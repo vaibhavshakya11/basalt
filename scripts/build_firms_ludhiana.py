@@ -1,6 +1,7 @@
 import argparse
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+from time import sleep
 
 import numpy as np
 import pandas as pd
@@ -14,17 +15,33 @@ EARTH_RADIUS_KM = 6371.0088
 ARCHIVE = "https://firms.modaps.eosdis.nasa.gov/data/country/viirs-snpp"
 
 
+def _transfer_year(url: str, partial: Path) -> None:
+    offset = partial.stat().st_size if partial.exists() else 0
+    headers = {"Range": f"bytes={offset}-"} if offset else {}
+    with requests.get(url, headers=headers, timeout=(20, 120), stream=True) as response:
+        response.raise_for_status()
+        if response.status_code == 206 and not response.headers.get("Content-Range", "").startswith(f"bytes {offset}-"):
+            raise ValueError("NASA FIRMS returned an unexpected partial archive range")
+        write_mode = "ab" if response.status_code == 206 else "wb"
+        with partial.open(write_mode) as stream:
+            for block in response.iter_content(chunk_size=1024 * 1024):
+                stream.write(block)
+
+
 def _download_year(target: Path, year: int) -> Path:
     filename = f"viirs-snpp_{year}_India.csv"
     destination = target / filename
     if destination.is_file():
         return destination
     partial = destination.with_suffix(".csv.part")
-    with requests.get(f"{ARCHIVE}/{year}/{filename}", timeout=(20, 120), stream=True) as response:
-        response.raise_for_status()
-        with partial.open("wb") as stream:
-            for block in response.iter_content(chunk_size=1024 * 1024):
-                stream.write(block)
+    for attempt in range(3):
+        try:
+            _transfer_year(f"{ARCHIVE}/{year}/{filename}", partial)
+            break
+        except requests.RequestException:
+            if attempt == 2:
+                raise
+            sleep(2 ** attempt)
     with partial.open() as stream:
         if not set(COLUMNS).issubset(stream.readline().strip().split(",")):
             raise ValueError(f"NASA did not return the expected FIRMS CSV for {year}")
