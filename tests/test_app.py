@@ -41,6 +41,42 @@ def test_demo_sliders_replay_archived_weather_without_network(network_off):
     app.run(timeout=12)
     app.slider(key="temperature-ludhiana").set_value(2.0).run(timeout=12)
     app.slider(key="rainfall-ludhiana").set_value(-10).run(timeout=12)
+    assert not any("Scenario: +2 °C, -10% rain" in paragraph.value for paragraph in app.markdown)
+    next(button for button in app.button if button.label == "Apply scenario").click().run(timeout=12)
     assert not app.exception
     assert not app.error
     assert any("Scenario: +2 °C, -10% rain" in paragraph.value for paragraph in app.markdown)
+
+
+
+def test_invalid_location_link_leaves_demos_reachable(network_off):
+    app = AppTest.from_file(str(ROOT / "app.py"))
+    app.query_params["lat"] = "NaN"
+    app.query_params["lon"] = "75.7"
+    app.run(timeout=12)
+    assert not app.exception
+    assert "Choose a latitude" in app.warning[0].value
+    assert any(button.label == "Try Ludhiana, India" for button in app.button)
+
+
+def test_uncovered_pin_explains_next_action_without_querying_weather(network_off, monkeypatch):
+    monkeypatch.setattr("basalt.service.local_calendars", lambda *args, **kwargs: ())
+    app = AppTest.from_file(str(ROOT / "app.py"))
+    app.query_params["lat"] = "-70"
+    app.query_params["lon"] = "-100"
+    app.run(timeout=12)
+    assert not app.exception
+    assert "No supported crop calendar" in app.error[0].value
+    assert any(button.label == "Open the demos" for button in app.button)
+
+
+def test_overlapping_crop_update_preserves_current_replay(network_off):
+    app = AppTest.from_file(str(ROOT / "app.py"))
+    app.query_params["site"] = "malawi"
+    app.run(timeout=12)
+    crops = next(widget for widget in app.multiselect if widget.label == "Current crops")
+    crops.set_value(["maize", "groundnut"]).run(timeout=12)
+    next(button for button in app.button if button.label == "Update field").click().run(timeout=12)
+    assert not app.exception
+    assert any("previous replay is still shown" in item.value for item in app.warning)
+    assert any(item.label == "Your options" for item in app.tabs)

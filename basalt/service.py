@@ -25,6 +25,10 @@ from basalt.soil.soilgrids import SoilGridsUnavailable, fetch_soilgrids
 from basalt.strata_data import encode_strata
 
 
+class FieldInputError(ValueError):
+    """The selected field inputs cannot form a supported replay."""
+
+
 @lru_cache(maxsize=2)
 def load_demo(site_id: str) -> dict:
     if site_id not in DEMO_COORDS:
@@ -36,7 +40,7 @@ def load_demo(site_id: str) -> dict:
 def _find_soil(site_id: str, lat: float, lon: float, soil_class):
     if soil_class is not None:
         if soil_class not in load_soils():
-            raise ValueError("Choose a soil type in the field settings.")
+            raise FieldInputError("Choose a soil type in the field settings.")
         return soil_class, "user"
     if site_id in DEMO_COORDS:
         path = DEMO / site_id / "soil.json"
@@ -51,28 +55,25 @@ def _find_soil(site_id: str, lat: float, lon: float, soil_class):
         raise SoilGridsUnavailable("SoilGrids is unavailable. Choose the soil type to see this field.") from error
 
 
-def _choose_irrigation(lat, lon, calibrated, irrigated):
-    if irrigated is not None:
-        return irrigated
-    if calibrated:
-        return True
-    def area(system):
-        rows = local_calendars(lat, lon, system)
-        return sum(row.harvested_frac or 0 for row in rows)
-    return area(True) > area(False)
+def _irrigation_default(calendars):
+    areas = {mode: sum(row.harvested_frac or 0 for row in rows) for mode, rows in calendars.items()}
+    return areas[True] > areas[False]
 
 
 def _setup(site_id, name, lat, lon, crop_ids, irrigated, soil_class, crops):
     calibrated = in_punjab(lat, lon)
-    irrigated = _choose_irrigation(lat, lon, calibrated, irrigated)
-    texture, soil_source = _find_soil(site_id, lat, lon, soil_class)
+    calendars_by_water = {} if calibrated else {
+        mode: local_calendars(lat, lon, mode) for mode in (False, True)
+    }
+    if irrigated is None:
+        irrigated = calibrated or _irrigation_default(calendars_by_water)
     calendars = ()
     reasons = {}
     if calibrated:
         presets = load_punjab_rotations()
         selected = (crop_ids or ("pb_rw",))[0]
         if len(crop_ids or ()) > 1 or selected not in presets:
-            raise ValueError("Choose a Punjab rotation preset.")
+            raise FieldInputError("Choose one Punjab rotation preset.")
         rotations = tuple(replace(preset, is_current=key == selected,
                                   lever="current" if key == selected else ("swap_weak_link" if key == "pb_rw" else preset.lever))
                           for key, preset in presets.items())
@@ -84,22 +85,30 @@ def _setup(site_id, name, lat, lon, crop_ids, irrigated, soil_class, crops):
         calendar_source = "pau"
         start = "06-01"
     else:
-        calendars = local_calendars(lat, lon, irrigated)
+        calendars = calendars_by_water[irrigated]
         options = {row.crop_id: crops[row.crop_id].name for row in calendars}
         if not options:
-            raise ValueError("No supported farm crop calendar is available at this pin for the selected water source.")
+            raise FieldInputError("No supported crop calendar covers this pin and water source. Try a nearby cultivated field.")
         if not crop_ids:
             crop_ids = ("maize",) if site_id == "malawi" and "maize" in options else (next(iter(options)),)
-        if not set(crop_ids) <= options.keys():
-            raise ValueError("Choose the current crops from the crops grown here.")
+        if len(set(crop_ids)) != len(crop_ids) or not set(crop_ids) <= options.keys():
+            raise FieldInputError("Choose each current crop once from the crops available for this water source.")
         start = default_season_start(next(row for row in calendars if row.crop_id == crop_ids[0]))
         rotations = (make_current(crop_ids, calendars),)
         calendar_source = "ggcmi"
+    try:
+        validate_rotation(rotations[0], crops, start)
+    except ValueError as error:
+        raise FieldInputError("The selected crops overlap or leave fewer than five bare days between them. Choose crops that grow at different times.") from error
+    texture, soil_source = _find_soil(site_id, lat, lon, soil_class)
     site = Site(site_id, name, lat, lon, "calibrated" if calibrated else "global", texture, soil_source,
                 irrigated, start, None if calibrated else ggcmi_cell(lat, lon))
-    validate_rotation(rotations[0], crops, start)
+    mode_options = {
+        label: options if calibrated else {row.crop_id: crops[row.crop_id].name for row in calendars_by_water[mode]}
+        for mode, label in ((True, "irrigated"), (False, "rainfed"))
+    }
     setup = {"soil_classes": list(load_soils()), "crop_options": options, "current_crop_ids": list(crop_ids),
-             "soil_class": texture, "irrigated": irrigated}
+             "crop_options_by_water": mode_options, "soil_class": texture, "irrigated": irrigated}
     return site, rotations, reasons, setup, calendars, calendar_source
 
 
@@ -169,11 +178,18 @@ def _datasets(site, ndvi, modis_et, grace, checks):
 
 
 def _assemble(site_id, name, lat, lon, climate, *, crop_ids=None, irrigated=None, soil_class=None,
-              constraints=Constraints(), scenario=Scenario(), online=False, base=None) -> dict:
+              constraints=Constraints(), scenario=Scenario(), online=False, base=None, prepared=None) -> dict:
     crops = load_crops()
-    site, rotations, why, setup, calendars, calendar_source = _setup(
-        site_id, name, lat, lon, crop_ids, irrigated, soil_class, crops,
-    )
+    if base is None:
+        site, rotations, why, setup, calendars, calendar_source = prepared or _setup(
+            site_id, name, lat, lon, crop_ids, irrigated, soil_class, crops,
+        )
+    else:
+        story = base["field_story"]
+        site = validated(story["site"], Site)
+        rotations = tuple(validated(row, Rotation) for row in base["rotations"])
+        why, setup, calendars = base["why"], dict(base["setup"]), ()
+        calendar_source = story["calendar_source"]
     soils = load_soils()
     soil = soils[site.soil_class]
     ndvi, modis_et = _satellite(site, online=online) if base is None else (None, None)
@@ -192,9 +208,7 @@ def _assemble(site_id, name, lat, lon, climate, *, crop_ids=None, irrigated=None
         why.update(outcome.why)
         rejected = outcome.rejected
     if base is not None:
-        rotations = tuple(validated(row, Rotation) for row in base["rotations"])
-        why, rejected = base["why"], base["rejections"]
-        calendar_source = base["field_story"]["calendar_source"]
+        rejected = base["rejections"]
     current = rotations[0]
     evidence, runs = replay(site, climate, rotations, crops, soil, constraints, scenario=scenario, why=why)
     if base is None:
@@ -228,9 +242,11 @@ def analyze_location(lat: float, lon: float, *, soil_class=None, irrigated=None,
                      constraints=Constraints(), scenario=Scenario()) -> dict:
     if not -90 <= lat <= 90 or not -180 <= lon <= 180:
         raise ValueError("Choose a valid latitude and longitude.")
+    name = f"{lat:.4f}, {lon:.4f}"
+    prepared = _setup("custom", name, lat, lon, crop_ids, irrigated, soil_class, load_crops())
     climate = fetch_power(lat, lon)
-    return _assemble("custom", f"{lat:.4f}, {lon:.4f}", lat, lon, climate, crop_ids=crop_ids,
-                     irrigated=irrigated, soil_class=soil_class, constraints=constraints, scenario=scenario, online=True)
+    return _assemble("custom", name, lat, lon, climate, constraints=constraints,
+                     scenario=scenario, online=True, prepared=prepared)
 
 
 def precompute_demo(site_id: str) -> dict:
@@ -254,3 +270,14 @@ def demo_scenario(site_id: str, scenario: Scenario = Scenario(), *, soil_class=N
     return _assemble(site_id, name, lat, lon, climate, crop_ids=crop_ids, irrigated=setup["irrigated"] if irrigated is None else irrigated,
                      soil_class=None if soil_class == setup["soil_class"] else soil_class,
                      constraints=constraints, scenario=scenario, base=baseline if unchanged else None)
+
+
+
+def replay_snapshot(snapshot: dict, scenario: Scenario) -> dict:
+    """Apply changed weather without rechecking the crop calendar or field settings."""
+    site = snapshot["field_story"]["site"]
+    site_id, lat, lon = site["site_id"], site["lat"], site["lon"]
+    constraints = validated({key: snapshot["setup"][key] for key in asdict(Constraints())}, Constraints)
+    climate = load_climate(DEMO / site_id / "climate.parquet") if site_id in DEMO_COORDS else fetch_power(lat, lon)
+    return _assemble(site_id, site["name"], lat, lon, climate,
+                     constraints=constraints, scenario=scenario, base=snapshot)

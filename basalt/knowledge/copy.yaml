@@ -309,3 +309,46 @@ ui:
   slides_checks: Checking the replay
   slides_demos: Open the field replay
   slide_comparison_columns: [Rotation, Soil, Water, Weather risk]
+  field_edit: Edit field settings
+  field_water_mode: Water source
+  field_modes:
+    irrigated: Irrigated
+    rainfed: Rainfed
+  field_unknown: Unconfirmed
+  field_crop_error: Choose at least one current crop before updating the field.
+  field_soil_error: Choose a soil type before updating the field.
+  field_crops_unavailable: No supported crop calendar is available here for this water source.
+  field_rainfed_limits: A yearly irrigation limit applies to irrigated fields.
+  field_irrigation_unknown: Leave blank if you are unsure.
+  field_confirmed: Field settings updated.
+  options_title: Compare crop rotations
+  options_context: "Compared with {current} in {n} farming years, {start} to {end}."
+  priorities_help: These weights change the order of the alternatives.
+  scenario_apply: Apply scenario
+  scenario_reset: Reset to historical weather
+  scenario_intro: Adjust temperature and rainfall, then replay the same weather history.
+  no_options_available: No alternatives passed the local crop and water checks.
+  models_baseline: Historical weather
+  field_storage_weak: No strong regional trend
+  validation_details: Data and threshold
+  validation_rule: Threshold
+  validation_sample: Sample size
+  validation_empty: No checks are available for this replay.
+  datasets_used: Data used in this replay
+  slide_page_home: Back to basalt
+  slide_current: Current
+  slide_data_missing: This demo replay is unavailable.
+  invalid_link: This link contains conflicting field details.
+  invalid_demo: This demo is unavailable. Choose Ludhiana or central Malawi from the home page.
+  valid_results_kept: The previous replay is still shown.
+  try_again: Try again
+  open_demos: Open the demos
+  weather_unavailable: NASA POWER weather is temporarily unavailable. Try again or open a demo.
+  field_data_unavailable: This field could not be loaded. Try again or choose another location.
+  field_update_unavailable: The change could not be replayed. Check your settings or try again.
+  field_context: "{details} · {start} to {end}"
+  field_location: Field location
+  field_soil_apply: Use this soil
+  choose_soil_hint: The soil data service did not respond. Select the soil texture for this field to continue.
+  field_demo_label: Demo replay
+  field_pin_label: Field pin

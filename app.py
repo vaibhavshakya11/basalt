@@ -1,10 +1,12 @@
 from collections.abc import Callable
+from logging import getLogger
 
 import requests
 import streamlit as st
 
-from basalt.config import DEMO_COORDS
+from basalt.climate.power import PowerError
 from basalt.contracts import Scenario
+from basalt.routes import ROUTE_FIELDS, Route, parse_route
 from basalt.soil.soilgrids import SoilGridsUnavailable
 from basalt.ui.components import apply_navigation, favicon, goto, header, labels
 from basalt.ui.field import field_view
@@ -12,6 +14,9 @@ from basalt.ui.howsure import how_sure
 from basalt.ui.landing import landing
 from basalt.ui.options import options_view
 from basalt.ui.slides import slides_view
+
+LOGGER = getLogger(__name__)
+FIELDS_KEPT = 4
 
 
 @st.cache_data(show_spinner=False)
@@ -21,125 +26,196 @@ def _load_demo(site_id: str) -> dict:
     return load_demo(site_id)
 
 
-@st.cache_data(show_spinner=False, max_entries=48)
+@st.cache_data(show_spinner=False, max_entries=24)
 def _refresh_demo(site_id: str, scenario: Scenario, **setup) -> dict:
     from basalt.service import demo_scenario
 
     return demo_scenario(site_id, scenario, **setup)
 
 
-@st.cache_data(show_spinner=False, max_entries=48)
+@st.cache_data(show_spinner=False, max_entries=24)
 def _analyze(lat: float, lon: float, scenario: Scenario, **setup) -> dict:
     from basalt.service import analyze_location
 
     return analyze_location(lat, lon, scenario=scenario, **setup)
 
 
-def _field_session(key: str) -> dict:
-    if st.session_state.get("field_key") != key:
-        st.session_state["field_key"] = key
-        st.session_state["field_model"] = {}
-    return st.session_state["field_model"]
+def _field_state(key: str) -> dict:
+    st.session_state["active_field"] = key
+    history = st.session_state.setdefault("field_history", {})
+    field = history.pop(key, {"settings": {}})
+    history[key] = field
+    if len(history) > FIELDS_KEPT:
+        del history[next(iter(history))]
+    return field
 
 
-def _set_scenario(scenario: Scenario) -> None:
-    st.session_state["field_model"] = dict(st.session_state["field_model"], scenario=scenario)
+def _stage_scenario(key: str, scenario: Scenario) -> None:
+    if st.session_state.get("active_field") == key:
+        st.session_state["field_history"][key]["pending"] = {"scenario": scenario}
 
 
-def _render_tabs(bundle: dict, key: str, state: dict) -> None:
+def _actions() -> None:
     ui = labels()
-    story = bundle["field_story"]
-    heading, navigate = st.columns([.73, .27])
-    heading.title(story["site"]["name"])
-    if navigate.button(ui["try_other_site"], key="field-home"):
-        goto()
-    field_tab, options_tab, confidence_tab = st.tabs([ui["tab_field"], ui["tab_options"], ui["tab_sure"]])
-    with field_tab:
-        updated_field = field_view(bundle, key=key)
-    with options_tab:
-        options_view(bundle, key=key, on_scenario=_set_scenario)
-    with confidence_tab:
-        how_sure(bundle)
-    st.divider()
-    st.caption(ui["local_advice"])
-    if updated_field is not None:
-        soil, irrigated, crop_ids, constraints = updated_field
-        state.update(soil_class=soil, irrigated=irrigated, crop_ids=crop_ids, constraints=constraints)
-        st.session_state["field_model"] = state
+    retry, back = st.columns([1, 1], gap="small")
+    if retry.button(ui["try_again"], key="retry-field", type="primary"):
         st.rerun()
+    if back.button(ui["open_demos"], key="field-demos"):
+        goto()
 
 
-def _show_field(key: str, load: Callable[..., dict]) -> None:
+def _choose_soil(field: dict) -> None:
+    from basalt.knowledge.loader import load_soils
+
     ui = labels()
-    state = _field_session(key)
-    scenario = state.get("scenario", Scenario())
-    setup = {name: value for name, value in state.items() if name != "scenario"}
-    try:
-        with st.spinner(ui["replaying"]):
-            bundle = load(scenario, **setup)
-    except SoilGridsUnavailable:
-        from basalt.knowledge.loader import load_soils
-
-        st.warning(ui["pick_soil"])
+    st.title(ui["field_location"])
+    st.warning(ui["choose_soil_hint"])
+    with st.form("soil-fallback", border=False):
         soil = st.selectbox(ui["soil_type"], list(load_soils()), index=None,
                             format_func=lambda value: value.replace("_", " ").capitalize())
-        if soil:
-            state["soil_class"] = soil
-            st.rerun()
-        return
-    except FileNotFoundError:
-        st.error(ui["demo_unavailable"] if key in DEMO_COORDS else ui["fetch_error"])
-        return
-    except (ValueError, RuntimeError, requests.RequestException) as exc:
-        st.error(ui["fetch_error"])
-        st.caption(str(exc))
-        if setup or scenario != Scenario():
-            if st.button(ui["update_field"], key="reset-field"):
-                state.clear()
+        if st.form_submit_button(ui["field_soil_apply"], type="primary"):
+            if soil is None:
+                st.error(ui["field_soil_error"])
+            else:
+                field["settings"] = {**field["settings"], "soil_class": soil}
                 st.rerun()
-        return
+    if st.button(ui["open_demos"], key="soil-demos"):
+        goto()
 
-    _render_tabs(bundle, key, state)
+
+def _render_tabs(bundle: dict, key: str, field: dict) -> None:
+    ui = labels()
+    story = bundle["field_story"]
+    current = next(option for option in bundle["evidence"] if option["is_current"])
+    with st.container(key="field-workspace"):
+        heading, navigate = st.columns([.74, .26], vertical_alignment="center")
+        heading.title(story["site"]["name"])
+        if navigate.button(ui["try_other_site"], key="field-home"):
+            goto()
+        start, end = current["season_range"]
+        source = ui["field_pin_label"] if story["site"]["site_id"] == "custom" else ui["field_demo_label"]
+        st.caption(ui["field_context"].format(details=source, start=start, end=end))
+        field_tab, options_tab, confidence_tab = st.tabs([ui["tab_field"], ui["tab_options"], ui["tab_sure"]])
+        notice = field.get("notice")
+        with field_tab:
+            if notice and notice[0] == "field":
+                st.warning(notice[1])
+            elif field.pop("updated", False):
+                st.success(ui["field_confirmed"])
+            updated = field_view(bundle, key=key, editor_open=bool(notice and notice[0] == "field"))
+        with options_tab:
+            if notice and notice[0] == "scenario":
+                st.warning(notice[1])
+            options_view(bundle, key=key, on_scenario=lambda scenario: _stage_scenario(key, scenario))
+        with confidence_tab:
+            how_sure(bundle)
+        st.divider()
+        st.caption(ui["local_advice"])
+        if updated is not None:
+            soil, irrigated, crops, constraints = updated
+            field["pending"] = {"soil_class": soil, "irrigated": irrigated, "crop_ids": crops, "constraints": constraints}
+            st.rerun()
+
+
+def _resolve_field(field: dict, load: Callable[..., dict]) -> dict:
+    from basalt.service import replay_snapshot
+
+    pending = field.get("pending")
+    if "bundle" in field and pending is not None:
+        complete = all(field["settings"].get(name, Scenario() if name == "scenario" else None) == value
+                       for name, value in pending.items())
+        if complete:
+            field.pop("pending")
+            field.pop("notice", None)
+            return field["bundle"]
+
+    settings = {**field["settings"], **(pending or {})}
+    scenario = settings.get("scenario", Scenario())
+    if "bundle" in field and pending and set(pending) == {"scenario"}:
+        bundle = replay_snapshot(field["bundle"], scenario)
+    else:
+        setup = {name: value for name, value in settings.items() if name != "scenario"}
+        bundle = load(scenario, **setup)
+    field.update(settings=settings, bundle=bundle)
+    if pending and "scenario" not in pending:
+        field["updated"] = True
+    field.pop("pending", None)
+    field.pop("notice", None)
+    return bundle
+
+
+def _show_field(route: Route, load: Callable[..., dict]) -> None:
+    from basalt.service import FieldInputError
+
+    ui = labels()
+    field = _field_state(route.key)
+    try:
+        if "bundle" in field and "pending" not in field:
+            bundle = field["bundle"]
+        else:
+            with st.spinner(ui["replaying"]):
+                bundle = _resolve_field(field, load)
+    except SoilGridsUnavailable:
+        _choose_soil(field)
+        return
+    except (FileNotFoundError, ValueError, RuntimeError, requests.RequestException) as error:
+        if isinstance(error, FieldInputError):
+            message = str(error)
+        elif isinstance(error, PowerError):
+            message = ui["weather_unavailable"]
+        elif isinstance(error, FileNotFoundError) and route.kind == "demo":
+            message = ui["demo_unavailable"]
+        else:
+            LOGGER.warning("Field replay failed: %s", type(error).__name__)
+            message = ui["field_update_unavailable"] if "bundle" in field else ui["field_data_unavailable"]
+        pending = field.pop("pending", {})
+        if "bundle" not in field:
+            st.error(message)
+            _actions()
+            return
+        kind = "scenario" if set(pending) == {"scenario"} else "field"
+        field["notice"] = (kind, f'{message} {ui["valid_results_kept"]}')
+        bundle = field["bundle"]
+
+    _render_tabs(bundle, route.key, field)
+
+
+def _landing(error: str | None = None) -> None:
+    if error:
+        st.warning(labels()[error])
+    try:
+        preview = _load_demo("ludhiana")
+    except FileNotFoundError:
+        preview = None
+    landing(preview)
 
 
 def run() -> None:
-    """Route public field pins and precomputed offline demo views."""
+    """Route offline demos, public field pins and presentation slides."""
     st.set_page_config(page_title="basalt", page_icon=favicon(), layout="wide", initial_sidebar_state="collapsed")
     apply_navigation()
     header()
     query = st.query_params
-    site_id = query.get("site")
-    if query.get("view") == "slides":
+    route = parse_route({name: query.get_all(name) for name in ROUTE_FIELDS if name in query})
+    st.session_state["active_field"] = route.key
+    if route.kind == "slides":
         try:
             slides_view(_load_demo("ludhiana"), _load_demo("malawi"))
         except FileNotFoundError:
             st.error(labels()["demo_unavailable"])
-    elif site_id in DEMO_COORDS:
+            if st.button(labels()["open_demos"]):
+                goto()
+    elif route.site is not None:
         def demo(scenario, **setup):
             if scenario == Scenario() and not setup:
-                return _load_demo(site_id)
-            return _refresh_demo(site_id, scenario, **setup)
+                return _load_demo(route.site)
+            return _refresh_demo(route.site, scenario, **setup)
 
-        _show_field(site_id, demo)
-    elif "lat" in query or "lon" in query:
-        try:
-            lat = float(query.get("lat", "nan"))
-            lon = float(query.get("lon", "nan"))
-        except ValueError:
-            lat, lon = float("nan"), float("nan")
-        if not (-90 <= lat <= 90 and -180 <= lon <= 180):
-            st.error(labels()["invalid_location"])
-            if st.button(labels()["try_other_site"]):
-                goto()
-            return
-        _show_field(f"{lat:.5f}_{lon:.5f}", lambda scenario, **setup: _analyze(lat, lon, scenario, **setup))
+        _show_field(route, demo)
+    elif route.coordinates is not None:
+        _show_field(route, lambda scenario, **setup: _analyze(*route.coordinates, scenario, **setup))
     else:
-        _field_session("landing")
-        try:
-            preview = _load_demo("ludhiana")
-        except FileNotFoundError:
-            preview = None
-        landing(preview)
+        _landing(route.error)
 
 
 if __name__ == "__main__":
