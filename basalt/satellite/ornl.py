@@ -121,8 +121,19 @@ def _fetch_series(
         response = _request(f"{product}/subset", params, staging / f"{first}_{last}.json", timeout)
         return _read_subset(response, product)
 
-    chunks = [dates[offset:offset + chunk_size] for offset in range(0, len(dates), chunk_size)]
     summaries = {}
+    if timeout > TIMEOUT_SECONDS:
+        for payload in sorted(staging.glob("A*.json")):
+            summaries.update(_read_subset(json.loads(payload.read_text()), product))
+    missing = [date for date in dates if date["calendar_date"] not in summaries]
+    # Only adjacent composites share a request, so sparse gaps never exceed the service limit.
+    positions = {date["modis_date"]: position for position, date in enumerate(dates)}
+    chunks = []
+    for date in missing:
+        if (not chunks or len(chunks[-1]) == chunk_size
+                or positions[date["modis_date"]] != positions[chunks[-1][-1]["modis_date"]] + 1):
+            chunks.append([])
+        chunks[-1].append(date)
     failures = []
     with ThreadPoolExecutor(max_workers=workers) as executor:
         requests_by_chunk = [(chunk, executor.submit(fetch, chunk)) for chunk in chunks]
