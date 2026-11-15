@@ -13,7 +13,7 @@ from basalt.climate.trends import annual_trends
 from basalt.config import DEMO, DEMO_COORDS, YEARS, in_punjab
 from basalt.contracts import Constraints, Rotation, Scenario, Site
 from basalt.decision.levers import make_current, propose_levers
-from basalt.decision.replay import replay
+from basalt.decision.replay import replay, replay_runs
 from basalt.decision.stability import stability
 from basalt.explain.cards import build_card
 from basalt.explain.patterns import field_patterns
@@ -198,15 +198,16 @@ def _assemble(site_id, name, lat, lon, climate, *, crop_ids=None, irrigated=None
     current = rotations[0]
     evidence, runs = replay(site, climate, rotations, crops, soil, constraints, scenario=scenario, why=why)
     if base is None:
+        baseline_runs = runs if scenario == Scenario() else replay_runs(site, climate, rotations, crops, soil, constraints)
         trends = annual_trends(climate, site, current, crops)
         grace = regional_trend(lat, lon)
-        validations = build_validation(site, climate, runs, crops, phenology=phenology, modis_et=modis_et,
+        validations = build_validation(site, climate, baseline_runs, crops, phenology=phenology, modis_et=modis_et,
                                        assumed_calendar=assumed_calendar)
         story = {"site": asdict(site), "tier": site.tier, "current_rotation_id": current.rotation_id,
                  "ndvi_seasons_detected": phenology["n_seasons"] if phenology else 0, "calendar_source": calendar_source,
-                 "patterns": field_patterns(runs[current.rotation_id], crops, trends, grace), "trends": trends, "grace": grace}
+                 "patterns": field_patterns(baseline_runs[current.rotation_id], crops, trends, grace), "trends": trends, "grace": grace}
         badges = stability(site, climate, rotations, crops, soil, soils, constraints,
-                           baseline=runs if scenario == Scenario() else None)
+                           baseline=baseline_runs)
         datasets = _datasets(site, ndvi, modis_et, grace, validations)
     else:
         story, validations = base["field_story"], base["validation"]

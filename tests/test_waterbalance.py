@@ -25,3 +25,21 @@ def test_standing_water_and_rice_refill():
     assert rice_refill(0., 23, 2, 70) == 75.
     assert rice_refill(0., 97, 5, 13) == 0.
     assert rice_day(0., 60., 14., 75., 200., 4., 0., 8.).runoff == 113.
+
+
+def test_full_punjab_replay_stops_wheat_irrigation_before_harvest():
+    from basalt.climate.power import load_climate
+    from basalt.config import DEMO
+    from basalt.contracts import Site
+    from basalt.knowledge.loader import load_crops, load_punjab_rotations, load_soils
+    from basalt.physics.simulate import run_rotation
+
+    site = Site("ludhiana", "Ludhiana", 30.8, 75.7, "calibrated", "loam", "soilgrids", True, "06-01")
+    climate = load_climate(DEMO / "ludhiana" / "climate.parquet")
+    rotation = load_punjab_rotations()["pb_rw"]
+    run = run_rotation(site, climate, rotation, load_crops(), load_soils()["loam"], years=range(2001, 2003))
+    for season in run.phases[0]:
+        wheat = season.daily.irr_net[season.daily.crop_id == "wheat_pb"]
+        assert np.any(wheat[:-14] > 0)
+        assert np.all(wheat[-14:] == 0)
+        assert season.result.wb_residual_max_mm < .1

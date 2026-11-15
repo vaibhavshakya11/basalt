@@ -95,7 +95,7 @@ def _fill_gap(site, current, climate, crops, gap_crops, evaluate, years):
     return None, None, "No catch crop met the local window, warmth and water checks often enough."
 
 
-def _weak_slot(current_run: RotationRun) -> tuple[str, str, int]:
+def _weak_slot(current_run: RotationRun, irrigated: bool) -> tuple[str, str, int]:
     crop_ids = [slot.crop_id for slot in current_run.rotation.years[0]]
     results = []
     for crop_id in crop_ids:
@@ -110,8 +110,8 @@ def _weak_slot(current_run: RotationRun) -> tuple[str, str, int]:
             hits["dry spells"] += int(in_mid.any() and daily.dry_stress_event[in_mid].mean() >= .3)
             et += float(daily.etc_adj[selected].sum())
         main = max(hits, key=hits.get)
-        results.append((sum(hits.values()), et, crop_id, main, hits[main]))
-    _, _, crop_id, event, count = max(results)
+        results.append((sum(hits.values()), et if irrigated else 0., crop_id, main, hits[main]))
+    _, _, crop_id, event, count = max(results, key=lambda row: row[:2])
     return crop_id, event, count
 
 
@@ -138,7 +138,7 @@ def _fit_calendar(site: Site, current: Rotation, crops: Mapping[str, Crop],
 
 
 def _propose(site, current, crops, calendars, evaluate, current_run, priorities, years):
-    weak, event, hits = _weak_slot(current_run)
+    weak, event, hits = _weak_slot(current_run, site.irrigated)
     swap, alternating = [], []
     crop_ids = {slot.crop_id for slot in current.years[0]}
     ranking = {"soil": priorities.soil, "water": priorities.water, "risk": priorities.risk}
