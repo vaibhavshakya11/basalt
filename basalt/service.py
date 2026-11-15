@@ -1,7 +1,6 @@
 import json
 from dataclasses import asdict, replace
 from datetime import timedelta
-from functools import lru_cache
 from statistics import median
 
 import pandas as pd
@@ -29,7 +28,6 @@ class FieldInputError(ValueError):
     """The selected field inputs cannot form a supported replay."""
 
 
-@lru_cache(maxsize=len(DEMO_COORDS))
 def load_demo(site_id: str) -> dict:
     if site_id not in DEMO_COORDS:
         raise ValueError("Unknown demo location")

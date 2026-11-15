@@ -64,7 +64,6 @@ for (const host of scopes) {
 """
 
 
-@st.cache_data(show_spinner=False)
 def _load_demo(site_id: str) -> dict:
     from basalt.service import load_demo
 
