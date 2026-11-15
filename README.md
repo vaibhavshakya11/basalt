@@ -9,7 +9,7 @@ Explore how your current rotation and up to three alternatives would have done t
 ## What it does
 
 - Starts with a field pin or eight offline demo fields across six continents.
-- Uses crop calendars and satellite greenness to help you confirm what grows and when.
+- Uses regional crop calendars to help you confirm what grows and when. Satellite greenness helps check crop dates where it is available.
 - Replays 2001 to 2024, comparing soil practices, crop water use and weather risks season by season.
 - Shows crop cover, bare soil and weather events in Season Strata.
 - Shows the validation results and assumptions behind each option, with questions to check locally.
@@ -25,22 +25,24 @@ python3.11 -m pip install -r requirements.txt
 python3.11 -m streamlit run app.py
 ```
 
-Open [the Ludhiana demo](http://localhost:8501/?site=ludhiana) or [the central Malawi demo](http://localhost:8501/?site=malawi). The demo screens load prepared results. A climate change runs a new replay using the same local weather file.
+Choose any demo from the landing page, or open the [Ludhiana](http://localhost:8501/?site=ludhiana), [Jaipur](http://localhost:8501/?site=jaipur), or [Central Malawi](http://localhost:8501/?site=malawi) demo directly. Each opens a prepared replay. Applying a climate scenario replays the same local weather file with the selected changes.
 
 ## Why these demo fields
 
-The pins represent cultivated land near each named city. The crop choices illustrate locally supported calendars and water sources. They are model scenarios rather than records of individual farms. All eight run on the historical NASA POWER weather for their location. The six added field pins were checked against [ESA WorldCover](https://esa-worldcover.org/en/data-access).
+The pins represent cultivated land near each named city. Each demo uses a representative model scenario based on local crop calendars, water sources and historical NASA POWER weather. The six added field pins were checked against [ESA WorldCover](https://esa-worldcover.org/en/data-access).
 
 | Demo field | Why it is in the set |
 | --- | --- |
 | [Ludhiana, India](https://basalt-nasa.streamlit.app/?site=ludhiana) | Irrigated rice and wheat show how replacing ponded rice can change pumping demand. [Punjab Agricultural University](https://pau.edu/content/ccil/pf/pp_kharif.pdf) |
 | [Lilongwe plain, Malawi](https://basalt-nasa.streamlit.app/?site=malawi) | Rainfed maize provides a comparison with legumes and dry-season cover in a system that relies on one rainy season. [GGCMI Phase 3](https://zenodo.org/records/5062513) |
-| [Jaipur, India](https://basalt-nasa.streamlit.app/?site=jaipur) | Rainfed millet shows how a short monsoon limits crop choices in the drier part of Rajasthan. [India's district crop figures](https://sansad.in/getFile/annex/267/AU3859_GVwFkG.pdf) |
+| [Jaipur, India](https://basalt-nasa.streamlit.app/?site=jaipur) | Rainfed millet shows how a short monsoon limits crop choices in the drier part of Rajasthan. [Jaipur district profile](https://foundation.rajasthan.gov.in/rf/pdf/Jaipur.pdf) · [Central Ground Water Board climate report](https://cgwb.gov.in/old_website/AQM/NAQUIM_REPORT/Rajasthan/JAIPUR%20RAJASTHAN.pdf) |
 | [Fresno County, United States](https://basalt-nasa.streamlit.app/?site=fresno) | Irrigated cotton adds a different crop family and a summer irrigation comparison from California's Central Valley. [Fresno County crop reports](https://www.fresnocountyca.gov/Departments/Agricultural-Commissioner/Annual-Crop-Livestock-Report) |
 | [Córdoba, Spain](https://basalt-nasa.streamlit.app/?site=cordoba) | Rainfed winter wheat illustrates a Mediterranean calendar that makes use of the cooler, wetter months. [Andalusia municipal statistics](https://www.juntadeandalucia.es/institutodeestadisticaycartografia/sima/ficha.htm?mun=14021) |
-| [Toowoomba, Australia](https://basalt-nasa.streamlit.app/?site=toowoomba) | Rainfed sorghum adds a Southern Hemisphere summer cereal where dry spells can matter within the crop season. [Darling Downs drought resilience program](https://rdrpqld.org.au/region/darling-downs-region/) |
+| [Toowoomba, Australia](https://basalt-nasa.streamlit.app/?site=toowoomba) | Rainfed sorghum adds a Southern Hemisphere summer cereal where dry spells can matter within the crop season. [Grains Research and Development Corporation sorghum guide](https://grdc.com.au/__data/assets/pdf_file/0026/370592/GrowNote-Sorghum-North-0A-Introduction.pdf) |
 | [Sinop, Brazil](https://basalt-nasa.streamlit.app/?site=sinop) | A rainfed soybean–maize sequence shows how two crops can fit within a tropical rainy season. [Embrapa field study](https://www.alice.cnptia.embrapa.br/alice/bitstream/doc/1103798/1/2019cpamtagrossilvipastorilpart4cap1estabelecimentosistemailpffocogadocortep145163.pdf) |
 | [Damanhur, Egypt](https://basalt-nasa.streamlit.app/?site=damanhur) | Irrigated wheat and maize show how a two-crop year depends on irrigation in a dry Nile Delta climate. [FAO Egypt crop calendar](https://www.fao.org/4/Y4632e/y4632e0c.htm) |
+
+Córdoba and Damanhur show the current rotation only because no alternatives passed the local crop calendar and water checks.
 
 ## NASA and partner data
 
@@ -50,7 +52,7 @@ The pins represent cultivated land near each named city. The crop choices illust
 | [MOD13Q1 v061](https://doi.org/10.5067/MODIS/MOD13Q1.061) | 250 m, 16 days | Greenness and calendar checks. ORNL DAAC and local cache. |
 | [MOD16A2GF v061](https://doi.org/10.5067/MODIS/MOD16A2GF.061) | 500 m, 8 days | Satellite water-use estimate. ORNL DAAC and local cache. |
 | [SMAP SPL4SMGP v008](https://doi.org/10.5067/T5RUATAQREF8) | 9 km, 3 hours | Root-zone wetness check in Malawi. Offline AppEEARS extract. |
-| [JPL GRACE/GRACE-FO mascons RL06.3 v4](https://podaac.jpl.nasa.gov/dataset/TELLUS_GRAC-GRFO_MASCON_CRI_GRID_RL06.3_V4) | 0.5° grid, effective scale about 300 km, monthly | Regional change in water stored on land. The demos ship exact JPL point trends. Other sites use the public NASA Goddard grid, labelled by source. The full JPL grid can be built from NASA Earthdata. |
+| [JPL GRACE/GRACE-FO mascons RL06.3 v4](https://podaac.jpl.nasa.gov/dataset/TELLUS_GRAC-GRFO_MASCON_CRI_GRID_RL06.3_V4) | 0.5° grid, effective scale about 300 km, monthly | Regional change in water stored on land. Ludhiana and Central Malawi ship JPL point trends. The six added demos and other fields use the public NASA Goddard grid, labelled by source. The full JPL grid can be built from NASA Earthdata. |
 | [FIRMS VIIRS S-NPP](https://firms.modaps.eosdis.nasa.gov/download/) | 375 m, satellite overpasses | Fire detections around Ludhiana after rice harvest. Offline archive extract. |
 | [GGCMI Phase 3](https://doi.org/10.5281/zenodo.5062513) | 0.5°, crop calendar | Regional planting and harvest dates. Offline calendar table. |
 | [MapSPAM 2010 v2.0](https://doi.org/10.7910/DVN/PRFF8V) | About 10 km, circa 2010 | Local harvested-area share where GGCMI supplies dates only. Public Harvard Dataverse data, CC BY 4.0. |
@@ -67,7 +69,7 @@ Climate trends use [Hamed and Rao's Mann–Kendall test (1998)](https://doi.org/
 
 ## Validation
 
-Open **How sure are we?** on either demo. It reports V1 (FAO reference water use), V2 (Punjab versus global defaults), V3 (satellite calendar), V4 (daily water balance closure), V5 (post-harvest fire detections), V6 (published Punjab ranges), V7 (SMAP soil moisture), and V8 (MODIS water use). [results_summary.json](results_summary.json) carries the values, sample sizes and statuses.
+Open **How sure are we?** in any demo. Every demo runs the FAO reference water-use check (V1) and the daily water-balance check (V4). The six added demos use regional crop calendars, and their site-specific satellite checks are listed as not run. The table below shows all eight checks for Ludhiana and Central Malawi. [results_summary.json](results_summary.json) carries the values, sample sizes and statuses.
 
 | Validation | Ludhiana | Malawi |
 | --- | --- | --- |

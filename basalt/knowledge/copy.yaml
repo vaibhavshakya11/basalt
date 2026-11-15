@@ -177,7 +177,7 @@ ui:
     - NASA POWER daily weather since 1990 feeds a FAO-56 estimate of crop water use.
     - A daily soil-water model replays each rotation through 24 seasons.
     - Each option is compared season by season with your current rotation.
-    - Satellites check the calendar and water use.
+    - Where readings are available, satellites help check crop dates and water use.
     - A sensitivity test lists what to check locally.
   choose_location: Or choose your own location
   use_location: Use this location
@@ -258,9 +258,9 @@ ui:
   assumptions: What this tool assumes
   no_assumptions: See the crop dates and local checks for each option.
   satellites_heading: Satellites vs ground measurements
-  satellites_text: Satellites see large areas often but indirectly; ground sensors are exact but only at one spot. basalt uses satellites and NASA weather to describe your area, and asks you to confirm what you know about your own field.
+  satellites_text: Satellites estimate conditions across large areas. Ground sensors measure conditions directly where they are installed. basalt uses satellite estimates and NASA weather and asks you to confirm your field details.
   datasets_heading: How the data fit together
-  datasets_text: "Every dataset is aligned to your field's location and a daily timeline: NASA POWER weather (~50 km, daily), MODIS greenness (250 m, every 16 days), MODIS water use (500 m, 8-day), SMAP soil moisture (9 km), GRACE-FO water storage (~300 km, monthly), crop calendars (GGCMI, 0.5°), soil texture (SoilGrids, 250 m)."
+  datasets_text: "The replay follows a daily timeline using NASA POWER weather (about 50 km). Other products help set up the replay or check its results at their own scales. MODIS estimates greenness (250 m, every 16 days) and water use (500 m, every 8 days). SMAP estimates soil moisture (9 km). GRACE and GRACE-FO track regional water storage (about 300 km, monthly). GGCMI supplies regional crop calendars (0.5°), and SoilGrids estimates soil texture (250 m)."
   limitations: Limits of the comparison
   limits:
     - The model uses a single point for your field.
