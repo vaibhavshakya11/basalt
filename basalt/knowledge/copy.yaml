@@ -380,7 +380,7 @@ ui:
   option_reference_irr: "{water:.0f} mm used a year"
   option_reference_rf: "{water:.0%} of sensitive days stressed"
   option_reference_risk: "Weather risks per year {risk:g}"
-  option_count_guide: "The counts show how often an option did better, worse or about the same as the current rotation. An arrow shows a consistent direction across the replay. A dot shows a mixed or small difference."
+  option_count_guide: "The counts show better, worse and similar years. An arrow shows a consistent difference. A dot shows a mixed or small difference."
   option_water_irrigated: The water comparison tracks water used by the crops and soil.
   option_water_rainfed: The water comparison tracks how often crops were short of water.
   option_chart_guide: Each small chart shows the same farming years in the same order, so you can compare the seasonal patterns.
@@ -397,3 +397,4 @@ ui:
   validation_v7_pairs: "Both sources had values for {n:,} days."
   validation_water_gap: Median difference in crop water use
   validation_soil_gap: Median difference in soil score
+  option_chart_key: Chart key
