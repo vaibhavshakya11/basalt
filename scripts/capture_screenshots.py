@@ -19,6 +19,7 @@ from basalt.knowledge.loader import read_yaml
 
 CHART = '.js-plotly-plot .main-svg:has(.ytick)'
 FIELD_CHART = f'[role="tabpanel"]:visible {CHART}'
+SCENARIO = 'iframe[title$="basalt_climate_scenario"]'
 DEFAULT_TIMEOUT = 45000
 NUMBER = r"-?\d+(?:\.\d+)?"
 
@@ -55,18 +56,23 @@ def _app_server():
 
 
 def _ready(page: Page, selector: str = CHART) -> None:
-    page.locator(selector).filter(visible=True).first.wait_for(state="visible")
-    page.evaluate("document.fonts.ready")
-    page.locator("[data-stale=true]:visible").first.wait_for(state="hidden")
-    alerts = page.locator('[data-testid="stException"]')
+    alerts = page.locator('[data-testid="stException"]:visible')
+    ready = page.locator(selector).filter(visible=True)
+    ready.or_(alerts).first.wait_for(state="visible")
     if alerts.count():
         raise RuntimeError(alerts.first.inner_text())
+    page.evaluate("document.fonts.ready")
+    page.locator("[data-stale=true]:visible").first.wait_for(state="hidden")
 
 
 def _save(page: Page, destination: Path, filename: str) -> None:
     page.evaluate("""async () => {
-        const finite = document.getAnimations().filter(animation => Number.isFinite(animation.effect?.getComputedTiming().endTime));
-        await Promise.all(finite.map(animation => animation.finished.catch(() => null)));
+        const active = document.getAnimations().filter(animation =>
+            animation.playState === 'running' && Number.isFinite(animation.effect?.getComputedTiming().endTime));
+        await Promise.race([
+            Promise.all(active.map(animation => animation.finished.catch(() => null))),
+            new Promise(resolve => setTimeout(resolve, 800)),
+        ]);
     }""")
     viewport = page.viewport_size
     content = page.locator('[data-testid="stMainBlockContainer"], [data-testid="stAppViewBlockContainer"], .block-container').first
@@ -93,18 +99,27 @@ def _wait_for_field(page: Page, site: str, bundle: dict) -> None:
     page.get_by_role("heading", name="Where the calendar came from", exact=True).wait_for()
 
 
-def _set_scenario(page: Page) -> None:
-    page.get_by_text("Try a different climate", exact=True).click()
-    presets = (("What if it gets warmer?", 2., .5), ("What if rainfall changes?", -10., 5.))
+def _set_scenario(page: Page) -> float:
+    ui = read_yaml("copy.yaml")["ui"]
+    page.get_by_text(ui["scenario"], exact=True).click()
+    controls = page.frame_locator(SCENARIO)
+    presets = ((ui["warm"], 2., .5), (ui["rain"], -10., 5.))
     for label, target, step in presets:
-        handle = page.get_by_role("slider", name=label, exact=True)
-        current = float(handle.get_attribute("aria-valuenow"))
+        handle = controls.get_by_role("slider", name=label, exact=True)
+        current = float(handle.input_value())
         count = round((target - current) / step)
         for _ in range(abs(count)):
             handle.press("ArrowRight" if count > 0 else "ArrowLeft")
-        if float(handle.get_attribute("aria-valuenow")) != target:
+        if float(handle.input_value()) != target:
             raise RuntimeError(f"Could not set the climate slider {label!r}")
-    page.get_by_text("Scenario: +2 °C, -10% rain", exact=True).wait_for(state="visible")
+    banner = page.get_by_text(ui["scenario_banner"].format(temperature=2, rain=-10), exact=True)
+    if page.locator(".b-scenario:visible").count():
+        raise RuntimeError("The draft changed the replay before it was applied")
+    start = time.monotonic()
+    controls.get_by_role("button", name=ui["scenario_apply"], exact=True).click()
+    banner.wait_for(state="visible")
+    _ready(page, FIELD_CHART)
+    return time.monotonic() - start
 
 
 def _bundle(site: str) -> dict:
@@ -164,7 +179,7 @@ def _capture_desktop(page: Page, base: str, destination: Path) -> dict:
     timings = {"ludhiana_demo_seconds": time.monotonic() - start}
     _save(page, destination, "02_ludhiana_field.png")
     _tab(page, "Your options")
-    _ready(page)
+    _ready(page, FIELD_CHART)
     option_audited = _audit_option_numbers(page, ludhiana)
     chart_audited &= _audit_chart_labels(page, list(ludhiana["strata"].values()))
     _save(page, destination, "03_ludhiana_options.png")
@@ -178,13 +193,15 @@ def _capture_desktop(page: Page, base: str, destination: Path) -> dict:
     }""")
     _save(page, destination, "04_ludhiana_card_details.png")
     _tab(page, "How sure are we?")
-    _ready(page, ".b-validation")
+    _ready(page, ".b-validation .b-check")
     _save(page, destination, "05_ludhiana_how_sure.png")
     _tab(page, "Your options")
     page.get_by_text("Details", exact=True).nth(1).click()
-    _set_scenario(page)
-    _ready(page)
+    timings["scenario_replay_seconds"] = _set_scenario(page)
     _save(page, destination, "08_slider_scenario.png")
+    ui = read_yaml("copy.yaml")["ui"]
+    page.frame_locator(SCENARIO).get_by_role("button", name=ui["scenario_reset"], exact=True).click()
+    page.locator(".b-scenario:visible").wait_for(state="hidden")
 
     page.goto(base, wait_until="domcontentloaded")
     _ready(page)
@@ -219,7 +236,21 @@ def _capture_mobile(page: Page, base: str, destination: Path) -> dict:
         button.scroll_into_view_if_needed()
         if not button.is_enabled():
             raise RuntimeError(f"Cannot reach the '{label}' demo at 390 px")
-    return layout
+    ui = read_yaml("copy.yaml")["ui"]
+    page.get_by_role("button", name=ui["demo_malawi"], exact=True).tap()
+    _wait_for_field(page, "malawi", _bundle("malawi"))
+    page.get_by_text(ui["field_edit"], exact=True).tap()
+    page.get_by_text(ui["field_water_mode"], exact=True).last.wait_for(state="visible")
+    workspace_widths = {}
+    for item in ("tab_field", "tab_options", "tab_sure"):
+        page.get_by_role("tab", name=ui[item], exact=True).tap()
+        _ready(page, ".b-validation .b-check" if item == "tab_sure" else FIELD_CHART)
+        page.wait_for_function("""() => {
+            const workspace = document.querySelector('[data-testid="stMainBlockContainer"], .block-container');
+            return workspace.scrollWidth <= window.innerWidth;
+        }""")
+        workspace_widths[item] = page.locator(".block-container").evaluate("(node) => node.scrollWidth")
+    return {**layout, "workspaceWidths": workspace_widths}
 
 
 def capture(base: str, destination: Path, executable: str | None = None) -> dict:
