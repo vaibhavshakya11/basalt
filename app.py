@@ -1,4 +1,5 @@
 from collections.abc import Callable
+import linecache
 from logging import getLogger
 
 import requests
@@ -93,6 +94,10 @@ def _load_demo(site_id: str) -> dict:
     from basalt.service import load_demo
 
     return load_demo(site_id)
+
+
+# The host can retain the previous entry point's source across a deploy. Streamlit inspects it for cache keys.
+linecache.cache.pop(__file__, None)
 
 
 @st.cache_data(show_spinner=False, max_entries=24)
