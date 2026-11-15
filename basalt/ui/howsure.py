@@ -2,7 +2,7 @@ from html import escape
 
 import streamlit as st
 
-from basalt.ui.components import APP_COLOR, how_it_works, labels
+from basalt.ui.components import APP_COLOR, copybook, how_it_works, labels
 
 STATUS_TONES = {"pass": "better", "caveat": "similar", "fail": "worse", "not_run": "similar"}
 
@@ -33,6 +33,15 @@ def _validation_table(checks: list[dict]) -> None:
                 f'</thead><tbody>{"".join(rows)}</tbody></table></div>', unsafe_allow_html=True)
 
 
+def _glossary(season_start: str) -> None:
+    ui = labels()
+    definitions = copybook()["glossary"]
+    with st.expander(ui["glossary"]):
+        terms = ui["glossary_terms"]
+        key = st.selectbox(ui["glossary"], list(terms), format_func=terms.__getitem__, label_visibility="collapsed")
+        st.write(definitions[key].format(season_year_start=season_start))
+
+
 def how_sure(bundle: dict) -> None:
     """Render validation, assumptions and the documented method limits."""
     ui = labels()
@@ -52,4 +61,5 @@ def how_sure(bundle: dict) -> None:
     st.subheader(ui["limitations"])
     for limitation in ui["limits"]:
         st.write(f"- {limitation}")
+    _glossary(bundle["field_story"]["site"]["season_year_start"])
     how_it_works()

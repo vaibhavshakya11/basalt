@@ -96,7 +96,7 @@ def _base_layout(figure: go.Figure, *, height: int, thumbnail: bool) -> None:
     figure.update_yaxes(ticks="", showline=False, tickfont_size=9 if thumbnail else 11, fixedrange=True)
 
 
-def strata_figure(strata: dict, *, thumbnail: bool = False) -> go.Figure:
+def strata_figure(strata: dict, *, thumbnail: bool = False, include_legend: bool = False) -> go.Figure:
     """Build Season Strata from the archived daily crop and event segments."""
     rows = strata["rows"]
     years = [row["season"] for row in rows]
@@ -123,6 +123,8 @@ def strata_figure(strata: dict, *, thumbnail: bool = False) -> go.Figure:
     year_ticks = [years[0], years[-1]] if thumbnail else years
     figure.update_yaxes(tickmode="array", tickvals=year_ticks, range=[min(years) - .5, max(years) + .5],
                         ticktext=[f"{year}/{(year + 1) % 100:02d}" for year in year_ticks])
+    if include_legend:
+        _print_legend(figure, strata)
     return figure
 
 
@@ -136,20 +138,32 @@ def _marker(color: str, symbol: str) -> str:
     return f'<svg viewBox="0 0 12 12" class="b-legend-mark" aria-hidden="true">{shapes[symbol]}</svg>'
 
 
+def _visible_legend(strata: dict) -> list[tuple[str, str, str]]:
+    ui = labels()
+    families = {segment[3] for row in strata["rows"] for segment in row["segments"]}
+    categories = [(ui["categories"][family], color, "square") for family, color in COVER.items() if family in families]
+    events = [(ui["events"][event], color, symbol) for event, (color, symbol) in EVENTS.items()]
+    return categories + events
+
+
+def _print_legend(figure: go.Figure, strata: dict) -> None:
+    for label, color, symbol in _visible_legend(strata):
+        figure.add_scatter(x=[None], y=[None], mode="markers", showlegend=True, name=label,
+                           marker={"color": color, "symbol": symbol, "size": 9}, hoverinfo="skip")
+    figure.update_traces(showlegend=False, selector=lambda trace: not trace.name)
+    figure.update_layout(showlegend=True, legend={"orientation": "h", "x": 0, "y": -.06, "yanchor": "top"},
+                         margin={"l": 66, "r": 12, "t": 12, "b": 68}, height=480)
+
+
 def draw_strata(strata: dict, *, key: str, thumbnail: bool = False) -> None:
     """Render a full or compact Season Strata chart."""
     st.plotly_chart(strata_figure(strata, thumbnail=thumbnail), use_container_width=True, key=key,
                     theme=None, config={"displayModeBar": False, "scrollZoom": False})
     if thumbnail:
         return
-    ui = labels()
-    families = {seg[3] for row in strata["rows"] for seg in row["segments"]}
-    cover_labels = [
-        f'<span><span class="b-legend-mark" style="background:{color}"></span>{escape(ui["categories"][family])}</span>'
-        for family, color in COVER.items() if family in families
+    legend = [
+        f'<span>{_marker(color, symbol)}{escape(label)}</span>'
+        for label, color, symbol in _visible_legend(strata)
     ]
-    event_labels = [
-        f'<span>{_marker(color, symbol)}{escape(ui["events"][name])}</span>'
-        for name, (color, symbol) in EVENTS.items()
-    ]
-    st.markdown('<div class="b-chart-legend">' + "".join(cover_labels + event_labels) + "</div>", unsafe_allow_html=True)
+    st.markdown('<div class="b-chart-legend">' + "".join(legend) + "</div>", unsafe_allow_html=True)
+    st.caption(labels()["chart_shading"])

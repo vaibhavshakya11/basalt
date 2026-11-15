@@ -252,7 +252,7 @@ ui:
   section_gaps: Information gaps
   section_risks: Risks to check locally
   soil_factors: Soil practices
-  soil_practices_caption: The model estimates these practice scores. Bars show the median and the middle 80% of seasons.
+  soil_practices_caption: The bars show the median and the spread across seasons.
   no_more: Why not more options?
   options_passed: Only {count} options passed the checks here.
   validation: Validation checks
@@ -294,3 +294,15 @@ ui:
     dev: Growing
     mid: Mid-season
     late: Ripening
+  glossary: Glossary
+  glossary_terms:
+    evapotranspiration: Evapotranspiration
+    ndvi: NDVI
+    soil_moisture: Soil moisture anomaly
+    frost_risk: Frost risk
+    water_balance: Water balance
+    growing_degree_days: Growing degree days
+    season: Season
+  phase_summary: The chart uses one starting crop. The comparison averages both starting crops.
+  phase_other: See the other starting crop
+  chart_shading: Lighter crop colours show establishment and early growth.

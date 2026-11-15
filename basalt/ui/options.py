@@ -86,7 +86,13 @@ def _option_card(option: Evidence, current: Evidence, bundle: dict, *, key: str)
             st.caption(render_stability(option))
         for warning in constraint_warnings(option):
             st.warning(warning)
-        draw_strata(bundle["strata"][identity], key=f"{key}-{identity}", thumbnail=True)
+        strata = bundle["strata"][identity]
+        draw_strata(strata, key=f"{key}-{identity}", thumbnail=True)
+        if strata.get("alternate_rows"):
+            st.caption(ui["phase_summary"])
+            with st.expander(ui["phase_other"]):
+                other = dict(strata, rows=strata["alternate_rows"])
+                draw_strata(other, key=f"{key}-{identity}-other", thumbnail=True)
         with st.expander(ui["details"]):
             for section in ("why", "evidence", "benefits", "gaps", "risks"):
                 st.markdown(f'**{ui[f"section_{section}"]}**')
