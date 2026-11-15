@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>Field location map</title>
+<style>
+  body{margin:0;font-family:Arial,sans-serif;color:#24272b}
+  canvas{display:block;width:100%;height:232px;box-sizing:border-box;border:1px solid #d5d8db;background:#f7f7f6}
+  canvas:focus-visible,button:focus-visible{outline:2px solid #a4472a;outline-offset:-2px}
+  #controls{position:absolute;top:7px;right:7px;display:flex;gap:4px}
+  #controls[hidden]{display:none}
+  button{font-size:16px;width:28px;height:28px;background:#fff;border:1px solid #d5d8db;border-radius:4px;color:#24272b}
+</style>
+<canvas id="map" tabindex="0" aria-label="Field map. Click or use arrow keys to move the pin. Latitude and longitude can also be typed below."></canvas>
+<div id="controls" hidden>
+  <button id="zoomIn" title="Zoom in" aria-label="Zoom in">+</button>
+  <button id="zoomOut" title="Zoom out" aria-label="Zoom out">−</button>
+</div>
+<script src="./map.js"></script>
+</html>
