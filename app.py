@@ -11,6 +11,7 @@ from basalt.ui.field import field_view
 from basalt.ui.howsure import how_sure
 from basalt.ui.landing import landing
 from basalt.ui.options import options_view
+from basalt.ui.slides import slides_view
 
 
 @st.cache_data(show_spinner=False)
@@ -105,7 +106,12 @@ def run() -> None:
     header()
     query = st.query_params
     site_id = query.get("site")
-    if site_id in DEMO_COORDS:
+    if query.get("view") == "slides":
+        try:
+            slides_view(_load_demo("ludhiana"), _load_demo("malawi"))
+        except FileNotFoundError:
+            st.error(labels()["demo_unavailable"])
+    elif site_id in DEMO_COORDS:
         def demo(scenario, **setup):
             if scenario == Scenario() and not setup:
                 return _load_demo(site_id)

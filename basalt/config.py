@@ -6,7 +6,7 @@ DEMO = DATA / "demo"
 CACHE = DATA / "cache"
 YEARS = tuple(range(2001, 2025))
 PUNJAB_BOUNDS = (73.8, 29.5, 77.0, 32.6)
-SLIDES_URL = "SLIDES_URL_TBD"
+SLIDES_URL = "?view=slides"
 SCOPE = (
     "Runs for any cultivated region covered by the global datasets. Calibrated in Punjab "
     "(with Punjab Agricultural University guidance); global defaults elsewhere, "

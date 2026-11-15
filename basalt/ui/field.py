@@ -48,9 +48,14 @@ def _regional_water(story: dict, key: str) -> None:
     grace = story.get("grace") or {}
     slope = grace.get("trend_cm_per_yr")
     map_view(place["lat"], place["lon"], fixed=True, key=f"storage-{key}", trend=slope)
-    st.caption(ui["storage_caption"])
+    note = grace.get("note")
+    dataset = grace.get("dataset")
+    if dataset and note:
+        st.caption(f"{dataset}. {note}")
+    elif not note:
+        st.caption(ui["storage_caption"])
     if slope is None:
-        st.caption(ui["storage_none"])
+        st.caption(note or ui["storage_none"])
     else:
         tone = APP_COLOR["iron"] if slope < 0 else "#3D7FC4"
         sign = ui["storage_drier"] if slope < 0 else ui["storage_wetter"]

@@ -41,7 +41,10 @@ def landing(bundle: dict | None) -> None:
             goto(site="ludhiana")
         if st.button(ui["demo_malawi"]):
             goto(site="malawi")
-        if SLIDES_URL.startswith("https://"):
+        if SLIDES_URL == "?view=slides":
+            if st.button(ui["slides"]):
+                goto(view="slides")
+        elif SLIDES_URL.startswith("https://"):
             st.link_button(ui["slides"], SLIDES_URL)
         else:
             st.button(ui["slides"], disabled=True, help=ui["slides_unavailable"])

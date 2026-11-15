@@ -306,3 +306,7 @@ ui:
   phase_summary: The chart uses one starting crop. The comparison averages both starting crops.
   phase_other: See the other starting crop
   chart_shading: Lighter crop colours show establishment and early growth.
+  slides_method: How Basalt compares rotations
+  slides_checks: Checking the replay
+  slides_demos: Open the field replay
+  slide_comparison_columns: [Rotation, Soil, Water, Weather risk]

@@ -64,6 +64,12 @@ STYLE = """
  .stApp [data-testid="stHorizontalBlock"]{flex-wrap:wrap}
  .stApp [data-testid="stHorizontalBlock"]>[data-testid="stColumn"]{min-width:220px}
 }
+@media print{
+ [data-testid="stAppViewContainer"],[data-testid="stAppViewBlockContainer"]{overflow:visible;height:auto;max-height:none}
+ [data-testid="stButton"]{display:none}
+ [class*="st-key-slide-"]{break-inside:avoid;break-after:page}
+ .st-key-slide-validation{break-after:auto}
+}
 </style>
 """
 

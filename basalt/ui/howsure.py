@@ -15,7 +15,7 @@ def _format_value(value, unit: str) -> str:
     return f"{value:.3g} {unit}".strip() if isinstance(value, (float, int)) else f"{value} {unit}".strip()
 
 
-def _validation_table(checks: list[dict]) -> None:
+def validation_table(checks: list[dict]) -> None:
     ui = labels()
     headings = "".join(f"<th scope='col'>{escape(label)}</th>" for label in ui["validation_columns"])
     rows = []
@@ -47,7 +47,7 @@ def how_sure(bundle: dict) -> None:
     ui = labels()
     st.subheader(ui["tab_sure"])
     st.markdown(f'### {ui["validation"]}')
-    _validation_table(bundle["validation"])
+    validation_table(bundle["validation"])
     st.subheader(ui["assumptions"])
     assumptions = dict.fromkeys(line for option in bundle["evidence"] for line in option["assumptions_L"])
     for assumption in assumptions:
