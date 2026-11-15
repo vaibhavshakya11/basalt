@@ -44,7 +44,7 @@ def _files(root: Path, suffix: str = ".py") -> list[Path]:
     return sorted(root.rglob(f"*{suffix}"))
 
 
-def _audit(browser: dict, summary: dict, bundles: dict) -> list[tuple[str, bool]]:
+def _audit(browser: dict, bundles: dict) -> list[tuple[str, bool]]:
     visual = re.compile(r"inter|geist|gradient|purple|indigo|violet|box-shadow|backdrop-filter", re.I)
     words = re.compile(r"\b(revolutionize|unlock|empower|seamless|cutting-edge|powerful|ai-powered|next-generation|"
                        r"game-changing|comprehensive|robust|leverage|harness|journey|delve)\b", re.I)
@@ -71,6 +71,10 @@ def _audit(browser: dict, summary: dict, bundles: dict) -> list[tuple[str, bool]
         ("Evidence numbers, options and expanded details", verdicts and bool(browser.get("option_numbers_verified"))),
         ("Landing at 390 px, both buttons and chart", mobile.get("viewport") == 390 and 300 <= mobile.get("chartWidth", 0) <= 390 and mobile.get("contentWidth", 391) <= 390),
         ("Chart legends and practice labels, screenshots 01, 02, 04, 06, 10", bool(browser.get("chart_labels_verified"))),
+        ("All three field tabs fit at 390 px", len(mobile.get("workspaceWidths", {})) == 3 and
+         all(width <= 390 for width in mobile["workspaceWidths"].values())),
+        ("Instant local demos and scenario replay", all(0 < browser.get(key, 99) < limit for key, limit in (
+            ("ludhiana_demo_seconds", 2), ("malawi_demo_seconds", 2), ("scenario_replay_seconds", 3)))),
         ("Public replay routes, signed-out browser", bool(links)),
     ]
 
@@ -99,7 +103,7 @@ def _report(summary, bundles, browser, pytest, deployed, commit) -> str:
             headlines.append(f"- {option['name']}. {option['verdict']} {arrows}. {option['stability_line']}.")
     rejects = summary["malawi"]["lever_rejections"]
     reasons = "\n".join(f"- {row['lever'].replace('_', ' ').capitalize()}. {row['reason']}" for row in rejects)
-    audit = "\n".join(f"- {'Pass' if good else 'Needs review'}. {name}." for name, good in _audit(browser, summary, bundles))
+    audit = "\n".join(f"- {'Pass' if good else 'Needs review'}. {name}." for name, good in _audit(browser, bundles))
     missing = [f"{site['site']['site_id']} {check['check_id']}"
                for site in summary.values() for check in site["validations"]
                if check["status"] == "not_run" and (site["site"]["site_id"], check["check_id"]) not in
@@ -129,7 +133,7 @@ def _report(summary, bundles, browser, pytest, deployed, commit) -> str:
 ## Deviations and assumptions
 
 - GGCMI v1.01 dates, with MapSPAM 2010 area because GGCMI flags alone cannot establish local crop coverage. Pea area is unavailable. Wheat area is unsplit.
-- The offline map uses bundled Natural Earth shapes instead of external tile and script servers. GRACE uses official JPL analysis values at the two demo cells. Elsewhere the fallback is NASA Goddard, labelled separately because its catalog and embedded release labels differ. The offline script also supports the authenticated full JPL product.
+- The offline map uses bundled Natural Earth shapes. The weather controls send both slider values together, including during rapid keyboard edits. GRACE uses official JPL analysis values at the two demo cells. Elsewhere the fallback is NASA Goddard, labelled separately because its catalog and embedded release labels differ. The offline script also supports the authenticated full JPL product.
 - Complete agricultural years determine trends. At these pins the 2025-starting season extends past the supplied weather archive. The bare-soil depletion fraction (0.55), proportional depletion when roots shrink, initial rooting depth{f' ({roots})' if roots else ''}, gap-crop heights and supplied uncertainty bounds are model assumptions. The crop YAML files record low-confidence additions.
 - Internal rotation runs retain both phases for two-year cycles. Reported counts can be half-integers after averaging phases; peak closure uses the larger phase residual. JSON Evidence fields follow the frozen structure.
 - V7 requires the authorized NASA AppEEARS point export at the Malawi pin.
