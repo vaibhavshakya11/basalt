@@ -88,6 +88,17 @@ GGCMI provides regional crop averages and does not design sequences for one fiel
 
 The controlled replay holds each PAU rotation's planting and harvest dates, the soil, weather, field settings and 24 seasons fixed, including leap years. It replaces crop parameters and the relative time spent in each crop stage with global defaults, then reruns all four rotations. The result measures agreement conditional on a feasible local schedule. It cannot establish the accuracy of the overlapping regional dates.
 
+### How to reproduce the V7 wetness check
+
+For the Malawi demo, V7 compares the model with daily SMAP root-zone wetness. It pairs dates, subtracts each series' typical wetness for that calendar date and calculates Spearman rank correlation on the departures. [NASA SMAP L4 product](https://nsidc.org/data/spl4smgp/versions/8)
+
+In [NASA AppEEARS](https://appeears.earthdatacloud.nasa.gov/), choose **Sign In** and use your Earthdata Login. Approve AppEEARS if Earthdata asks for authorization. The request samples `Geophysical_Data_sm_rootzone_wetness` from `SPL4SMGP.008` at nine points around 13.800° S, 33.450° E, from 1 April 2015 through 31 December 2024. Download the completed request's ZIP from **Explore**. The offline importer verifies the locations, product, dates, and wetness values before building the local daily file.
+
+```sh
+python -m scripts.fetch_smap_appeears --bundle /path/to/malawi-export.zip
+python -m scripts.precompute_demos
+```
+
 ## Limits
 
 - The model uses one point per field and compares soil practices as proxies.
