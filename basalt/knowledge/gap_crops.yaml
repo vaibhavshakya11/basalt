@@ -1,0 +1,134 @@
+gap_crops:
+  mungbean:
+    name: Mungbean
+    family: Fabaceae
+    kc_ini: 0.4
+    kc_mid: 1.05
+    kc_end: 0.4
+    stage_fracs: [0.23, 0.31, 0.31, 0.15]
+    zr_min_m: 0.15
+    zr_max_m: 0.7
+    p: 0.45
+    height_m: 0.4
+    ponded: false
+    tcrit_heat_c: 40
+    heat_window: mid_first_15d
+    frost_sensitive: true
+    frost_tmin_c: 2.0
+    frost_window: whole_season
+    residue: low
+    tags: [nitrogen_fixing, cover, extra_harvest]
+    tbase_c: 10
+    gdd_req: 1100
+    min_window_days: 60
+    sources: ['Basalt specification, section 7.5 (low-confidence screening parameters)', assumption]
+    confidence: {default: L, zr_min_m: L, height_m: L, frost_tmin_c: L}
+    ranges: {tcrit_heat_c: [39, 41], sowing_days: [-14, 14], zr_max_m: [0.525, 0.875]}
+  cowpea:
+    name: Cowpea
+    family: Fabaceae
+    kc_ini: 0.4
+    kc_mid: 1.05
+    kc_end: 0.35
+    stage_fracs: [0.2, 0.3, 0.3, 0.2]
+    zr_min_m: 0.15
+    zr_max_m: 0.8
+    p: 0.45
+    height_m: 0.4
+    ponded: false
+    tcrit_heat_c: 38
+    heat_window: mid_first_15d
+    frost_sensitive: true
+    frost_tmin_c: 2.0
+    frost_window: whole_season
+    residue: low
+    tags: [nitrogen_fixing, cover, drought_tolerant, fodder_value, extra_harvest]
+    tbase_c: 10
+    gdd_req: 1300
+    min_window_days: 70
+    sources: ['Basalt specification, section 7.5 (low-confidence screening parameters)', assumption]
+    confidence: {default: L, zr_min_m: L, height_m: L, frost_tmin_c: L}
+    ranges: {tcrit_heat_c: [37, 39], sowing_days: [-14, 14], zr_max_m: [0.6, 1.0]}
+  sunn_hemp:
+    name: Sunn hemp
+    family: Fabaceae
+    kc_ini: 0.4
+    kc_mid: 1.0
+    kc_end: 1.0
+    stage_fracs: [0.25, 0.35, 0.4, 0]
+    zr_min_m: 0.15
+    zr_max_m: 1.0
+    p: 0.5
+    height_m: 1.0
+    ponded: false
+    tcrit_heat_c: 40
+    heat_window: mid_first_15d
+    frost_sensitive: true
+    frost_tmin_c: 2.0
+    frost_window: whole_season
+    residue: none
+    tags: [nitrogen_fixing, cover, deep_rooting]
+    tbase_c: 10
+    gdd_req: 900
+    min_window_days: 50
+    sources: ['Basalt specification, section 7.5 (low-confidence screening parameters)', assumption]
+    confidence: {default: L, zr_min_m: L, height_m: L, frost_tmin_c: L}
+    ranges: {tcrit_heat_c: [39, 41], sowing_days: [-14, 14], zr_max_m: [0.75, 1.25]}
+  hairy_vetch:
+    name: Hairy vetch
+    family: Fabaceae
+    kc_ini: 0.4
+    kc_mid: 1.0
+    kc_end: 1.0
+    stage_fracs: [0.25, 0.35, 0.4, 0]
+    zr_min_m: 0.15
+    zr_max_m: 0.8
+    p: 0.5
+    height_m: 0.5
+    ponded: false
+    tcrit_heat_c: 32
+    heat_window: mid_first_15d
+    frost_sensitive: false
+    frost_tmin_c: 2.0
+    frost_window: whole_season
+    residue: none
+    tags: [nitrogen_fixing, cover]
+    tbase_c: 4
+    gdd_req: 900
+    min_window_days: 75
+    sources: ['Basalt specification, section 7.5 (low-confidence screening parameters)', assumption]
+    confidence: {default: L, zr_min_m: L, height_m: L}
+    ranges: {tcrit_heat_c: [31, 33], sowing_days: [-14, 14], zr_max_m: [0.6, 1.0]}
+  cereal_rye:
+    name: Cereal rye
+    family: Poaceae
+    kc_ini: 0.4
+    kc_mid: 1.0
+    kc_end: 0.9
+    stage_fracs: [0.25, 0.35, 0.4, 0]
+    zr_min_m: 0.15
+    zr_max_m: 1.0
+    p: 0.55
+    height_m: 1.0
+    ponded: false
+    tcrit_heat_c: 32
+    heat_window: mid_first_15d
+    frost_sensitive: false
+    frost_tmin_c: 2.0
+    frost_window: whole_season
+    residue: none
+    tags: [cover, deep_rooting]
+    tbase_c: 0
+    gdd_req: 700
+    min_window_days: 60
+    sources: ['Basalt specification, section 7.5 (low-confidence screening parameters)', assumption]
+    confidence: {default: L, zr_min_m: L, height_m: L}
+    ranges: {tcrit_heat_c: [31, 33], sowing_days: [-14, 14], zr_max_m: [0.75, 1.25]}
+
+assumptions:
+- scope: gap crops
+  parameter: height_m
+  value: Mungbean 0.4 m, cowpea 0.4 m, sunn hemp 1.0 m, hairy vetch 0.5 m, cereal rye 1.0 m
+  source: assumption
+  confidence: L
+  reason: Crop height enters the FAO-56 climate adjustment; section 7.5 provides no crop heights. These proxies need local verification.

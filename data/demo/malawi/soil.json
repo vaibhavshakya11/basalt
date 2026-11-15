@@ -1,0 +1,33 @@
+{
+  "soil_class": "sandy_loam",
+  "source": "soilgrids",
+  "sand": 75.96201899050475,
+  "silt": 7.712810261535899,
+  "clay": 16.325170747959355,
+  "unit": "%",
+  "coverage_unit": "g/kg",
+  "depth_cm": [
+    0,
+    30
+  ],
+  "lat": -13.8,
+  "lon": 33.45,
+  "coverage_g_kg": {
+    "sand": {
+      "0-5cm": 760,
+      "5-15cm": 763,
+      "15-30cm": 758
+    },
+    "silt": {
+      "0-5cm": 85,
+      "5-15cm": 78,
+      "15-30cm": 74
+    },
+    "clay": {
+      "0-5cm": 155,
+      "5-15cm": 159,
+      "15-30cm": 169
+    }
+  },
+  "dataset": "SoilGrids 2.0 via WCS"
+}

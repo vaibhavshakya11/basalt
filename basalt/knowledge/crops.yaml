@@ -1,0 +1,378 @@
+calibrated_punjab:
+  rice_pb:
+    name: Rice
+    family: Poaceae
+    kc_ini: 1.05
+    kc_mid: 1.2
+    kc_end: 0.75
+    stage_days: [20, 25, 40, 25]
+    zr_min_m: 0.3
+    zr_max_m: 0.5
+    p: 0.2
+    height_m: 1.0
+    ponded: true
+    tcrit_heat_c: 35
+    heat_window: mid_first_15d
+    frost_sensitive: false
+    frost_tmin_c: 2.0
+    frost_window: whole_season
+    residue: high
+    tags: []
+    sources: ['FAO-56 (Allen et al. 1998), Tables 11, 12 and 22', PAU Package of Practices Kharif 2026 / Rabi 2025-26]
+    confidence: {kc: H, stage_days: L, zr: M, p: M}
+    ranges: {tcrit_heat_c: [34, 36], sowing_days: [-14, 14], zr_max_m: [0.375, 0.625], rice_percolation: [2, 15]}
+  wheat_pb:
+    name: Wheat
+    family: Poaceae
+    kc_ini: 0.4
+    kc_mid: 1.15
+    kc_end: 0.3
+    stage_days: [25, 30, 60, 35]
+    zr_min_m: 0.15
+    zr_max_m: 1.25
+    p: 0.55
+    height_m: 1.0
+    ponded: false
+    tcrit_heat_c: 31
+    heat_window: mid_first_15d
+    frost_sensitive: true
+    frost_tmin_c: 2.0
+    frost_window: mid_first_15d
+    residue: medium
+    tags: []
+    sources: ['FAO-56 (Allen et al. 1998), Tables 11, 12 and 22', PAU Package of Practices Kharif 2026 / Rabi 2025-26]
+    confidence: {kc_ini: L, kc_mid: H, kc_end: H, stage_days: M, zr: M, p: M, frost_tmin_c: L}
+    ranges: {tcrit_heat_c: [30, 32], sowing_days: [-14, 14], zr_max_m: [0.9375, 1.5625], kc_ini: [0.3, 0.7]}
+  maize_pb:
+    name: Maize
+    family: Poaceae
+    kc_ini: 0.4
+    kc_mid: 1.2
+    kc_end: 0.45
+    stage_days: [15, 30, 30, 22]
+    zr_min_m: 0.15
+    zr_max_m: 1.2
+    p: 0.55
+    height_m: 2.0
+    ponded: false
+    tcrit_heat_c: 35
+    heat_window: mid_first_15d
+    frost_sensitive: false
+    frost_tmin_c: 2.0
+    frost_window: whole_season
+    residue: low
+    tags: [fodder_value]
+    sources: ['FAO-56 (Allen et al. 1998), Tables 11, 12 and 22', PAU Package of Practices Kharif 2026 / Rabi 2025-26]
+    confidence: {kc: H, stage_days: H, zr: M}
+    ranges: {tcrit_heat_c: [34, 36], sowing_days: [-14, 14], zr_max_m: [0.9, 1.5]}
+  moong_pb:
+    name: Summer moong
+    family: Fabaceae
+    kc_ini: 0.4
+    kc_mid: 1.05
+    kc_end: 0.4
+    stage_days: [15, 20, 20, 10]
+    zr_min_m: 0.15
+    zr_max_m: 0.7
+    p: 0.45
+    height_m: 0.4
+    ponded: false
+    tcrit_heat_c: 40
+    heat_window: mid_first_15d
+    frost_sensitive: true
+    frost_tmin_c: 2.0
+    frost_window: whole_season
+    residue: low
+    tags: [nitrogen_fixing, cover, extra_harvest]
+    sources: ['FAO-56 (Allen et al. 1998), Tables 11, 12 and 22', PAU Package of Practices Kharif 2026 / Rabi 2025-26]
+    confidence: {kc: H, stage_days: L, frost_tmin_c: L}
+    ranges: {tcrit_heat_c: [39, 41], sowing_days: [-14, 14], zr_max_m: [0.525, 0.875]}
+
+global:
+  maize:
+    name: Maize
+    family: Poaceae
+    kc_ini: 0.3
+    kc_mid: 1.2
+    kc_end: 0.35
+    stage_fracs: [0.2, 0.27, 0.33, 0.2]
+    zr_min_m: 0.15
+    zr_max_m: 1.4
+    p: 0.55
+    height_m: 2.0
+    ponded: false
+    tcrit_heat_c: 35
+    heat_window: mid_first_15d
+    frost_sensitive: true
+    frost_tmin_c: 2.0
+    frost_window: whole_season
+    residue: medium
+    tags: [fodder_value]
+    sources: ['FAO-56 (Allen et al. 1998), Tables 11, 12 and 22', GGCMI Phase 3 crop calendar (Zenodo 5062513), assumption]
+    confidence: {kc: H, tcrit_heat_c: M, stage_fracs: M, zr_max_m: M, zr_min_m: L, p: M, height_m: M, frost_tmin_c: L}
+    ranges: {tcrit_heat_c: [34, 36], sowing_days: [-14, 14], zr_max_m: [1.05, 1.75]}
+  rice:
+    name: Rice
+    family: Poaceae
+    kc_ini: 1.05
+    kc_mid: 1.2
+    kc_end: 0.75
+    stage_fracs: [0.18, 0.23, 0.36, 0.23]
+    zr_min_m: 0.3
+    zr_max_m: 0.5
+    p: 0.2
+    height_m: 1.0
+    ponded: true
+    tcrit_heat_c: 35
+    heat_window: mid_first_15d
+    frost_sensitive: true
+    frost_tmin_c: 2.0
+    frost_window: whole_season
+    residue: high
+    tags: []
+    sources: ['FAO-56 (Allen et al. 1998), Tables 11, 12 and 22', GGCMI Phase 3 crop calendar (Zenodo 5062513), assumption]
+    confidence: {kc: H, tcrit_heat_c: M, stage_fracs: M, zr_max_m: M, zr_min_m: L, p: M, height_m: M, frost_tmin_c: L}
+    ranges: {tcrit_heat_c: [34, 36], sowing_days: [-14, 14], zr_max_m: [0.375, 0.625], rice_percolation: [2, 15]}
+  wheat_spring:
+    name: Spring wheat
+    family: Poaceae
+    kc_ini: 0.4
+    kc_mid: 1.15
+    kc_end: 0.3
+    stage_fracs: [0.15, 0.19, 0.44, 0.22]
+    zr_min_m: 0.15
+    zr_max_m: 1.25
+    p: 0.55
+    height_m: 1.0
+    ponded: false
+    tcrit_heat_c: 31
+    heat_window: mid_first_15d
+    frost_sensitive: true
+    frost_tmin_c: 2.0
+    frost_window: mid_first_15d
+    residue: medium
+    tags: []
+    sources: ['FAO-56 (Allen et al. 1998), Tables 11, 12 and 22', GGCMI Phase 3 crop calendar (Zenodo 5062513), assumption]
+    confidence: {kc: M, tcrit_heat_c: M, stage_fracs: M, zr_max_m: M, zr_min_m: L, p: M, height_m: M, frost_tmin_c: L}
+    ranges: {tcrit_heat_c: [30, 32], sowing_days: [-14, 14], zr_max_m: [0.9375, 1.5625], kc_ini: [0.3, 0.7]}
+  wheat_winter:
+    name: Winter wheat
+    family: Poaceae
+    kc_ini: 0.4
+    kc_mid: 1.15
+    kc_end: 0.3
+    stage_fracs: [0.15, 0.19, 0.44, 0.22]
+    zr_min_m: 0.15
+    zr_max_m: 1.25
+    p: 0.55
+    height_m: 1.0
+    ponded: false
+    tcrit_heat_c: 31
+    heat_window: mid_first_15d
+    frost_sensitive: true
+    frost_tmin_c: 2.0
+    frost_window: mid_first_15d
+    residue: medium
+    tags: []
+    sources: ['FAO-56 (Allen et al. 1998), Tables 11, 12 and 22', GGCMI Phase 3 crop calendar (Zenodo 5062513), assumption]
+    confidence: {kc: M, tcrit_heat_c: M, stage_fracs: M, zr_max_m: M, zr_min_m: L, p: M, height_m: M, frost_tmin_c: L}
+    ranges: {tcrit_heat_c: [30, 32], sowing_days: [-14, 14], zr_max_m: [0.9375, 1.5625], kc_ini: [0.3, 0.7]}
+  soybean:
+    name: Soybean
+    family: Fabaceae
+    kc_ini: 0.4
+    kc_mid: 1.15
+    kc_end: 0.5
+    stage_fracs: [0.15, 0.22, 0.44, 0.19]
+    zr_min_m: 0.15
+    zr_max_m: 0.95
+    p: 0.5
+    height_m: 0.75
+    ponded: false
+    tcrit_heat_c: 35
+    heat_window: mid_first_15d
+    frost_sensitive: true
+    frost_tmin_c: 2.0
+    frost_window: whole_season
+    residue: low
+    tags: [nitrogen_fixing, extra_harvest]
+    sources: ['FAO-56 (Allen et al. 1998), Tables 11, 12 and 22', GGCMI Phase 3 crop calendar (Zenodo 5062513), assumption]
+    confidence: {kc: H, tcrit_heat_c: M, stage_fracs: M, zr_max_m: M, zr_min_m: L, p: M, height_m: M, frost_tmin_c: L}
+    ranges: {tcrit_heat_c: [34, 36], sowing_days: [-14, 14], zr_max_m: [0.7125, 1.1875]}
+  groundnut:
+    name: Groundnut
+    family: Fabaceae
+    kc_ini: 0.4
+    kc_mid: 1.15
+    kc_end: 0.6
+    stage_fracs: [0.19, 0.27, 0.35, 0.19]
+    zr_min_m: 0.15
+    zr_max_m: 0.75
+    p: 0.5
+    height_m: 0.4
+    ponded: false
+    tcrit_heat_c: 35
+    heat_window: mid_first_15d
+    frost_sensitive: true
+    frost_tmin_c: 2.0
+    frost_window: whole_season
+    residue: low
+    tags: [nitrogen_fixing, extra_harvest, fodder_value]
+    sources: ['FAO-56 (Allen et al. 1998), Tables 11, 12 and 22', GGCMI Phase 3 crop calendar (Zenodo 5062513), assumption]
+    confidence: {kc: M, tcrit_heat_c: L, stage_fracs: M, zr_max_m: M, zr_min_m: L, p: M, height_m: M, frost_tmin_c: L}
+    ranges: {tcrit_heat_c: [34, 36], sowing_days: [-14, 14], zr_max_m: [0.5625, 0.9375]}
+  beans:
+    name: Beans
+    family: Fabaceae
+    kc_ini: 0.4
+    kc_mid: 1.15
+    kc_end: 0.35
+    stage_fracs: [0.18, 0.27, 0.36, 0.18]
+    zr_min_m: 0.15
+    zr_max_m: 0.75
+    p: 0.45
+    height_m: 0.4
+    ponded: false
+    tcrit_heat_c: 32
+    heat_window: mid_first_15d
+    frost_sensitive: true
+    frost_tmin_c: 2.0
+    frost_window: whole_season
+    residue: low
+    tags: [nitrogen_fixing, extra_harvest]
+    sources: ['FAO-56 (Allen et al. 1998), Tables 11, 12 and 22', GGCMI Phase 3 crop calendar (Zenodo 5062513), assumption]
+    confidence: {kc: M, tcrit_heat_c: L, stage_fracs: M, zr_max_m: M, zr_min_m: L, p: M, height_m: M, frost_tmin_c: L}
+    ranges: {tcrit_heat_c: [31, 33], sowing_days: [-14, 14], zr_max_m: [0.5625, 0.9375]}
+  pea:
+    name: Pea
+    family: Fabaceae
+    kc_ini: 0.5
+    kc_mid: 1.15
+    kc_end: 0.3
+    stage_fracs: [0.17, 0.28, 0.39, 0.17]
+    zr_min_m: 0.15
+    zr_max_m: 0.8
+    p: 0.35
+    height_m: 0.5
+    ponded: false
+    tcrit_heat_c: 30
+    heat_window: mid_first_15d
+    frost_sensitive: true
+    frost_tmin_c: 2.0
+    frost_window: mid_first_15d
+    residue: low
+    tags: [nitrogen_fixing, extra_harvest]
+    sources: ['FAO-56 (Allen et al. 1998), Tables 11, 12 and 22', GGCMI Phase 3 crop calendar (Zenodo 5062513), assumption]
+    confidence: {kc: M, tcrit_heat_c: L, stage_fracs: M, zr_max_m: M, zr_min_m: L, p: M, height_m: M, frost_tmin_c: L}
+    ranges: {tcrit_heat_c: [29, 31], sowing_days: [-14, 14], zr_max_m: [0.6, 1.0]}
+  sorghum:
+    name: Sorghum
+    family: Poaceae
+    kc_ini: 0.3
+    kc_mid: 1.05
+    kc_end: 0.55
+    stage_fracs: [0.16, 0.28, 0.32, 0.24]
+    zr_min_m: 0.15
+    zr_max_m: 1.4
+    p: 0.55
+    height_m: 1.5
+    ponded: false
+    tcrit_heat_c: 40
+    heat_window: mid_first_15d
+    frost_sensitive: true
+    frost_tmin_c: 2.0
+    frost_window: whole_season
+    residue: medium
+    tags: [drought_tolerant, deep_rooting, fodder_value]
+    sources: ['FAO-56 (Allen et al. 1998), Tables 11, 12 and 22', GGCMI Phase 3 crop calendar (Zenodo 5062513), assumption]
+    confidence: {kc: M, tcrit_heat_c: L, stage_fracs: M, zr_max_m: M, zr_min_m: L, p: M, height_m: M, frost_tmin_c: L}
+    ranges: {tcrit_heat_c: [39, 41], sowing_days: [-14, 14], zr_max_m: [1.05, 1.75]}
+  millet:
+    name: Millet
+    family: Poaceae
+    kc_ini: 0.3
+    kc_mid: 1.0
+    kc_end: 0.3
+    stage_fracs: [0.14, 0.24, 0.38, 0.24]
+    zr_min_m: 0.15
+    zr_max_m: 1.5
+    p: 0.55
+    height_m: 1.5
+    ponded: false
+    tcrit_heat_c: 42
+    heat_window: mid_first_15d
+    frost_sensitive: true
+    frost_tmin_c: 2.0
+    frost_window: whole_season
+    residue: medium
+    tags: [drought_tolerant, deep_rooting, fodder_value]
+    sources: ['FAO-56 (Allen et al. 1998), Tables 11, 12 and 22', GGCMI Phase 3 crop calendar (Zenodo 5062513), assumption]
+    confidence: {kc: M, tcrit_heat_c: L, stage_fracs: M, zr_max_m: M, zr_min_m: L, p: M, height_m: M, frost_tmin_c: L}
+    ranges: {tcrit_heat_c: [41, 43], sowing_days: [-14, 14], zr_max_m: [1.125, 1.875]}
+  cotton:
+    name: Cotton
+    family: Malvaceae
+    kc_ini: 0.35
+    kc_mid: 1.18
+    kc_end: 0.6
+    stage_fracs: [0.15, 0.26, 0.31, 0.28]
+    zr_min_m: 0.15
+    zr_max_m: 1.35
+    p: 0.65
+    height_m: 1.35
+    ponded: false
+    tcrit_heat_c: 36
+    heat_window: mid_first_15d
+    frost_sensitive: true
+    frost_tmin_c: 2.0
+    frost_window: whole_season
+    residue: low
+    tags: [deep_rooting]
+    sources: ['FAO-56 (Allen et al. 1998), Tables 11, 12 and 22', GGCMI Phase 3 crop calendar (Zenodo 5062513), assumption]
+    confidence: {kc: M, tcrit_heat_c: L, stage_fracs: M, zr_max_m: M, zr_min_m: L, p: M, height_m: M, frost_tmin_c: L}
+    ranges: {tcrit_heat_c: [35, 37], sowing_days: [-14, 14], zr_max_m: [1.0125, 1.6875]}
+  rapeseed:
+    name: Rapeseed
+    family: Brassicaceae
+    kc_ini: 0.35
+    kc_mid: 1.05
+    kc_end: 0.35
+    stage_fracs: [0.19, 0.26, 0.33, 0.22]
+    zr_min_m: 0.15
+    zr_max_m: 1.25
+    p: 0.6
+    height_m: 1.2
+    ponded: false
+    tcrit_heat_c: 29
+    heat_window: mid_first_15d
+    frost_sensitive: true
+    frost_tmin_c: 2.0
+    frost_window: mid_first_15d
+    residue: low
+    tags: []
+    sources: ['FAO-56 (Allen et al. 1998), Tables 11, 12 and 22', GGCMI Phase 3 crop calendar (Zenodo 5062513), assumption]
+    confidence: {kc: M, tcrit_heat_c: L, stage_fracs: M, zr_max_m: M, zr_min_m: L, p: M, height_m: M, frost_tmin_c: L}
+    ranges: {tcrit_heat_c: [28, 30], sowing_days: [-14, 14], zr_max_m: [0.9375, 1.5625]}
+
+ggcmi_codes:
+  mai: maize
+  ri1: rice
+  swh: wheat_spring
+  wwh: wheat_winter
+  soy: soybean
+  nut: groundnut
+  bea: beans
+  pea: pea
+  sor: sorghum
+  mil: millet
+  cot: cotton
+  rap: rapeseed
+  ri2: rice
+
+assumptions:
+- scope: global and gap crops
+  parameter: zr_min_m
+  value: 0.30 m for rice, 0.15 m for all others
+  source: assumption
+  confidence: L
+  reason: Starting root depths follow the corresponding Punjab rice and non-rice defaults where sections 7.3 and 7.5 only specify mature roots.

@@ -1,0 +1,50 @@
+season_year_start: 06-01
+rotations:
+  pb_rw:
+    name: Rice and wheat
+    lever: current
+    cycle_years: 1
+    years:
+    - - crop_id: rice_pb
+        sow: 06-20
+      - crop_id: wheat_pb
+        sow: 11-01
+    is_current: true
+    notes: 24-day post-rice gap
+  pb_rw_moong:
+    name: Rice and wheat with summer moong
+    lever: fill_the_gap
+    cycle_years: 1
+    years:
+    - - crop_id: rice_pb
+        sow: 06-25
+      - crop_id: wheat_pb
+        sow: 11-05
+      - crop_id: moong_pb
+        sow: 04-10
+    is_current: false
+    notes: Keeps both assured-market crops
+  pb_mw:
+    name: Maize and wheat
+    lever: swap_weak_link
+    cycle_years: 1
+    years:
+    - - crop_id: maize_pb
+        sow: 06-10
+      - crop_id: wheat_pb
+        sow: 11-01
+    is_current: false
+    notes: Avoids puddling; 48 days from maize harvest to wheat sowing
+  pb_mw_moong:
+    name: Maize and wheat with summer moong
+    lever: combine
+    cycle_years: 1
+    years:
+    - - crop_id: maize_pb
+        sow: 06-15
+      - crop_id: wheat_pb
+        sow: 11-01
+      - crop_id: moong_pb
+        sow: 04-05
+    is_current: false
+    notes: Combines the maize swap and the summer moong addition
