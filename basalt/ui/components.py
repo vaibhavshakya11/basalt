@@ -1,3 +1,4 @@
+import re
 from functools import lru_cache
 from html import escape
 from io import BytesIO
@@ -6,6 +7,7 @@ from pathlib import Path
 import streamlit as st
 from PIL import Image, ImageDraw
 
+from basalt.config import SCOPE
 from basalt.knowledge.loader import read_yaml
 
 APP_COLOR = {
@@ -16,6 +18,7 @@ APP_COLOR = {
 ARROWS = {"better": "▲", "similar": "●", "worse": "▼"}
 
 STYLE = Path(__file__).with_name("style.css").read_text(encoding="utf-8")
+NUMBERS = re.compile(r"(?<!\w)([+-]?\d+(?:[.,]\d+)*)")
 
 
 @lru_cache(maxsize=1)
@@ -40,7 +43,13 @@ def favicon() -> Image.Image:
     return Image.open(output)
 
 
-def header() -> None:
+def text_with_numbers(value: str) -> str:
+    """Escape text and style the numbers it already contains."""
+    return "".join(f'<span class="b-number">{escape(part)}</span>' if index % 2 else escape(part)
+                   for index, part in enumerate(NUMBERS.split(value)))
+
+
+def header(site_name: str | None = None) -> None:
     """Render the basalt wordmark and theme."""
     logo = (
         '<svg viewBox="0 0 22 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5">'
@@ -48,7 +57,16 @@ def header() -> None:
     )
     st.markdown(f"<style>{STYLE}</style>", unsafe_allow_html=True)
     wordmark = f'<a class="b-brand" href="?">{logo}<span>{escape(labels()["brand"])}</span></a>'
-    st.markdown(f'<header class="b-masthead">{wordmark}</header>', unsafe_allow_html=True)
+    location = (f'<div class="b-location"><span class="b-location-name">{text_with_numbers(site_name)}</span>'
+                '<a href="?" class="b-change-location">Change location</a></div>') if site_name else ""
+    st.markdown(f'<header class="b-masthead">{wordmark}{location}</header>', unsafe_allow_html=True)
+
+
+def footer() -> None:
+    """Show the scope statement on every page."""
+    scope = SCOPE.replace("; global", ". The tool uses global")
+    st.markdown(f'<footer class="b-v2-footer"><p>{escape(scope)}</p>'
+                f'<p>{escape(labels()["local_advice"])}</p></footer>', unsafe_allow_html=True)
 
 
 def stage_navigation(**params: str | float) -> None:

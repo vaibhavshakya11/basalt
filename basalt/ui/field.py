@@ -3,43 +3,34 @@ from html import escape
 import streamlit as st
 
 from basalt.contracts import Constraints
-from basalt.ui.components import APP_COLOR, labels
+from basalt.ui.components import APP_COLOR, labels, text_with_numbers
 from basalt.ui.map import map_view
 from basalt.ui.strata import EVENTS, draw_strata, draw_strata_legend, farming_year_label
 
 FIELD_STYLE = """
 <style>
-.stApp .st-key-field-summary{padding:8px 0 20px}
-.stApp .b-field-facts{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px 24px;
- border-top:1px solid var(--fracture);margin:4px 0 0;padding:12px 0;min-width:0}
-.stApp .b-field-fact:first-child{grid-column:1/-1}
-.stApp .b-field-fact dt{color:var(--ash);font-size:13px;margin:0 0 2px}
-.stApp .b-field-fact dd{margin:0;font-size:16px;font-weight:600;line-height:1.3;overflow-wrap:anywhere}
-.stApp .b-field-fact:first-child dd{font-size:19px}
-.stApp .b-field-reading{padding:4px 0;border-inline-start:4px solid var(--iron);padding-inline-start:24px}
-.stApp .b-field-reading h2{font-weight:600;font-size:17px;margin:0;padding:0}
-.stApp .b-field-reading-value{display:block;color:var(--basalt);font-size:clamp(38px,5vw,66px);font-weight:650;
- font-variant-numeric:tabular-nums;line-height:1.12;margin:3px 0 10px}
-.stApp .b-field-reading-value span{font-size:.46em}
-.stApp .b-field-reading p,.stApp .b-field-strata-title p{margin:0;color:var(--ash);max-width:62ch}
-.stApp .st-key-field-chart{padding:24px;background:var(--plate);border:1px solid var(--fracture);border-radius:4px}
-.stApp .b-field-strata-title h2{font-size:24px;margin:0;padding:0 0 5px}
-.stApp .b-field-strata-title p{font-size:15px}
-.stApp .st-key-field-chart .b-strata-legend section{border:0}
+.stApp .st-key-field-chart{margin-top:16px}
+.stApp .st-key-field-chart .b-strata-legend section{border:0;display:flex;align-items:baseline;gap:8px}
+.stApp .st-key-field-chart .b-strata-legend h3{margin:0;white-space:nowrap}
 .stApp .st-key-field-chart [data-testid="stPlotlyChart"]{max-width:100%;overflow-x:clip}
-.stApp .st-key-field-notes{padding-top:20px}
-.stApp .st-key-field-notes h3{font-size:20px;margin:0;padding:0 0 6px}
-.stApp .b-field-pattern-list{list-style:none;margin:0;padding:0}
-.stApp .b-field-pattern-list li{border-top:1px solid var(--fracture);padding:10px 0;line-height:1.45}
-.stApp .b-field-pattern-list li:first-child{border-top:0;padding-top:0}
-.stApp .b-field-water-reading{margin:0 0 2px;font-size:17px;font-weight:600}
-.stApp .b-field-water-reading strong{font-family:'IBM Plex Mono',monospace;font-weight:400}
-@media(max-width:700px){
- .stApp .st-key-field-summary{padding:0 0 10px}
- .stApp .b-field-reading{padding-inline-start:14px}
- .stApp .st-key-field-chart{padding:14px 12px}
- .stApp .b-field-facts{grid-template-columns:1fr 1fr;gap:8px 12px}
- .stApp .b-field-strata-title h2{font-size:22px}
+.stApp .st-key-field-patterns,.stApp .st-key-field-assumptions{margin-top:40px}
+.stApp .b-field-pattern-list{margin:0;padding-inline-start:28px;max-width:70ch}
+.stApp .b-field-pattern-list li{margin:0 0 8px;padding-inline-start:6px}
+.stApp .b-field-pattern-list li::marker{font-family:'IBM Plex Mono',monospace;color:var(--ash)}
+.stApp .b-field-facts{display:grid;grid-template-columns:minmax(104px,1fr) minmax(0,1.55fr);gap:0 16px;margin:0 0 16px}
+.stApp .b-field-fact{display:contents}
+.stApp .b-field-fact dt{color:var(--ash);margin:0;align-self:center}
+.stApp .b-field-fact dd{display:flex;align-items:center;gap:12px;margin:0;overflow-wrap:anywhere}
+.stApp .b-field-fact a{display:inline-flex;align-items:center;min-height:40px;font-size:var(--type-xs)}
+.stApp .b-field-calendar h3{font-size:var(--type-sm)}
+.stApp .b-field-calendar p{margin:0;max-width:58ch}
+.stApp .st-key-field-editor details{border:0;background:transparent}
+.stApp .st-key-field-editor details summary{padding-inline:0;min-height:40px;color:var(--iron);font-weight:600}
+.stApp .st-key-field-editor details summary p{color:inherit}
+.stApp .b-field-water-reading{margin:0 0 4px;font-weight:600}
+.stApp .st-key-field-cta{margin-top:24px}
+@media(max-width:767px){
+ .stApp .st-key-field-patterns,.stApp .st-key-field-assumptions{margin-top:24px}
  .st-key-field-chart g.xtick:nth-child(even){display:none}
 }
 </style>
@@ -60,7 +51,9 @@ def _field_facts(setup: dict) -> None:
         (ui["field_water_mode"], ui["field_modes"][mode]),
     )
     markup = "".join(
-        f'<div class="b-field-fact"><dt>{escape(label)}</dt><dd>{escape(value)}</dd></div>'
+        f'<div class="b-field-fact"><dt>{escape(label)}</dt><dd><span>{escape(value)}</span>'
+        f'<a href="#edit-field-settings" class="b-text-link" aria-label="Edit {escape(label.lower())}" data-field-edit>Edit</a>'
+        '</dd></div>'
         for label, value in facts
     )
     st.markdown(f'<dl class="b-field-facts">{markup}</dl>', unsafe_allow_html=True)
@@ -145,26 +138,27 @@ def _regional_water(story: dict, key: str) -> None:
             direction = ui["storage_drier"] if slope < 0 else ui["storage_wetter"]
             magnitude = f"{abs(slope):.2f}"
             sentence = ui["field_storage_statement"].format(direction=direction.lower(), rate=magnitude)
-            reading = escape(sentence).replace(magnitude, f"<strong>{magnitude}</strong>", 1)
+            reading = text_with_numbers(sentence)
             st.markdown(f'<p class="b-field-water-reading" style="color:{tone}">{reading}</p>', unsafe_allow_html=True)
         if period:
-            st.caption(period)
+            st.markdown(f'<p class="b-field-context">{text_with_numbers(period)}</p>', unsafe_allow_html=True)
     map_view(place["lat"], place["lon"], fixed=True, key=f"storage-{key}", trend=slope)
     if slope is not None:
         source = ". ".join(piece for piece in (grace.get("dataset"), grace.get("note")) if piece)
         st.caption(source or ui["storage_caption"])
 
 
-def _cover_summary(bundle: dict) -> None:
+def _field_answer(bundle: dict) -> None:
     ui = labels()
     current = next(row for row in bundle["evidence"] if row["is_current"])
-    bare = f'{current["metrics"]["bare_days"]["median"]:g}'
-    st.markdown(
-        f'<div class="b-field-reading"><h2>{escape(ui["field_cover_title"])}</h2>'
-        f'<strong class="b-field-reading-value">{escape(bare)} <span>{escape(ui["field_cover_days"])}</span></strong>'
-        f'<p>{escape(ui["field_cover_period"].format(seasons=current["n_seasons"]))}</p></div>',
-        unsafe_allow_html=True,
-    )
+    story = bundle["field_story"]
+    soil_class = bundle["setup"]["soil_class"]
+    soil = _soil_name(soil_class).lower() if soil_class else "unspecified"
+    description = f'{current["name"]} grows on {soil} soil in this replay.'
+    patterns = [_pattern_sentence(pattern, ui) for pattern in story.get("patterns", ())
+                if pattern["id"] in {"bare", "vulnerable"}]
+    st.markdown(f'<p class="b-v2-answer">{text_with_numbers(" ".join([description, *patterns]))}</p>',
+                unsafe_allow_html=True)
 
 
 def _focus_chart(strata: dict, key: str) -> tuple[dict, tuple[str, ...]]:
@@ -173,13 +167,12 @@ def _focus_chart(strata: dict, key: str) -> tuple[dict, tuple[str, ...]]:
     recent = 8
     years = {"all": ui["chart_years_all"]}
     if len(rows) > recent:
-        years = {"recent": ui["chart_years_recent"].format(n=recent), **years}
+        years["recent"] = ui["chart_years_recent"].format(n=recent)
     for row in reversed(rows):
         years[str(row["season"])] = farming_year_label(row["season"], strata["season_year_start"])
     markers = {"all": ui["chart_events_all"], "none": ui["chart_events_none"], **ui["events"]}
     periods_key, markers_key = f"chart-season-{key}", f"chart-events-{key}"
-    default_period = next(iter(years))
-    focused = (st.session_state.get(periods_key, default_period) != default_period
+    focused = (st.session_state.get(periods_key, "all") != "all"
                or st.session_state.get(markers_key, "all") != "all")
     with st.expander(ui["chart_filter"], expanded=focused):
         seasons_col, markers_col = st.columns(2)
@@ -199,6 +192,8 @@ def _pattern_sentence(pattern: dict, ui: dict) -> str:
     message = pattern["text"]
     if pattern["id"] == "bare" and message.startswith("Bare for "):
         return ui["field_bare_phrase"].format(period=message.removeprefix("Bare for "))
+    if pattern["id"] == "water_storage":
+        return message.replace("(~300 km)", "(regional, about 300 km)")
     return message
 
 
@@ -209,36 +204,42 @@ def field_view(
     ui = labels()
     story = bundle["field_story"]
     st.markdown(FIELD_STYLE, unsafe_allow_html=True)
-    with st.container(key="field-summary"):
-        reading, settings = st.columns([.57, .43], gap="large")
-        with reading:
-            _cover_summary(bundle)
-        with settings:
-            _field_facts(bundle["setup"])
-            updated = field_inputs(bundle, key=key, editor_open=editor_open)
+    _field_answer(bundle)
     history = bundle["strata"][story["current_rotation_id"]]
     with st.container(key="field-chart"):
-        st.markdown(f'<div class="b-field-strata-title"><h2>{escape(ui["strata"])}</h2>'
-                    f'<p>{escape(ui["chart_reading"])}</p></div>', unsafe_allow_html=True)
+        st.markdown(f'## {ui["strata"]}')
+        st.caption(ui["chart_reading"])
         graph = st.container()
         strata, events = _focus_chart(history, key)
         with graph:
-            st.caption(ui["chart_visible_rows"].format(shown=len(strata["rows"]), total=len(history["rows"])))
+            if len(strata["rows"]) != len(history["rows"]):
+                count = ui["chart_visible_rows"].format(shown=len(strata["rows"]), total=len(history["rows"]))
+                st.markdown(f'<p class="b-field-context">{text_with_numbers(count)}</p>', unsafe_allow_html=True)
             draw_strata(strata, key=f"current-strata-{key}", show_legend=False, events=events)
             draw_strata_legend([strata], events=events)
-    with st.container(key="field-notes"):
-        patterns = [pattern for pattern in story.get("patterns", ()) if pattern["id"] != "water_storage"]
-        if patterns:
+    patterns = sorted(story.get("patterns", ()), key=lambda pattern: pattern["id"] == "water_storage")
+    if patterns:
+        with st.container(key="field-patterns"):
             st.subheader(ui["patterns"])
-            points = "".join(f'<li>{escape(_pattern_sentence(pattern, ui))}</li>' for pattern in patterns)
-            st.markdown(f'<ul class="b-field-pattern-list">{points}</ul>', unsafe_allow_html=True)
-        with st.expander(ui["field_sources"]):
-            notes, region = st.columns([.45, .55], gap="large")
-            with notes:
-                st.subheader(ui["calendar"])
-                st.write(ui["calendar_source"][story["calendar_source"]])
-                if story["ndvi_seasons_detected"]:
-                    st.caption(ui["ndvi_detected"].format(n=story["ndvi_seasons_detected"]))
-            with region:
-                _regional_water(story, key)
+            points = "".join(f'<li>{text_with_numbers(_pattern_sentence(pattern, ui))}</li>' for pattern in patterns)
+            st.markdown(f'<ol class="b-field-pattern-list">{points}</ol>', unsafe_allow_html=True)
+    with st.container(key="field-assumptions"):
+        notes, region = st.columns([.5, .5], gap="large")
+        with notes:
+            st.subheader("What we assumed about your field")
+            _field_facts(bundle["setup"])
+            source = ui["calendar_source"][story["calendar_source"]]
+            st.markdown(f'<div class="b-field-calendar"><h3>{escape(ui["calendar"])}</h3>'
+                        f'<p>{escape(source)}</p></div>', unsafe_allow_html=True)
+            if story["ndvi_seasons_detected"]:
+                detection = ui["ndvi_detected"].format(n=story["ndvi_seasons_detected"])
+                st.markdown(f'<p class="b-field-context">{text_with_numbers(detection)}</p>', unsafe_allow_html=True)
+            with st.container(key="field-editor"):
+                st.markdown('<span id="edit-field-settings"></span>', unsafe_allow_html=True)
+                updated = field_inputs(bundle, key=key, editor_open=editor_open)
+        with region:
+            _regional_water(story, key)
+    with st.container(key="field-cta"):
+        st.markdown('<a class="b-primary-link" href="#your-options" data-options-step>See your options →</a>',
+                    unsafe_allow_html=True)
     return updated

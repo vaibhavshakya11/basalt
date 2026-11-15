@@ -6,13 +6,14 @@ import streamlit as st
 from streamlit.components.v1 import html as component_html
 
 from basalt.climate.power import PowerError
+from basalt.config import DEMO_COORDS
 from basalt.contracts import Scenario
 from basalt.routes import ROUTE_FIELDS, Route, parse_route
 from basalt.soil.soilgrids import SoilGridsUnavailable
-from basalt.ui.components import apply_navigation, favicon, goto, header, labels, stage_navigation
+from basalt.ui.components import apply_navigation, favicon, footer, goto, header, labels, text_with_numbers
 from basalt.ui.field import field_view
 from basalt.ui.howsure import how_sure
-from basalt.ui.landing import landing
+from basalt.ui import landing as landing_page
 from basalt.ui.options import options_view
 from basalt.ui.slides import slides_view
 
@@ -20,18 +21,18 @@ LOGGER = getLogger(__name__)
 FIELDS_KEPT = 4
 WORKSPACE_STYLE = """
 <style>
-.stApp .st-key-field-workspace{padding-top:22px}
-.stApp .st-key-field-workspace h1{font-size:clamp(26px,3.2vw,42px)}
-.stApp .st-key-location-actions [data-testid="stButton"]{display:flex;justify-content:flex-end}
-.stApp .st-key-location-actions button{min-height:42px}
-.stApp .st-key-field-workspace [role="tablist"]{gap:12px}
-.stApp .st-key-field-workspace button[role="tab"]{min-height:44px;padding-inline:12px;border-radius:4px 4px 0 0}
-.stApp .st-key-field-workspace button[role="tab"][aria-selected="true"]{background:#f4e8e2;font-weight:650}
-@media(max-width:640px){
- .stApp .st-key-field-workspace{padding-top:12px}
- .stApp .st-key-location-actions [data-testid="stButton"]{justify-content:flex-start}
- .stApp .st-key-field-workspace [role="tablist"]{gap:3px}
- .stApp .st-key-field-workspace button[role="tab"]{padding-inline:7px}
+.stApp .st-key-field-workspace{padding-top:16px}
+.stApp .st-key-field-workspace [role="tablist"]{gap:24px;counter-reset:workspace-step}
+.stApp .st-key-field-workspace button[role="tab"]{min-height:44px;padding-inline:0;gap:6px;font-weight:500}
+.stApp .st-key-field-workspace button[role="tab"]::before{
+ counter-increment:workspace-step;content:counter(workspace-step) / "";
+ font:400 var(--type-xs)/1.4 'IBM Plex Mono',monospace;color:var(--ash);
+}
+.stApp .st-key-field-workspace button[role="tab"][aria-selected="true"]{font-weight:650;color:var(--iron)}
+.stApp .b-field-context{color:var(--ash);font-size:var(--type-xs);margin:0}
+@media(max-width:767px){
+ .stApp .st-key-field-workspace [role="tablist"]{gap:12px}
+ .stApp .st-key-field-workspace button[role="tab"]{font-size:14px;gap:4px}
 }
 </style>
 """
@@ -61,6 +62,26 @@ for (const host of scopes) {
   }
   host.addEventListener("popstate", () => {
     if (route() !== previousRoute) host.location.reload();
+  });
+  host.document.addEventListener("click", event => {
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    if (event.target.closest?.("[data-options-step]")) {
+      const tabs = host.document.querySelectorAll('.st-key-field-workspace [role="tablist"] [role="tab"]');
+      const options = tabs[1];
+      if (!options) return;
+      event.preventDefault();
+      options.click();
+      options.focus();
+      options.scrollIntoView({block: "start", inline: "nearest"});
+    } else if (event.target.closest?.("[data-field-edit]")) {
+      const editor = host.document.querySelector('.st-key-field-editor details');
+      const summary = editor?.querySelector('summary');
+      if (!summary) return;
+      event.preventDefault();
+      if (!editor.open) summary.click();
+      summary.focus();
+      summary.scrollIntoView({block: "nearest", inline: "nearest"});
+    }
   });
 }
 </script>
@@ -136,14 +157,11 @@ def _render_tabs(bundle: dict, key: str, field: dict) -> None:
     current = next(option for option in bundle["evidence"] if option["is_current"])
     st.markdown(WORKSPACE_STYLE, unsafe_allow_html=True)
     with st.container(key="field-workspace"):
-        heading, navigate = st.columns([.74, .26], vertical_alignment="center")
-        heading.title(story["site"]["name"])
-        with navigate:
-            with st.container(key="location-actions"):
-                st.button(ui["try_other_site"], key="field-home", on_click=stage_navigation)
+        st.title(story["site"]["name"])
         start, end = current["season_range"]
         source = ui["field_pin_label"] if story["site"]["site_id"] == "custom" else ui["field_demo_label"]
-        st.caption(ui["field_context"].format(details=source, start=start, end=end))
+        context = ui["field_context"].format(details=source, start=start, end=end)
+        st.markdown(f'<p class="b-field-context">{text_with_numbers(context)}</p>', unsafe_allow_html=True)
         field_tab, options_tab, confidence_tab = st.tabs([ui["tab_field"], ui["tab_options"], ui["tab_sure"]])
         notice = field.get("notice")
         with field_tab:
@@ -158,8 +176,6 @@ def _render_tabs(bundle: dict, key: str, field: dict) -> None:
             options_view(bundle, key=key, on_scenario=lambda scenario: _stage_scenario(key, scenario))
         with confidence_tab:
             how_sure(bundle)
-        st.divider()
-        st.caption(ui["local_advice"])
         if updated is not None:
             soil, irrigated, crops, constraints = updated
             field["pending"] = {"soil_class": soil, "irrigated": irrigated, "crop_ids": crops, "constraints": constraints}
@@ -239,7 +255,7 @@ def _landing(error: str | None = None) -> None:
         preview = _load_demo("ludhiana")
     except FileNotFoundError:
         preview = None
-    landing(preview)
+    landing_page.landing(preview)
 
 
 def run() -> None:
@@ -249,9 +265,21 @@ def run() -> None:
     with st.container(key="browser-history"):
         st.markdown("<style>.st-key-browser-history{display:none}</style>", unsafe_allow_html=True)
         component_html(HISTORY_HANDLER, width=0, height=0, tab_index=-1)
-    header()
     query = st.query_params
-    route = parse_route({name: query.get_all(name) for name in ROUTE_FIELDS if name in query})
+    parameters = {name: query.get_all(name) for name in ROUTE_FIELDS if name in query}
+    if parameters == {"view": ["demo-fields"]}:
+        header()
+        landing_page.directory_page()
+        footer()
+        return
+    route = parse_route(parameters)
+    site_name = None
+    if route.site is not None:
+        site_name = DEMO_COORDS[route.site][0]
+    elif route.coordinates is not None:
+        lat, lon = route.coordinates
+        site_name = f"{lat:.4f}, {lon:.4f}"
+    header(site_name)
     st.session_state["active_field"] = route.key
     if route.kind == "slides":
         try:
@@ -271,6 +299,7 @@ def run() -> None:
         _show_field(route, lambda scenario, **setup: _analyze(*route.coordinates, scenario, **setup))
     else:
         _landing(route.error)
+    footer()
 
 
 if __name__ == "__main__":
