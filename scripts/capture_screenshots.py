@@ -250,7 +250,7 @@ def capture(base: str, destination: Path, executable: str | None = None) -> dict
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Capture Basalt's real demo screens with headless Chromium.")
+    parser = argparse.ArgumentParser(description="Capture basalt's real demo screens with headless Chromium.")
     parser.add_argument("--base-url")
     parser.add_argument("--destination", type=Path, default=ROOT / "review" / "screenshots")
     parser.add_argument("--chromium-executable")

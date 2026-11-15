@@ -165,7 +165,7 @@ glossary:
   growing_degree_days: "A count of warmth a crop needs to grow; warmer days add more."
   season: "One farming year at this place, starting {season_year_start}."
 ui:
-  brand: Basalt
+  brand: basalt
   page_title: A stress test for crop rotations
   page_intro: Before you change your rotation, see how each option would have done in each of the last 24 seasons on your field.
   demo_india: Try Ludhiana, India
@@ -186,12 +186,12 @@ ui:
   longitude: Longitude
   data_caption: Built on NASA POWER, MODIS, SMAP, GRACE-FO and FIRMS, with GGCMI crop calendars and SoilGrids soil data.
   hero_caption: Ludhiana, 2001 to 2024. Each row is one season. Sand colour is bare soil.
-  local_advice: Basalt supports, and does not replace, local agricultural advice.
+  local_advice: basalt supports, and does not replace, local agricultural advice.
   try_other_site: Choose another location
   replaying: Replaying crop rotations
   demo_unavailable: This demo has no verified replay on disk.
   pick_soil: Choose a soil type to continue.
-  fetch_error: Basalt could not load the field data.
+  fetch_error: basalt could not load the field data.
   invalid_location: Choose a latitude from −90 to 90 and a longitude from −180 to 180.
   tab_field: Your field
   tab_options: Your options
@@ -258,7 +258,7 @@ ui:
   assumptions: What this tool assumes
   no_assumptions: See the crop dates and local checks for each option.
   satellites_heading: Satellites vs ground measurements
-  satellites_text: Satellites see large areas often but indirectly; ground sensors are exact but only at one spot. Basalt uses satellites and NASA weather to describe your area, and asks you to confirm what you know about your own field.
+  satellites_text: Satellites see large areas often but indirectly; ground sensors are exact but only at one spot. basalt uses satellites and NASA weather to describe your area, and asks you to confirm what you know about your own field.
   datasets_heading: How the data fit together
   datasets_text: "Every dataset is aligned to your field's location and a daily timeline: NASA POWER weather (~50 km, daily), MODIS greenness (250 m, every 16 days), MODIS water use (500 m, 8-day), SMAP soil moisture (9 km), GRACE-FO water storage (~300 km, monthly), crop calendars (GGCMI, 0.5°), soil texture (SoilGrids, 250 m)."
   limitations: Limits of the comparison
@@ -305,7 +305,7 @@ ui:
   phase_summary: The chart uses one starting crop. The comparison averages both starting crops.
   phase_other: See the other starting crop
   chart_shading: Lighter crop colours show establishment and early growth.
-  slides_method: How Basalt compares rotations
+  slides_method: How basalt compares rotations
   slides_checks: Checking the replay
   slides_demos: Open the field replay
   slide_comparison_columns: [Rotation, Soil, Water, Weather risk]

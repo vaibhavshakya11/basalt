@@ -100,7 +100,7 @@ def favicon() -> Image.Image:
 
 
 def header() -> None:
-    """Render the Basalt wordmark and theme."""
+    """Render the basalt wordmark and theme."""
     logo = (
         '<svg viewBox="0 0 22 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5">'
         '<path d="M11 1.1 19.7 5.6v8.8L11 18.9l-8.7-4.5V5.6Z"/></svg>'

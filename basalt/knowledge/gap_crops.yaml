@@ -21,7 +21,7 @@ gap_crops:
     tbase_c: 10
     gdd_req: 1100
     min_window_days: 60
-    sources: ['Basalt specification, section 7.5 (low-confidence screening parameters)', assumption]
+    sources: ['basalt specification, section 7.5 (low-confidence screening parameters)', assumption]
     confidence: {default: L, zr_min_m: L, height_m: L, frost_tmin_c: L}
     ranges: {tcrit_heat_c: [39, 41], sowing_days: [-14, 14], zr_max_m: [0.525, 0.875]}
   cowpea:
@@ -46,7 +46,7 @@ gap_crops:
     tbase_c: 10
     gdd_req: 1300
     min_window_days: 70
-    sources: ['Basalt specification, section 7.5 (low-confidence screening parameters)', assumption]
+    sources: ['basalt specification, section 7.5 (low-confidence screening parameters)', assumption]
     confidence: {default: L, zr_min_m: L, height_m: L, frost_tmin_c: L}
     ranges: {tcrit_heat_c: [37, 39], sowing_days: [-14, 14], zr_max_m: [0.6, 1.0]}
   sunn_hemp:
@@ -71,7 +71,7 @@ gap_crops:
     tbase_c: 10
     gdd_req: 900
     min_window_days: 50
-    sources: ['Basalt specification, section 7.5 (low-confidence screening parameters)', assumption]
+    sources: ['basalt specification, section 7.5 (low-confidence screening parameters)', assumption]
     confidence: {default: L, zr_min_m: L, height_m: L, frost_tmin_c: L}
     ranges: {tcrit_heat_c: [39, 41], sowing_days: [-14, 14], zr_max_m: [0.75, 1.25]}
   hairy_vetch:
@@ -96,7 +96,7 @@ gap_crops:
     tbase_c: 4
     gdd_req: 900
     min_window_days: 75
-    sources: ['Basalt specification, section 7.5 (low-confidence screening parameters)', assumption]
+    sources: ['basalt specification, section 7.5 (low-confidence screening parameters)', assumption]
     confidence: {default: L, zr_min_m: L, height_m: L}
     ranges: {tcrit_heat_c: [31, 33], sowing_days: [-14, 14], zr_max_m: [0.6, 1.0]}
   cereal_rye:
@@ -121,7 +121,7 @@ gap_crops:
     tbase_c: 0
     gdd_req: 700
     min_window_days: 60
-    sources: ['Basalt specification, section 7.5 (low-confidence screening parameters)', assumption]
+    sources: ['basalt specification, section 7.5 (low-confidence screening parameters)', assumption]
     confidence: {default: L, zr_min_m: L, height_m: L}
     ranges: {tcrit_heat_c: [31, 33], sowing_days: [-14, 14], zr_max_m: [0.75, 1.25]}
 

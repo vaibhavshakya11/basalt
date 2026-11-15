@@ -83,7 +83,7 @@ def load_crops() -> dict[str, Crop]:
 
 
 def load_ggcmi_codes() -> dict[str, str]:
-    """Map the calendar file crop codes to Basalt crop IDs."""
+    """Map the calendar file crop codes to basalt crop IDs."""
     return validated(read_yaml("crops.yaml")["ggcmi_codes"], dict[str, str])
 
 

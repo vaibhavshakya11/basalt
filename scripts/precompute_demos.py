@@ -50,7 +50,7 @@ def fetch_modis(site_id: str) -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Write both network-free Basalt demos and the results summary")
+    parser = argparse.ArgumentParser(description="Write both network-free basalt demos and the results summary")
     parser.add_argument("--fetch-power", action="store_true", help="Update the checked NASA POWER weather input")
     parser.add_argument("--fetch-modis", action="store_true", help="Update the ORNL greenness and water-use composites")
     opts = parser.parse_args()

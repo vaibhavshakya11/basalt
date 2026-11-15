@@ -31,7 +31,7 @@ def _payload() -> dict:
     ]
     return {
         "task_type": "point",
-        "task_name": "Basalt Malawi SMAP root zone",
+        "task_name": "basalt Malawi SMAP root zone",
         "params": {
             "dates": [{"startDate": "04-01-2015", "endDate": "12-31-2024"}],
             "layers": [{"product": PRODUCT, "layer": LAYER}],

@@ -104,7 +104,7 @@ def _show_field(key: str, load: Callable[..., dict]) -> None:
 
 def run() -> None:
     """Route public field pins and precomputed offline demo views."""
-    st.set_page_config(page_title="Basalt", page_icon=favicon(), layout="wide", initial_sidebar_state="collapsed")
+    st.set_page_config(page_title="basalt", page_icon=favicon(), layout="wide", initial_sidebar_state="collapsed")
     apply_navigation()
     header()
     query = st.query_params

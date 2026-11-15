@@ -44,7 +44,7 @@ METRICS = {
 
 @lru_cache(maxsize=1)
 def copy_templates() -> dict:
-    """Read Basalt's fixed copy templates."""
+    """Read basalt's fixed copy templates."""
     return read_yaml("copy.yaml")
 
 

@@ -1,4 +1,4 @@
-# Basalt: a stress test for crop rotations
+# basalt: a stress test for crop rotations
 
 Explore how your current rotation and up to three alternatives would have done through 24 seasons of NASA weather.
 
@@ -73,4 +73,4 @@ GPT (OpenAI) wrote the code from a specification drafted with Claude (Anthropic)
 
 ## License
 
-Basalt code is [MIT licensed](LICENSE). Source data and the packaged Plex fonts retain their original licenses.
+basalt code is [MIT licensed](LICENSE). Source data and the packaged Plex fonts retain their original licenses.

@@ -94,7 +94,7 @@ def _report(summary, bundles, browser, pytest, deployed, commit) -> str:
                {("malawi", "V2"), ("malawi", "V5"), ("malawi", "V6"), ("ludhiana", "V7")}]
     tests = " ".join(pytest.strip().splitlines()[-1:]) or "Pytest output is empty."
     roots = ", ".join(a.value for a in load_assumptions() if a.parameter == "initial_root_depth")
-    return f"""# Basalt review
+    return f"""# basalt review
 
 1. [Repository]({REPO_URL}) · {f'[Public app]({deployed})' if deployed else 'Public deployment pending'} · `{commit}`
 2. M0–M3 implemented. M4 {'verified in a signed-out browser' if deployed else 'verified locally, public deployment pending'}. M5 {'complete' if not missing else 'partial (' + ', '.join(missing) + ' pending or infeasible)'}.

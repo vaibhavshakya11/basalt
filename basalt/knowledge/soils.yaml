@@ -5,49 +5,49 @@ soils:
     hydrologic_group: A
     rice_percolation: 15
     confidence: M
-    source: FAO-56 Table 19, USDA TR-55 and Basalt specification section 7.7
+    source: FAO-56 Table 19, USDA TR-55 and basalt specification section 7.7
   loamy_sand:
     theta_fc: 0.15
     theta_wp: 0.065
     hydrologic_group: A
     rice_percolation: 10
     confidence: M
-    source: FAO-56 Table 19, USDA TR-55 and Basalt specification section 7.7
+    source: FAO-56 Table 19, USDA TR-55 and basalt specification section 7.7
   sandy_loam:
     theta_fc: 0.23
     theta_wp: 0.11
     hydrologic_group: B
     rice_percolation: 8
     confidence: M
-    source: FAO-56 Table 19, USDA TR-55 and Basalt specification section 7.7
+    source: FAO-56 Table 19, USDA TR-55 and basalt specification section 7.7
   loam:
     theta_fc: 0.25
     theta_wp: 0.12
     hydrologic_group: B
     rice_percolation: 5
     confidence: M
-    source: FAO-56 Table 19, USDA TR-55 and Basalt specification section 7.7
+    source: FAO-56 Table 19, USDA TR-55 and basalt specification section 7.7
   silt_loam:
     theta_fc: 0.29
     theta_wp: 0.15
     hydrologic_group: B
     rice_percolation: 4
     confidence: M
-    source: FAO-56 Table 19, USDA TR-55 and Basalt specification section 7.7
+    source: FAO-56 Table 19, USDA TR-55 and basalt specification section 7.7
   clay_loam:
     theta_fc: 0.32
     theta_wp: 0.18
     hydrologic_group: C
     rice_percolation: 3
     confidence: M
-    source: FAO-56 Table 19, USDA TR-55 and Basalt specification section 7.7
+    source: FAO-56 Table 19, USDA TR-55 and basalt specification section 7.7
   clay:
     theta_fc: 0.36
     theta_wp: 0.22
     hydrologic_group: D
     rice_percolation: 2
     confidence: M
-    source: FAO-56 Table 19, USDA TR-55 and Basalt specification section 7.7
+    source: FAO-56 Table 19, USDA TR-55 and basalt specification section 7.7
 
 assumptions:
   - scope: all fields
