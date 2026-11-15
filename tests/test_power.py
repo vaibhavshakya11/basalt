@@ -41,7 +41,7 @@ def test_short_gap_fills_and_long_radiation_gap_uses_hargreaves(payload):
 def test_unexpected_source_units_and_unsafe_gap_raise(payload):
     wrong_unit = deepcopy(payload)
     wrong_unit["parameters"]["ALLSKY_SFC_SW_DWN"]["units"] = "kW-hr/m^2/day"
-    with pytest.raises(PowerError, match="expected"):
+    with pytest.raises(PowerError, match="Expected"):
         parse_power(wrong_unit)
     for day in ("20200602", "20200603", "20200604", "20200605"):
         payload["properties"]["parameter"]["PRECTOTCORR"][day] = -999
