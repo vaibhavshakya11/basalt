@@ -56,34 +56,41 @@
 .stApp .st-key-landing-demos button{min-height:48px;padding:8px 12px;font-weight:600}
 .stApp .st-key-landing-demos button[kind="secondary"]:hover{background:var(--paper);border-color:var(--iron)}
 .stApp .st-key-landing-location details{border:0;border-top:1px solid var(--fracture);border-radius:0}
-.stApp .st-key-landing-location details summary{min-height:44px;padding:8px 0;color:var(--iron);font-weight:600}
+.stApp .st-key-landing-location details summary{min-height:44px;padding:8px 0;color:var(--basalt);font-weight:600}
 .stApp .st-key-landing-location details summary p{color:inherit}
 .stApp .st-key-landing-location details[open]{border-bottom:1px solid var(--fracture)}
 .stApp .st-key-landing-preview{padding:20px;border:1px solid var(--fracture);border-radius:4px;background:var(--plate)}
 .stApp .st-key-landing-preview [data-testid="stVerticalBlock"]{row-gap:12px}
-.b-preview-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;padding-bottom:12px;border-bottom:1px solid var(--fracture)}
+.b-preview-heading{padding-bottom:12px;border-bottom:1px solid var(--fracture)}
 .stApp .b-preview-heading h2{margin:0;padding:0;font-size:20px}
 .stApp .b-preview-heading p{margin:2px 0 0;color:var(--ash);font-size:14px}
-.b-preview-period{white-space:nowrap;color:var(--ash);font:12px/1.6 'IBM Plex Mono',monospace}
-.stApp .st-key-landing-preview .b-chart-legend{margin-top:0}
+.stApp .st-key-landing-preview [data-testid="stCaptionContainer"]{margin-top:4px}
+.stApp .st-key-landing-preview .b-chart-legend.b-strata-legend{
+ display:grid;grid-template-columns:minmax(0,.75fr) minmax(0,1fr);gap:8px 16px;
+ margin:0;border-top:1px solid var(--fracture);padding:12px 0 8px}
+.stApp .st-key-landing-preview .b-strata-legend section{width:auto;border:0;padding:0}
+.stApp .st-key-landing-preview .b-strata-legend section + section{
+ border-inline-start:1px solid var(--fracture);padding-inline-start:16px}
+.stApp .st-key-landing-preview .b-strata-legend-hint{grid-column:1/-1}
 .stApp .st-key-landing-demos [data-testid="stVerticalBlock"]{row-gap:6px}
 .stApp a.b-demo-jump{display:inline-flex;align-items:center;min-height:32px;font-weight:600;color:var(--iron);text-underline-offset:4px}
 .stApp a.b-demo-jump:hover{color:var(--basalt)}
-.stApp .st-key-landing-directory{margin-top:16px;padding-top:20px;border-top:1px solid var(--fracture)}
+.stApp .st-key-landing-directory{margin-top:24px;padding-top:28px;border-top:1px solid var(--fracture)}
 .stApp .st-key-landing-directory [data-testid="stVerticalBlock"]{row-gap:10px}
 .stApp .st-key-landing-directory h2{margin:0;padding:0;font-size:26px;line-height:1.2;scroll-margin-top:24px}
-.stApp .b-demo-intro{color:var(--ash);margin:0;max-width:66ch;font-size:16px}
+.stApp .b-demo-intro{color:var(--ash);margin:0;max-width:66ch;font-size:15px}
+.stApp .st-key-landing-city-list{margin-top:8px}
 .stApp .st-key-landing-city-list [data-testid="stHorizontalBlock"]{
- display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px 24px}
+ display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px 40px}
 .stApp .st-key-landing-city-list [data-testid="stColumn"]{
- width:auto;min-width:0;border-top:1px solid var(--fracture);padding-block:8px 12px}
+ width:auto;min-width:0;border-top:1px solid var(--fracture);padding-block:12px 18px}
 .stApp .st-key-landing-city-list [data-testid="stVerticalBlock"]{row-gap:2px}
 .stApp .st-key-landing-city-list button[kind="secondary"]{
- min-height:40px;padding:0;border:0;background:transparent;color:var(--iron);justify-content:flex-start;text-align:left}
+ min-height:38px;padding:0;border:0;background:transparent;color:var(--basalt);justify-content:flex-start;text-align:left}
 .stApp .st-key-landing-city-list button[kind="secondary"] p{
  font-size:18px;font-weight:600;text-decoration:underline;text-decoration-color:#A4472A80;text-underline-offset:4px}
-.stApp .st-key-landing-city-list button[kind="secondary"]:hover p{text-decoration-color:var(--iron)}
-.stApp .b-city-summary{color:var(--ash);font-size:14px;line-height:1.45;margin:0}
+.stApp .st-key-landing-city-list button[kind="secondary"]:hover p{color:var(--iron);text-decoration-color:var(--iron)}
+.stApp .b-city-summary{color:var(--ash);font-size:14px;line-height:1.55;margin:0;max-width:43ch}
 .stApp .st-key-landing-support{margin-top:20px;padding-top:20px;border-top:1px solid var(--fracture)}
 .stApp .st-key-landing-support [data-testid="stVerticalBlock"]{row-gap:8px}
 .stApp .st-key-landing-method details{background:var(--plate);border-radius:4px}
@@ -92,7 +99,7 @@
  .stApp .st-key-landing-grid [data-testid="stHorizontalBlock"]{gap:24px}
  .stApp .st-key-landing-demos [data-testid="stHorizontalBlock"]{gap:8px}
  .stApp .st-key-landing-lead{padding-top:8px}
- .stApp .st-key-landing-city-list [data-testid="stHorizontalBlock"]{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 16px}
+ .stApp .st-key-landing-city-list [data-testid="stHorizontalBlock"]{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 24px}
 }
 @media(max-width:700px){
  .b-masthead{min-height:52px;padding:0 12px}
@@ -106,13 +113,18 @@
  .stApp .st-key-landing-demos [data-testid="stHorizontalBlock"]{display:grid;grid-template-columns:1fr 1fr}
  .stApp .st-key-landing-demos [data-testid="stHorizontalBlock"] > [data-testid="stColumn"]{width:100%;min-width:0}
  .stApp .st-key-landing-demos button p{font-size:14px}
- .stApp .st-key-landing-directory{margin-top:8px;padding-top:16px}
+ .stApp .st-key-landing-directory{margin-top:16px;padding-top:20px}
  .stApp .st-key-landing-directory h2{font-size:23px}
  .stApp .b-demo-intro{font-size:15px}
  .stApp .st-key-landing-city-list button[kind="secondary"] p{font-size:16px}
  .stApp .st-key-landing-preview{padding:12px}
  .stApp .b-hero h1{max-width:13ch;margin-bottom:12px}
  .stApp .b-hero p{font-size:16px}
+}
+@media(max-width:560px){
+ .stApp .st-key-landing-city-list [data-testid="stHorizontalBlock"]{grid-template-columns:minmax(0,1fr);gap:0}
+ .stApp .st-key-landing-preview .b-chart-legend.b-strata-legend{grid-template-columns:minmax(0,1fr);row-gap:10px}
+ .stApp .st-key-landing-preview .b-strata-legend section + section{border:0;padding:0}
 }
 @media print{
  [data-testid="stAppViewContainer"],[data-testid="stMain"],:is([data-testid="stAppViewBlockContainer"],[data-testid="stMainBlockContainer"],.block-container){overflow:visible;height:auto;max-height:none}

@@ -5,9 +5,10 @@ import streamlit as st
 from basalt.config import DEMO_PROFILES, SCOPE, SLIDES_URL
 from basalt.ui.components import goto, how_it_works, labels, stage_navigation
 from basalt.ui.map import map_view
-from basalt.ui.strata import draw_strata_legend, strata_figure
+from basalt.ui.strata import EVENTS, draw_strata_legend, strata_figure
 
 LEAD_DEMOS = ("ludhiana", "malawi")
+PREVIEW_YEARS = 8
 
 
 def _location_picker() -> None:
@@ -84,20 +85,22 @@ def _preview(bundle: dict | None) -> None:
         story = bundle["field_story"]
         current = story["current_rotation_id"]
         site = escape(story["site"]["name"])
-        season_range = next(option["season_range"] for option in bundle["evidence"] if option["rotation_id"] == current)
-        period = f"{season_range[0]}–{season_range[1]}"
+        strata = bundle["strata"][current]
+        years = sorted(strata["rows"], key=lambda row: row["season"])
+        rows = years[-PREVIEW_YEARS:]
+        sample = {**strata, "rows": rows}
+        events = tuple(key for key in EVENTS if any(row["events"].get(key) for row in rows))
         st.markdown(
-            f'<div class="b-preview-heading"><div><h2>{escape(ui["strata"])}</h2>'
-            f'<p>{site}</p></div><span class="b-preview-period">{period}</span></div>',
+            f'<div class="b-preview-heading"><h2>{escape(ui["preview_chart_title"])}</h2>'
+            f'<p>{site}</p></div>',
             unsafe_allow_html=True,
         )
-        st.caption(ui["preview_chart_guide"])
-        strata = bundle["strata"][current]
-        chart = strata_figure(strata)
+        st.caption(ui["preview_chart_guide"].format(shown=len(rows), total=len(years)))
+        chart = strata_figure(sample, events=events)
         chart.update_xaxes(tickangle=0, tickfont_size=10)
         st.plotly_chart(chart, use_container_width=True, theme=None, key="landing-strata",
                         config={"displayModeBar": False, "scrollZoom": False})
-        draw_strata_legend([strata])
+        draw_strata_legend([sample], events=events)
 
 
 def _supporting_information() -> None:
@@ -127,7 +130,7 @@ def landing(bundle: dict | None) -> None:
     more_fields = {site: profile for site, profile in DEMO_PROFILES.items() if site not in LEAD_DEMOS}
     with st.container(key="landing"):
         with st.container(key="landing-grid"):
-            intro, figure = st.columns([.43, .57], gap="large")
+            intro, figure = st.columns([.46, .54], gap="large")
             with intro:
                 _intro(len(more_fields))
             with figure:
