@@ -103,7 +103,8 @@ def _base_layout(figure: go.Figure, *, height: int, thumbnail: bool) -> None:
         showlegend=False,
     )
     figure.update_xaxes(ticks="", showline=False, tickfont_size=10 if thumbnail else 11, fixedrange=True)
-    figure.update_yaxes(ticks="", showline=False, tickfont_size=9 if thumbnail else 11, fixedrange=True)
+    figure.update_yaxes(ticks="", showline=False, fixedrange=True,
+                        tickfont={"family": "IBM Plex Mono, monospace", "size": 9 if thumbnail else 11})
 
 
 def farming_year_label(year: int, start: str) -> str:
@@ -190,7 +191,11 @@ def _print_legend(figure: go.Figure, strata: dict) -> None:
             )
     figure.update_traces(showlegend=False, selector=lambda trace: not trace.name)
     figure.update_layout(showlegend=True, legend={"orientation": "h", "x": 0, "y": -.12, "yanchor": "top"},
-                         margin={"l": 74, "r": 12, "t": 12, "b": 82}, height=492)
+                         margin={"l": 74, "r": 12, "t": 38, "b": 92}, height=528)
+    figure.add_annotation(
+        xref="paper", yref="paper", x=0, y=1, yshift=8, xanchor="left", yanchor="bottom", showarrow=False,
+        text=labels()["chart_shading"], font={"color": APP_COLOR["ash"], "size": 11},
+    )
 
 
 def draw_strata(

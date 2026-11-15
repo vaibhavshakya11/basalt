@@ -147,7 +147,7 @@ def _comparison_row(option: Evidence, irrigated: bool) -> str:
     warnings = "".join(f'<span class="b-option-warning">{_numbers(warning)}</span>' for warning in constraint_warnings(option))
     verdict = "" if current else f'<span class="b-verdict">{_numbers(option["verdict"])}</span>'
     stability = render_stability(option)
-    if option["stability"]["badge"] == "robust":
+    if option["stability"]["badge"] != "depends":
         stability = "Holds under tested assumptions"
     if current:
         stability = ""
@@ -200,7 +200,7 @@ def _plot_mark(metric: dict, kind: str, name: str) -> str:
     midpoint, low, high = (metric[key] for key in ("median", "p10", "p90"))
     values = f"{name}. Median {midpoint:.2f}, 10th to 90th percentile {low:.2f} to {high:.2f}"
     return (f'<div class="b-factor-mark" data-kind="{kind}" role="img" aria-label="{escape(values)}" title="{escape(values)}">'
-            f'<span class="b-factor-interval" style="left:{low * 100:g}%;width:{(high - low) * 100:g}%"></span>'
+            f'<span class="b-factor-whisker" style="left:{low * 100:g}%;width:{(high - low) * 100:g}%"></span>'
             f'<span class="b-factor-dot" style="left:{midpoint * 100:g}%"></span></div>')
 
 
@@ -256,7 +256,7 @@ def _season_charts(options: Sequence[Evidence], bundle: dict, *, key: str) -> No
         figure.add_traces(chart.data, rows=[row] * len(chart.data), cols=[1] * len(chart.data))
         axis = chart.layout.yaxis
         figure.update_yaxes(tickmode="array", tickvals=axis.tickvals, ticktext=axis.ticktext, range=axis.range,
-                            tickfont_size=9, fixedrange=True, row=row, col=1)
+                            tickfont=axis.tickfont, fixedrange=True, row=row, col=1)
         width = max(width, len(chart.data[0].x))
         yref = "y domain" if row == 1 else f"y{row} domain"
         figure.add_annotation(xref="paper", yref=yref, x=0, y=1, xanchor="left", yanchor="bottom", yshift=3,

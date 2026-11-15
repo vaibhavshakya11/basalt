@@ -134,7 +134,7 @@ def _regional_water(story: dict, key: str) -> None:
         if abs(slope) < .3:
             st.caption(ui["field_storage_weak"])
         else:
-            tone = APP_COLOR["iron"] if slope < 0 else "#3D7FC4"
+            tone = APP_COLOR["iron"] if slope < 0 else APP_COLOR["basalt"]
             direction = ui["storage_drier"] if slope < 0 else ui["storage_wetter"]
             magnitude = f"{abs(slope):.2f}"
             sentence = ui["field_storage_statement"].format(direction=direction.lower(), rate=magnitude)
@@ -154,7 +154,7 @@ def _field_answer(bundle: dict) -> None:
     story = bundle["field_story"]
     soil_class = bundle["setup"]["soil_class"]
     soil = _soil_name(soil_class).lower() if soil_class else "unspecified"
-    description = f'{current["name"]} grows on {soil} soil in this replay.'
+    description = f'This replay follows {current["name"].lower()} on {soil} soil.'
     patterns = [_pattern_sentence(pattern, ui) for pattern in story.get("patterns", ())
                 if pattern["id"] in {"bare", "vulnerable"}]
     st.markdown(f'<p class="b-v2-answer">{text_with_numbers(" ".join([description, *patterns]))}</p>',
@@ -193,7 +193,7 @@ def _pattern_sentence(pattern: dict, ui: dict) -> str:
     if pattern["id"] == "bare" and message.startswith("Bare for "):
         return ui["field_bare_phrase"].format(period=message.removeprefix("Bare for "))
     if pattern["id"] == "water_storage":
-        return message.replace("(~300 km)", "(regional, about 300 km)")
+        return message.replace("Water stored on land in this region (~300 km)", "Regional water storage (about 300 km)")
     return message
 
 
@@ -240,6 +240,6 @@ def field_view(
         with region:
             _regional_water(story, key)
     with st.container(key="field-cta"):
-        st.markdown('<a class="b-primary-link" href="#your-options" data-options-step>See your options →</a>',
+        st.markdown('<a class="b-primary-link" href="#your-options" data-options-step>See your options &rarr;</a>',
                     unsafe_allow_html=True)
     return updated

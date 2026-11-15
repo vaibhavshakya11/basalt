@@ -7,8 +7,8 @@ import streamlit as st
 from basalt.ui.components import labels
 
 
-STATUS_MARKS = {"pass": "▲", "caveat": "●", "fail": "▼", "not_run": "○"}
-NUMBERS_IN_TEXT = re.compile(r"(?<!\w)[+−-]?\d+(?:,\d{3})*(?:\.\d+)?(?!\w)")
+STATUS_MARKS = {"pass": "▲", "caveat": "●", "fail": "▼", "not_run": "●"}
+NUMBERS_IN_TEXT = re.compile(r"(?<!\w)[+\u2212-]?\d+(?:,\d{3})*(?:\.\d+)?(?!\w)")
 CHECK_PURPOSE = {
     "V1": "Does the reference water-use calculation match the published FAO example?",
     "V2": "Do global and Punjab crop parameters produce the same rotation ratings?",

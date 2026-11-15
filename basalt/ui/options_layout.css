@@ -46,8 +46,8 @@
  border-top:1px solid var(--fracture);font-size:13px}
 .stApp .b-factor-mark{position:relative;height:12px;margin-inline:5px;color:var(--ash)}
 .stApp .b-factor-mark[data-kind="alternative"]{color:var(--iron)}
-.stApp .b-factor-interval{position:absolute;height:7px;top:2px;border-inline:1px solid currentColor}
-.stApp .b-factor-interval::after{content:"";position:absolute;left:0;right:0;top:3px;border-top:1px solid currentColor}
+.stApp .b-factor-whisker{position:absolute;height:7px;top:2px;border-inline:1px solid currentColor}
+.stApp .b-factor-whisker::after{content:"";position:absolute;left:0;right:0;top:3px;border-top:1px solid currentColor}
 .stApp .b-factor-dot{position:absolute;top:2px;width:7px;height:7px;transform:translateX(-50%);background:currentColor}
 .stApp .b-factor-mark[data-kind="alternative"] .b-factor-dot{border-radius:50%}
 .stApp .b-factor-axis{min-height:20px;color:var(--ash)}

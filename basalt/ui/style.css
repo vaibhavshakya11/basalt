@@ -13,7 +13,7 @@
 }
 /* The masthead remains a navigation target on every route. */
 .b-masthead{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:56px;padding:0 16px;background:var(--basalt)}
-.stApp a.b-brand{display:inline-flex;align-items:center;gap:8px;color:var(--paper);font-size:23px;font-weight:600;letter-spacing:-.03em;text-decoration:none}
+.stApp a.b-brand{display:inline-flex;align-items:center;gap:8px;min-height:40px;color:var(--paper);font-size:23px;font-weight:600;letter-spacing:-.03em;text-decoration:none}
 .b-brand svg{height:20px;width:22px;flex:none}
 .b-masthead .b-location{display:flex;align-items:center;justify-content:flex-end;gap:8px 16px;text-align:right;min-width:0;color:#d5d8db;font-size:var(--type-xs)}
 .stApp .b-masthead a.b-change-location{color:var(--paper);white-space:nowrap;text-underline-offset:3px;display:inline-flex;align-items:center;min-height:40px}

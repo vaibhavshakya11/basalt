@@ -29,6 +29,7 @@ WORKSPACE_STYLE = """
  font:400 var(--type-xs)/1.4 'IBM Plex Mono',monospace;color:var(--ash);
 }
 .stApp .st-key-field-workspace button[role="tab"][aria-selected="true"]{font-weight:650;color:var(--iron)}
+.stApp .st-key-field-workspace button[role="tab"]:focus-visible{outline-offset:-2px}
 .stApp .b-field-context{color:var(--ash);font-size:var(--type-xs);margin:0}
 @media(max-width:767px){
  .stApp .st-key-field-workspace [role="tablist"]{gap:12px}
