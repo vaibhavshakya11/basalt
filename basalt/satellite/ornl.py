@@ -23,6 +23,7 @@ ET_QC = "ET_QC_500m"
 START = "2001-01-01"
 END = "2024-12-31"
 CHUNK_SIZE = 8
+TIMEOUT_SECONDS = 20
 _thread = local()
 
 
@@ -41,7 +42,7 @@ def _write_atomic(path: Path, write) -> None:
         temporary.unlink(missing_ok=True)
 
 
-def _request(path: str, params: dict, cache: Path) -> dict:
+def _request(path: str, params: dict, cache: Path, timeout: int) -> dict:
     if cache.is_file():
         return json.loads(cache.read_text())
     if not hasattr(_thread, "client"):
@@ -49,7 +50,7 @@ def _request(path: str, params: dict, cache: Path) -> dict:
     for attempt in range(3):
         try:
             response = _thread.client.get(
-                f"{ORNL_URL}/{path}", params=params, headers={"Accept": "application/json"}, timeout=20,
+                f"{ORNL_URL}/{path}", params=params, headers={"Accept": "application/json"}, timeout=timeout,
             )
             response.raise_for_status()
             content = response.json()
@@ -95,15 +96,18 @@ def _read_subset(response: dict, product: str) -> dict:
 
 
 def _fetch_series(
-    product: str, lat: float, lon: float, start: str, end: str, value_name: str, cache_dir: Path, workers: int,
+    product: str, lat: float, lon: float, start: str, end: str, value_name: str, cache_dir: Path,
+    workers: int, timeout: int, chunk_size: int,
 ) -> pd.DataFrame:
+    if not 1 <= chunk_size <= 10:
+        raise ValueError("ORNL accepts a maximum of ten composites per request.")
     coordinates = {"latitude": f"{lat:.2f}", "longitude": f"{lon:.2f}"}
     key = f"{product}_{coordinates['latitude']}_{coordinates['longitude']}"
     cache = cache_dir / f"{key}_{start}_{end}.parquet"
     if cache.is_file():
         return pd.read_parquet(cache)
     staging = cache_dir / "ornl_raw" / key
-    returned_dates = _request(f"{product}/dates", coordinates, staging / "dates.json")["dates"]
+    returned_dates = _request(f"{product}/dates", coordinates, staging / "dates.json", timeout)["dates"]
     dates = sorted(
         (row for row in returned_dates if start <= row["calendar_date"] <= end),
         key=lambda row: row["calendar_date"],
@@ -114,14 +118,22 @@ def _fetch_series(
     def fetch(chunk: list[dict]) -> dict:
         first, last = (chunk[index]["modis_date"] for index in (0, -1))
         params = {**coordinates, "startDate": first, "endDate": last, "kmAboveBelow": 1, "kmLeftRight": 1}
-        response = _request(f"{product}/subset", params, staging / f"{first}_{last}.json")
+        response = _request(f"{product}/subset", params, staging / f"{first}_{last}.json", timeout)
         return _read_subset(response, product)
 
-    chunks = [dates[offset:offset + CHUNK_SIZE] for offset in range(0, len(dates), CHUNK_SIZE)]
+    chunks = [dates[offset:offset + chunk_size] for offset in range(0, len(dates), chunk_size)]
     summaries = {}
+    failures = []
     with ThreadPoolExecutor(max_workers=workers) as executor:
-        for subset in executor.map(fetch, chunks):
-            summaries.update(subset)
+        requests_by_chunk = [(chunk, executor.submit(fetch, chunk)) for chunk in chunks]
+        for chunk, subset_request in requests_by_chunk:
+            try:
+                summaries.update(subset_request.result())
+            except ORNLError as error:
+                failures.append((chunk[0]["modis_date"], chunk[-1]["modis_date"], error))
+    if failures:
+        first, last, error = failures[0]
+        raise ORNLError(f"{len(failures)} {product} batches failed. First failed range: {first}–{last}.") from error
     calendar_dates = [day["calendar_date"] for day in dates]
     observations = pd.DataFrame(
         [summaries.get(day, (np.nan, 0)) for day in calendar_dates],
@@ -140,20 +152,20 @@ def _fetch_series(
 
 def fetch_ndvi(
     lat: float, lon: float, *, start: str = START, end: str = END,
-    cache_dir: Path = CACHE, workers: int = 3,
+    cache_dir: Path = CACHE, workers: int = 3, timeout: int = TIMEOUT_SECONDS, chunk_size: int = CHUNK_SIZE,
 ) -> pd.DataFrame:
     """Get center-pixel NDVI medians and accepted pixel counts for each composite."""
-    return _fetch_series(NDVI_PRODUCT, lat, lon, start, end, "ndvi", cache_dir, workers)
+    return _fetch_series(NDVI_PRODUCT, lat, lon, start, end, "ndvi", cache_dir, workers, timeout, chunk_size)
 
 
 def fetch_modis_et(
     lat: float, lon: float, *, start: str = START, end: str = END,
-    cache_dir: Path = CACHE, workers: int = 3,
+    cache_dir: Path = CACHE, workers: int = 3, timeout: int = TIMEOUT_SECONDS, chunk_size: int = CHUNK_SIZE,
 ) -> pd.DataFrame:
     """Get the MOD16 composite water depth and accepted pixel count."""
-    catalog = _request("products", {}, cache_dir / "ornl_raw" / "products.json")
+    catalog = _request("products", {}, cache_dir / "ornl_raw" / "products.json", timeout)
     products = {entry["product"] for entry in catalog["products"]}
     product = ET_PRODUCT if ET_PRODUCT in products else ET_FALLBACK
     if product not in products:
         raise ORNLError("The ORNL catalog has no MOD16 evapotranspiration product.")
-    return _fetch_series(product, lat, lon, start, end, "et_mm", cache_dir, workers)
+    return _fetch_series(product, lat, lon, start, end, "et_mm", cache_dir, workers, timeout, chunk_size)
