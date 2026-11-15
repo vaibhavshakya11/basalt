@@ -3,8 +3,6 @@ from itertools import groupby
 from math import ceil
 from statistics import median
 
-import numpy as np
-
 from basalt.contracts import Crop, RotationRun
 
 EVENT_NAMES = {"heat_event": "heat", "frost_event": "frost", "dry_stress_event": "dry spells"}
@@ -14,8 +12,11 @@ STAGE_NAMES = {"ini": "early growth", "dev": "developing canopy", "mid": "mid-se
 def _longest_bare(season):
     # Crop-free stretches may cross the agricultural year boundary.
     bare = season.daily.crop_id == "bare"
-    runs = [(start, end) for is_bare, group in groupby(range(len(bare)), key=bare.__getitem__)
-            if is_bare for start, *rest in [list(group)] for end in [rest[-1] if rest else start]]
+    runs = []
+    for is_bare, group in groupby(range(len(bare)), key=bare.__getitem__):
+        if is_bare:
+            days = list(group)
+            runs.append((days[0], days[-1]))
     if not runs:
         return 0, 0, 0
     size = len(bare)

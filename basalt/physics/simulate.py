@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 
 from basalt.calendar_utils import calendar_windows, season_bounds
+from basalt.climate.et0 import saturation_vapor_pressure
 from basalt.config import YEARS
 from basalt.contracts import (
     ClimateTable, Constraints, Crop, CropWindow, DailyState, ModelParameters,
@@ -55,13 +56,12 @@ def _schedule(dates: pd.DatetimeIndex, climate: ClimateTable, site: Site,
               windows: tuple[CropWindow, ...], constraints: Constraints,
               parameters: ModelParameters) -> tuple[FieldDays, dict[int, float]]:
     size = len(dates)
-    zeros = lambda: np.zeros(size)
     days = FieldDays(np.full(size, "bare", dtype="U24"), np.full(size, "bare", dtype="U4"),
-                     zeros(), np.full(size, .15), np.full(size, bare_depletion_fraction()), np.full(size, -1),
+                     np.zeros(size), np.full(size, .15), np.full(size, bare_depletion_fraction()), np.full(size, -1),
                      np.full(size, -1), *[np.zeros(size, dtype=bool) for _ in range(5)])
     tmax, tmin, tdew, rh, wind = (climate[column].to_numpy() for column in ("tmax", "tmin", "tdew", "rh", "ws2"))
-    sat = lambda temp: np.exp(17.27 * temp / (temp + 237.3))
-    rhmin = np.clip(np.where(np.isfinite(tdew), 100 * sat(tdew) / sat(tmax), rh), 20, 80)
+    humidity = 100 * saturation_vapor_pressure(tdew) / saturation_vapor_pressure(tmax)
+    rhmin = np.clip(np.where(np.isfinite(tdew), humidity, rh), 20, 80)
     wind = np.clip(wind, 1, 6)
     previous_burn = {}
     for previous, following in pairwise(windows):
