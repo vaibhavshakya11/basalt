@@ -4,6 +4,7 @@ from dataclasses import asdict
 from functools import lru_cache
 
 import numpy as np
+import pandas as pd
 
 from basalt.calendar_utils import calendar_windows
 from basalt.climate.power import POWER_SOURCE
@@ -182,19 +183,27 @@ def _sources(site: Site, crops: Sequence[Crop], datasets: Sequence[str]) -> tupl
     return list(dict.fromkeys(used)), list(dict.fromkeys(sources)), assumptions
 
 
-def _heat_risks(run: RotationRun, crops: Mapping[str, Crop]) -> list[str]:
-    risk_rows = []
-    for crop_id in _crop_ids(run.rotation):
-        hit_by_season = [
-            any(np.count_nonzero((season.daily.crop_id == crop_id) & season.daily.heat_event) >= 3 for season in paired)
-            for paired in zip(*run.phases)
-        ]
-        if (hits := sum(hit_by_season)):
-            risk_rows.append(json.dumps({
-                "rule": "heat_phases" if len(run.phases) > 1 else "heat",
-                "crop": crops[crop_id].name, "k": hits, "n": len(hit_by_season),
-            }))
-    return risk_rows
+def _heat_risks(run: RotationRun, site: Site, crops: Mapping[str, Crop], shift_days: int) -> list[str]:
+    seasons = [season.season for season in run.seasons]
+    heat_hit_years = {crop_id: set() for crop_id in _crop_ids(run.rotation)}
+    for phase_index, phase in enumerate(run.phases):
+        for crop_id, hits in heat_hit_years.items():
+            events = pd.DatetimeIndex(np.concatenate([
+                season.dates[(season.daily.crop_id == crop_id) & season.daily.heat_event].to_numpy()
+                for season in phase
+            ]))
+            if len(events) < 3:
+                continue
+            windows = calendar_windows(run.rotation, crops, site.season_year_start, seasons,
+                                       phase=phase_index, shift_days=shift_days)
+            for window in windows:
+                if window.crop.crop_id == crop_id and np.count_nonzero((events >= window.sow) & (events <= window.harvest)) >= 3:
+                    hits.add(window.season)
+    return [
+        json.dumps({"rule": "heat_phases" if len(run.phases) > 1 else "heat", "crop": crops[crop_id].name,
+                    "k": len(hits), "n": len(seasons)})
+        for crop_id, hits in heat_hit_years.items() if hits
+    ]
 
 
 def evidence_for_runs(
@@ -222,7 +231,7 @@ def evidence_for_runs(
             stability={"badge": "robust", "drivers": []}, constraints_flags=_constraints(site, constraints, run),
             tags=list(dict.fromkeys(tag for crop in crop_library for tag in crop.tags)),
             calendar=_calendar(site, rotation, crops, shift_days), why=[json.dumps(reason) for reason in reasons],
-            gaps=[], risks=_heat_risks(run, crops), datasets=used_datasets, sources=sources, assumptions_L=assumptions,
+            gaps=[], risks=_heat_risks(run, site, crops, shift_days), datasets=used_datasets, sources=sources, assumptions_L=assumptions,
         ))
     return evidence
 
