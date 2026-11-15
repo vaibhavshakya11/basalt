@@ -21,14 +21,17 @@ FIELDS_KEPT = 4
 WORKSPACE_STYLE = """
 <style>
 .stApp .st-key-field-workspace{padding-top:22px}
+.stApp .st-key-field-workspace h1{font-size:clamp(26px,3.2vw,42px)}
 .stApp .st-key-location-actions [data-testid="stButton"]{display:flex;justify-content:flex-end}
 .stApp .st-key-location-actions button{min-height:42px}
-.stApp .st-key-field-workspace [role="tablist"]{gap:20px}
-.stApp .st-key-field-workspace button[role="tab"]{min-height:44px}
+.stApp .st-key-field-workspace [role="tablist"]{gap:12px}
+.stApp .st-key-field-workspace button[role="tab"]{min-height:44px;padding-inline:12px;border-radius:4px 4px 0 0}
+.stApp .st-key-field-workspace button[role="tab"][aria-selected="true"]{background:#f4e8e2;font-weight:650}
 @media(max-width:640px){
  .stApp .st-key-field-workspace{padding-top:12px}
  .stApp .st-key-location-actions [data-testid="stButton"]{justify-content:flex-start}
- .stApp .st-key-field-workspace [role="tablist"]{gap:9px}
+ .stApp .st-key-field-workspace [role="tablist"]{gap:3px}
+ .stApp .st-key-field-workspace button[role="tab"]{padding-inline:7px}
 }
 </style>
 """
