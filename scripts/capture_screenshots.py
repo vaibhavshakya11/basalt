@@ -1,6 +1,5 @@
 import argparse
 import json
-import re
 import socket
 import subprocess
 import sys
@@ -12,16 +11,18 @@ from urllib.error import URLError
 from urllib.parse import urlsplit
 from urllib.request import urlopen
 
-from playwright.sync_api import Page, sync_playwright
+from playwright.sync_api import Locator, Page, sync_playwright
 
 from basalt.config import DEMO, ROOT
 from basalt.knowledge.loader import read_yaml
+from basalt.ui.landing import PREVIEW_YEARS
+from basalt.ui.strata import EVENTS, farming_year_label
 
 CHART = '.js-plotly-plot .main-svg:has(.ytick)'
 FIELD_CHART = f'[role="tabpanel"]:visible {CHART}'
+OPTIONS_REFERENCE = ".b-rotation-reference"
 SCENARIO = 'iframe[title$="basalt_climate_scenario"]'
 DEFAULT_TIMEOUT = 45000
-NUMBER = r"-?\d+(?:\.\d+)?"
 
 
 def _port() -> int:
@@ -96,7 +97,7 @@ def _wait_for_field(page: Page, site: str, bundle: dict) -> None:
     page.wait_for_function("site => new URL(location.href).searchParams.get('site') === site", arg=site)
     page.get_by_role("heading", name=bundle["field_story"]["site"]["name"], exact=True).wait_for()
     _ready(page, FIELD_CHART)
-    page.get_by_role("heading", name="Where the calendar came from", exact=True).wait_for()
+    page.get_by_role("heading", name="Where the calendar came from", exact=True, include_hidden=True).wait_for(state="attached")
 
 
 def _set_scenario(page: Page) -> float:
@@ -118,7 +119,7 @@ def _set_scenario(page: Page) -> float:
     start = time.monotonic()
     controls.get_by_role("button", name=ui["scenario_apply"], exact=True).click()
     banner.wait_for(state="visible")
-    _ready(page, FIELD_CHART)
+    _ready(page, OPTIONS_REFERENCE)
     return time.monotonic() - start
 
 
@@ -126,61 +127,94 @@ def _bundle(site: str) -> dict:
     return json.loads((DEMO / site / "bundle.json").read_text(encoding="utf-8"))
 
 
-def _audit_chart_labels(page: Page, views: list[dict]) -> bool:
+def _audit_chart_labels(page: Page, views: list[dict], events: tuple[str, ...] = tuple(EVENTS)) -> bool:
     ui = read_yaml("copy.yaml")["ui"]
     families = {segment[3] for strata in views for row in strata["rows"] for segment in row["segments"]}
     expected = {ui["categories"][family] for family in families}
-    expected.update(ui["events"].values())
-    legend = page.locator(".b-chart-legend").filter(visible=True).inner_text()
-    return all(word in legend for word in expected)
+    expected.update(ui["events"][event] for event in events)
+    legend = page.locator(".b-chart-legend:visible .b-strata-legend-key")
+    return set(legend.all_inner_texts()) == expected
 
 
-def _audit_option_numbers(page: Page, bundle: dict, *, expanded: bool = False) -> bool:
+def _audit_option_numbers(page: Page, bundle: dict) -> bool:
+    ui = read_yaml("copy.yaml")["ui"]
     options = bundle["evidence"]
-    actual = {item.get_attribute("data-rotation"): item.inner_text() for item in page.locator(".b-verdict:visible").all()}
-    expected = {option["rotation_id"]: option["verdict"] for option in options}
-    if actual != expected:
+    current = next(option for option in options if option["is_current"])
+    metrics = current["metrics"]
+    irrigated = bundle["setup"]["irrigated"]
+    water = metrics["et_mm" if irrigated else "dry_stress_frac"]["median"]
+    water_key = "option_reference_irr" if irrigated else "option_reference_rf"
+    values = [
+        ui["option_reference_soil"].format(score=metrics["soil_score"]["median"]),
+        ui[water_key].format(water=water),
+        ui["option_reference_risk"].format(risk=metrics["risk_hits"]["median"]),
+    ]
+    reference = page.locator(OPTIONS_REFERENCE)
+    if reference.locator("dd").all_inner_texts() != values or reference.locator("h3").inner_text() != current["name"]:
+        return False
+    if page.locator(".b-option-years:visible").count() or page.locator(FIELD_CHART).filter(visible=True).count():
         return False
 
-    layout = read_yaml("copy.yaml")["ui"]["option_count_line"]
-    counts = {option["rotation_id"]: [layout.format(**option["wins_vs_current"][axis])
-              for axis in ("soil", "water", "risk")] for option in options if not option["is_current"]}
-    measured = {
-        card.locator(".b-verdict").get_attribute("data-rotation"): card.locator(".b-axis-counts").all_inner_texts()
-        for card in page.locator('.b-option-head[data-current="false"]:visible').all()
+    expected = {option["rotation_id"]: [option["arrows"][axis] for axis in ("soil", "water", "risk")]
+                for option in options if not option["is_current"]}
+    shown = {
+        card.get_attribute("data-rotation"): card.locator("[data-tone]").evaluate_all("(items) => items.map(i => i.dataset.tone)")
+        for card in page.locator(".b-option-head:visible").all()
     }
-    if measured != counts:
+    return shown == expected
+
+
+def _open_option_detail(page: Page, bundle: dict, option: dict) -> tuple[Locator, bool]:
+    detail = page.locator(f'.b-option-years[data-rotation="{option["rotation_id"]}"]')
+    toggle = detail.locator("xpath=ancestor::details/summary")
+    toggle.press("Enter")
+    detail.wait_for(state="visible")
+    ui = read_yaml("copy.yaml")["ui"]
+    counts = [ui["option_count_line"].format(**option["wins_vs_current"][axis]) for axis in ("soil", "water", "risk")]
+    verified = detail.locator(".b-verdict").inner_text() == option["verdict"]
+    verified &= detail.locator(".b-axis-counts:visible").all_inner_texts() == ([] if option["is_current"] else counts)
+    card = bundle["cards"][option["rotation_id"]]
+    sections = [line for section in card.values() for line in section]
+    panel = detail.locator("xpath=ancestor::details")
+    text = panel.inner_text()
+    verified &= all(line in text for line in sections)
+    current = next(item for item in bundle["evidence"] if item["is_current"])
+    reference_factors = current["metrics"]["soil_factors"]
+    expected_practices = []
+    for factor, metric in option["metrics"]["soil_factors"].items():
+        expected_practices.append(f'{metric["median"]:.2f}')
+        if not option["is_current"]:
+            expected_practices.append(f'{reference_factors[factor]["median"]:.2f}')
+    verified &= panel.locator(".b-practice .b-count:visible").all_inner_texts() == expected_practices
+    return toggle, verified
+
+
+def _audit_option_charts(page: Page, bundle: dict) -> bool:
+    primary = list(bundle["strata"].values())
+    alternate = [{**strata, "rows": strata["alternate_rows"]} for strata in primary if strata.get("alternate_rows")]
+    views = primary + alternate
+    if not _audit_chart_labels(page, views):
         return False
 
-    year_axes = [axis.text_content() or "" for axis in page.locator(".yaxislayer-above:visible").all()]
-    years = {season for option in options for season in range(option["season_range"][0], option["season_range"][1] + 1)}
-    if any(int(year) not in years for axis in year_axes for year in re.findall(r"\b(20\d{2})/", axis)):
-        return False
-    if not expanded:
-        return True
-
-    baseline = next(option for option in options if option["is_current"])
-    visible_text = page.locator('[role="tabpanel"]:visible').inner_text()
-    for option in options:
-        if option["is_current"]:
-            continue
-        card = bundle["cards"][option["rotation_id"]]
-        sections = [line for section in card.values() for line in section]
-        if not sections or any(line not in visible_text for line in sections):
-            continue
-        evidence_numbers = [float(value) for value in re.findall(NUMBER, json.dumps([option, baseline]))]
-        practice_numbers = [icon.inner_text() for icon in page.locator(".b-practice .b-count:visible").all()]
-        visible_numbers = map(float, re.findall(NUMBER, " ".join(sections + practice_numbers)))
-        return all(any(abs(number - reported) <= max(.5, abs(reported) * .01) for reported in evidence_numbers)
-                   for number in visible_numbers)
-    return False
+    expected = []
+    for view in views:
+        years = sorted({row["season"] for row in view["rows"]})
+        expected.append(tuple(farming_year_label(year, view["season_year_start"])
+                              for year in dict.fromkeys((years[0], years[-1]))))
+    shown = [tuple(axis.locator(".ytick text").all_text_contents())
+             for axis in page.locator(".yaxislayer-above:visible").all()]
+    return sorted(shown) == sorted(expected)
 
 
 def _capture_desktop(page: Page, base: str, destination: Path) -> dict:
     ludhiana, malawi = _bundle("ludhiana"), _bundle("malawi")
+    ui = read_yaml("copy.yaml")["ui"]
     page.goto(base, wait_until="domcontentloaded")
     _ready(page)
-    chart_audited = _audit_chart_labels(page, [ludhiana["strata"][ludhiana["field_story"]["current_rotation_id"]]])
+    strata = ludhiana["strata"][ludhiana["field_story"]["current_rotation_id"]]
+    rows = sorted(strata["rows"], key=lambda row: row["season"])[-PREVIEW_YEARS:]
+    events = tuple(event for event in EVENTS if any(row["events"].get(event) for row in rows))
+    chart_audited = _audit_chart_labels(page, [{**strata, "rows": rows}], events)
     _save(page, destination, "01_landing.png")
 
     start = time.monotonic()
@@ -189,27 +223,35 @@ def _capture_desktop(page: Page, base: str, destination: Path) -> dict:
     timings = {"ludhiana_demo_seconds": time.monotonic() - start}
     _save(page, destination, "02_ludhiana_field.png")
     _tab(page, "Your options")
-    _ready(page, FIELD_CHART)
+    _ready(page, OPTIONS_REFERENCE)
     option_audited = _audit_option_numbers(page, ludhiana)
-    chart_audited &= _audit_chart_labels(page, list(ludhiana["strata"].values()))
     _save(page, destination, "03_ludhiana_options.png")
-    page.get_by_text("Details", exact=True).nth(1).click()
-    page.get_by_text("Why suggested", exact=True).filter(visible=True).nth(0).wait_for(state="visible")
-    option_audited &= _audit_option_numbers(page, ludhiana, expanded=True)
-    option_audited &= page.locator(".b-practice .b-practice-row:visible").count() >= 12
+    first_alternative = page.locator(".b-option-head:visible").first.get_attribute("data-rotation")
+    first = next(option for option in ludhiana["evidence"] if option["rotation_id"] == first_alternative)
+    toggle, verified = _open_option_detail(page, ludhiana, first)
+    option_audited &= verified
     page.wait_for_function("""() => {
         const last = [...document.querySelectorAll('details[open] .b-practice-row')].at(-1);
         return last && last.getBoundingClientRect().bottom <= last.closest('details').getBoundingClientRect().bottom + 1;
     }""")
     _save(page, destination, "04_ludhiana_card_details.png")
+    toggle.press("Enter")
+    for option in ludhiana["evidence"]:
+        if option["rotation_id"] != first_alternative:
+            toggle, verified = _open_option_detail(page, ludhiana, option)
+            option_audited &= verified
+            toggle.press("Enter")
+    charts = page.get_by_text(ui["option_charts"], exact=True)
+    charts.click()
+    _ready(page, FIELD_CHART)
+    chart_audited &= _audit_option_charts(page, ludhiana)
+    charts.click()
     _tab(page, "How sure are we?")
     _ready(page, ".b-validation .b-check")
     _save(page, destination, "05_ludhiana_how_sure.png")
     _tab(page, "Your options")
-    page.get_by_text("Details", exact=True).nth(1).click()
     timings["scenario_replay_seconds"] = _set_scenario(page)
     _save(page, destination, "08_slider_scenario.png")
-    ui = read_yaml("copy.yaml")["ui"]
     page.frame_locator(SCENARIO).get_by_role("button", name=ui["scenario_reset"], exact=True).click()
     page.locator(".b-scenario").wait_for(state="detached")
     page.get_by_role("tab", name=ui["tab_options"], exact=True, selected=True).wait_for(state="visible")
@@ -223,11 +265,23 @@ def _capture_desktop(page: Page, base: str, destination: Path) -> dict:
     chart_audited &= _audit_chart_labels(page, [malawi["strata"][malawi["field_story"]["current_rotation_id"]]])
     _save(page, destination, "06_malawi_field.png")
     _tab(page, "Your options")
-    page.get_by_text("Why not more options?", exact=True).wait_for(state="visible")
-    _ready(page, FIELD_CHART)
+    page.get_by_text(ui["no_more"], exact=True).wait_for(state="visible")
+    _ready(page, OPTIONS_REFERENCE)
     option_audited &= _audit_option_numbers(page, malawi)
-    chart_audited &= _audit_chart_labels(page, list(malawi["strata"].values()))
     _save(page, destination, "07_malawi_options.png")
+    page.get_by_text(ui["option_charts"], exact=True).click()
+    _ready(page, FIELD_CHART)
+    chart_audited &= _audit_option_charts(page, malawi)
+
+    page.goto(base + "/?site=cordoba", wait_until="domcontentloaded")
+    cordoba = _bundle("cordoba")
+    _wait_for_field(page, "cordoba", cordoba)
+    _tab(page, "Your options")
+    page.get_by_text(ui["no_options_available"], exact=True).wait_for(state="visible")
+    option_audited &= _audit_option_numbers(page, cordoba)
+    page.get_by_text(ui["option_single_chart"], exact=True).click()
+    _ready(page, FIELD_CHART)
+    chart_audited &= _audit_option_charts(page, cordoba)
     return {**timings, "option_numbers_verified": option_audited, "chart_labels_verified": chart_audited}
 
 
@@ -255,7 +309,11 @@ def _capture_mobile(page: Page, base: str, destination: Path) -> dict:
     workspace_widths = {}
     for item in ("tab_field", "tab_options", "tab_sure"):
         page.get_by_role("tab", name=ui[item], exact=True).tap()
-        _ready(page, ".b-validation .b-check" if item == "tab_sure" else FIELD_CHART)
+        selector = {"tab_field": FIELD_CHART, "tab_options": OPTIONS_REFERENCE, "tab_sure": ".b-validation .b-check"}[item]
+        _ready(page, selector)
+        if item == "tab_options":
+            page.get_by_text(ui["option_charts"], exact=True).tap()
+            _ready(page, FIELD_CHART)
         page.wait_for_function("""() => {
             const workspace = document.querySelector('[data-testid="stMainBlockContainer"], .block-container');
             return workspace.scrollWidth <= window.innerWidth;

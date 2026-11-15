@@ -324,7 +324,7 @@ ui:
   field_irrigation_unknown: Leave blank if you are unsure.
   field_confirmed: Field settings updated.
   options_title: Compare crop rotations
-  options_context: "Compared with {current} across {n} farming years."
+  options_context: "The replay covers {n} farming years."
   priorities_help: These weights change the order of the alternatives.
   scenario_apply: Apply scenario
   scenario_reset: Reset to historical weather
@@ -376,19 +376,35 @@ ui:
   field_bare_summary: "The field was bare for a total of {days} days in a typical simulated farming year."
   field_bare_lead: Total days of bare soil
   field_bare_cadence: Median per farming year
-  option_count_line: "{better} better · {worse} worse · {tie} about the same"
   field_cover_title: Time without crop cover
   field_cover_days: days
   field_cover_period: This is how long the soil was bare in a typical year across the {seasons}-season replay.
   field_sources: See where crop dates and regional water readings came from
-  option_reference: Reference
+  option_count_line: "{better} better · {worse} worse · {tie} about the same"
+  option_results: Results and evidence
+  option_reference_detail: Current rotation evidence
+  option_alternatives: Alternative rotations
+  option_years: Farming year results
+  option_sensitive: Sensitive to assumptions
+  option_reference_period: Median per farming year
   option_reference_soil: "{score:.0f} out of 100"
-  option_reference_irr: "{water:.0f} mm used a year"
-  option_reference_rf: "{water:.0%} of sensitive days stressed"
-  option_reference_risk: "Weather risks per year {risk:g}"
-  option_count_guide: "The counts show better, worse and similar years. An arrow shows a consistent difference. A dot shows a mixed or small difference."
-  option_water_irrigated: The water comparison tracks water used by the crops and soil.
-  option_water_rainfed: The water comparison tracks how often crops were short of water.
+  option_reference_irr: "{water:.0f} mm used"
+  option_reference_rf: "{water:.0%} of sensitive days"
+  option_reference_risk: "{risk:g} per year"
+  option_count_guide: "Similar includes small or mixed differences across years."
+  option_water_irrigated: Crop water use
+  option_water_rainfed: Water stress
+  option_irrigated_ratings:
+    better: Less water used
+    worse: More water used
+  option_rainfed_ratings:
+    better: Less stress
+    worse: More stress
+  option_risk_ratings:
+    better: Lower risk
+    worse: Higher risk
+  option_charts: Compare season charts
+  option_single_chart: View season chart
   option_chart_guide: Each small chart shows the same farming years in the same order, so you can compare the seasonal patterns.
   field_bare_phrase: "The longest spell without a crop lasted {period}"
   field_storage_statement: "Regional water storage was {direction} by about {rate} centimetres per year."
@@ -403,7 +419,6 @@ ui:
   validation_v7_pairs: "Both sources had values for {n:,} days."
   validation_water_gap: Median difference in crop water use
   validation_soil_gap: Median difference in soil score
-  option_chart_key: Chart key
   validation_lead: These checks compare the replay with published calculations and available evidence from satellites and local studies.
   validation_attention: Checks that need care
   validation_passes: Checks that passed

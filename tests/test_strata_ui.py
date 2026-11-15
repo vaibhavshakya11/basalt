@@ -1,7 +1,7 @@
 import json
 
 from basalt.config import DEMO
-from basalt.ui.options import _option_head
+from basalt.ui.options import _option_head, _year_results
 from basalt.ui.strata import farming_year_label, strata_figure
 
 
@@ -33,6 +33,8 @@ def test_option_counts_come_from_paired_evidence(monkeypatch):
     html = []
     monkeypatch.setattr("basalt.ui.options.st.markdown", lambda markup, **unused: html.append(markup))
     _option_head(option, irrigated=True)
+    _year_results(option)
+    assert 'class="b-axis-counts"' not in html[0]
     for tally in option["wins_vs_current"].values():
         better, worse, tie = tally["better"], tally["worse"], tally["tie"]
-        assert f'{better}</span> better · <span class="b-count">{worse}</span> worse · <span class="b-count">{tie}</span>' in html[0]
+        assert f'{better}</span> better · <span class="b-count">{worse}</span> worse · <span class="b-count">{tie}</span>' in html[1]

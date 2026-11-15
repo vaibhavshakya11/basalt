@@ -19,57 +19,78 @@ scenario_picker = components.declare_component(
 )
 OPTIONS_STYLE = """
 <style>
-.stApp .b-options-intro{margin-bottom:8px}
-.stApp .b-options-intro h2{padding-top:0;margin:0}
-.stApp .b-options-intro p{color:var(--ash);margin:0;max-width:82ch}
-.stApp .b-options-guide{padding:8px 0 0;border-top:1px solid var(--fracture);color:var(--ash)}
-.stApp .b-options-guide p{font-size:14px;max-width:105ch;margin:0 0 4px}
-.stApp .st-key-options-compact-key{display:none}
+.stApp .b-options-intro h2{font-size:clamp(25px,2.5vw,32px);line-height:1.16;margin:0 0 5px;padding:0}
+.stApp .b-options-intro p{color:var(--ash);margin:0}
+.stApp .b-rotation-reference{display:grid;grid-template-columns:minmax(165px,1fr) minmax(0,2.8fr);gap:20px;
+ align-items:center;background:#ECEEEB;border:1px solid #D9DED8;border-radius:8px;padding:20px 22px}
+.stApp .b-rotation-reference h3{padding:0;margin:3px 0 0;font-size:21px;line-height:1.2;overflow-wrap:anywhere}
+.stApp .b-reference-kicker,.stApp .b-reference-period{display:block;color:var(--ash);font-size:13px}
+.stApp .b-reference-kicker{font-weight:600}
+.stApp .b-reference-period{margin-top:4px}
+.stApp .b-reference-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));margin:0;gap:12px}
+.stApp .b-reference-metrics div{border-inline-start:1px solid #CDD1CD;padding-inline-start:16px}
+.stApp .b-reference-metrics dt{color:var(--ash);font-size:13px}
+.stApp .b-reference-metrics dd{font-size:16px;font-weight:600;line-height:1.35;margin:3px 0 0}
+.stApp .b-alternatives-title{font-size:20px;margin:10px 0 3px;padding:0}
+.stApp .st-key-options-controls{margin-top:5px}
 .stApp .b-scenario{margin:0;background:var(--plate);border-inline-start:2px solid var(--iron);font-size:14px}
-.stApp .st-key-options-grid [data-testid="stVerticalBlockBorderWrapper"]{background:var(--plate)}
-.stApp .st-key-options-grid :is([data-testid="stColumn"],[data-testid="column"]){min-width:0}
-.stApp .st-key-options-grid [data-testid="stPlotlyChart"]{max-width:100%;overflow-x:clip}
-.stApp .st-key-options-grid-single{max-width:620px}
-.stApp .b-option-head{border-top:2px solid var(--fracture);padding-top:10px}
-.stApp .b-option-head[data-current="true"]{border-color:var(--basalt)}
-.stApp .b-option-head h3{margin:3px 0 8px;padding:0;font-size:18px;line-height:1.2;min-block-size:2.4em}
-.stApp .b-option-lever{color:var(--ash);font-size:12px;font-weight:500}
-.stApp .b-option-head .b-verdict{font-size:14px;line-height:1.4;min-block-size:5.6em;margin:0 0 10px;
- font-weight:400;overflow-wrap:anywhere}
-.stApp .b-option-head .b-count{white-space:nowrap}
-.stApp .b-option-axes{margin:0;padding:0}
-.stApp .b-option-axis{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:1px 8px;align-items:start;
- border-top:1px solid var(--fracture);padding:5px 0;font-size:13px;line-height:1.4}
+.stApp :is(.st-key-options-grid,.st-key-options-charts) [data-testid="stHorizontalBlock"]{
+ display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,245px),1fr));gap:16px;align-items:start}
+.stApp :is(.st-key-options-grid,.st-key-options-charts) [data-testid="stHorizontalBlock"]>
+ :is([data-testid="stColumn"],[data-testid="column"]){width:auto;min-width:0}
+.stApp .st-key-options-grid [data-testid="stVerticalBlockBorderWrapper"]{background:var(--plate);border-radius:8px}
+.stApp .st-key-options-grid [data-testid="stVerticalBlockBorderWrapper"]>.stVerticalBlock{row-gap:12px}
+.stApp .st-key-options-single{max-width:650px}
+.stApp .st-key-options-charts [data-testid="stPlotlyChart"]{max-width:100%;overflow-x:clip}
+.stApp .b-replay-chart-name{font-size:15px;margin:0;padding:0;overflow-wrap:anywhere}
+.stApp .b-option-title{min-block-size:4.45em}
+.stApp .b-option-title h4{margin:4px 0 0;padding:0;font-size:20px;line-height:1.2;overflow-wrap:anywhere}
+.stApp .b-option-lever{color:var(--ash);font-size:13px;font-weight:500}
+.stApp .b-option-axes{margin:12px 0 0;padding:0}
+.stApp .b-option-axis{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 8px;align-items:center;
+ border-top:1px solid #EBECE9;padding:7px 0;font-size:14px;line-height:1.4}
 .stApp .b-option-axis dt,.stApp .b-option-axis dd{margin:0}
-.stApp .b-option-axis .b-axis-direction{font-weight:600;white-space:nowrap}
-.stApp .b-option-axis .b-axis-counts{grid-column:1/-1;color:var(--ash);font-size:12px}
-.stApp .b-option-notes{display:grid;gap:4px;color:var(--ash);font-size:13px;line-height:1.4;min-block-size:2.8em}
-.stApp .b-option-notes .b-tag{margin:0}
+.stApp .b-axis-direction{display:flex;gap:5px;align-items:center;border-radius:4px;font-size:13px;font-weight:600;
+ line-height:1.3;padding:4px 7px;background:#F0F1EF;color:var(--ash)}
+.stApp .b-axis-direction[data-tone="better"]{background:#EAF3ED;color:#295C3D}
+.stApp .b-axis-direction[data-tone="worse"]{background:#F8EFEB;color:#882C2C}
+.stApp .b-option-axis .b-count{white-space:nowrap}
+.stApp .b-option-years{margin-bottom:4px}
+.stApp .b-option-years .b-option-axis{display:block;padding:5px 0}
+.stApp .b-option-years .b-option-axis dt{font-weight:600}
+.stApp .b-option-years .b-axis-counts{color:var(--ash);white-space:normal}
+.stApp .b-option-detail .b-verdict{min-height:0;font-weight:400;line-height:1.45;margin:0 0 6px}
+.stApp .b-option-notices{display:grid;gap:5px;font-size:13px;line-height:1.4;color:var(--ash)}
 .stApp .b-option-warning{padding-left:8px;border-inline-start:2px solid var(--iron);color:var(--basalt)}
-.stApp .b-option-detail{border-top:1px solid var(--fracture);padding-top:6px}
-.stApp .b-option-detail h4{font-size:13px;margin:0 0 4px;padding:0}
+.stApp .b-option-detail{border-top:1px solid var(--fracture);padding-top:8px}
+.stApp .b-option-detail h4{font-size:14px;margin:0 0 4px;padding:0}
 .stApp .b-option-detail p{font-size:14px;margin:0 0 6px}
-@media(max-width:980px){
- .stApp .st-key-options-grid [data-testid="stHorizontalBlock"]{flex-wrap:wrap}
- .stApp .st-key-options-grid [data-testid="stHorizontalBlock"]>:is([data-testid="stColumn"],[data-testid="column"]){
-   flex:1 1 calc(50% - 16px);min-width:0}
+.stApp :is(.st-key-options-grid,.st-key-options-secondary,.st-key-options-controls) summary{
+ min-height:44px;padding-block:9px}
+.stApp :is(.st-key-options-grid,.st-key-options-secondary,.st-key-options-controls) summary p{
+ font-size:14px;font-weight:600;line-height:1.35}
+.stApp :is(.st-key-options-grid,.st-key-options-secondary,.st-key-options-controls) summary:focus-visible{
+ outline:2px solid var(--iron);outline-offset:-2px}
+.stApp .st-key-options-grid summary p{color:var(--iron)}
+@media(max-width:820px){
+ .stApp .b-rotation-reference{grid-template-columns:1fr;gap:12px}
+ .stApp .b-reference-metrics{border-top:1px solid #CDD1CD;padding-top:9px}
+ .stApp .b-reference-metrics div:first-child{border-inline-start:0;padding-inline-start:0}
 }
 @media(max-width:600px){
- .stApp .st-key-options-full-key{display:none}
- .stApp .st-key-options-compact-key{display:flex}
+ .stApp .b-rotation-reference{padding:13px 14px}
+ .stApp .b-reference-metrics{gap:8px}
+ .stApp .b-reference-metrics div{padding-inline-start:8px}
+ .stApp .b-reference-metrics dd{font-size:14px}
+ .stApp .b-option-title{min-block-size:0}
  .stApp .st-key-options-controls [data-testid="stHorizontalBlock"]{flex-wrap:wrap;gap:8px}
- .stApp .st-key-options-controls [data-testid="stHorizontalBlock"]>:is([data-testid="stColumn"],[data-testid="column"]){
-   flex:1 1 calc(50% - 8px);min-width:0}
- .stApp .st-key-options-controls [data-testid="stHorizontalBlock"]:has(details[open])>:is([data-testid="stColumn"],[data-testid="column"]){
-   flex-basis:100%}
- .stApp .st-key-options-controls summary [data-testid="stMarkdownContainer"] p{font-size:14px;line-height:1.25}
- .stApp .st-key-options-grid [data-testid="stHorizontalBlock"]>:is([data-testid="stColumn"],[data-testid="column"]){
-   flex:1 1 100%;min-width:0}
- .stApp .b-option-head h3,.stApp .b-option-head .b-verdict,.stApp .b-option-notes{min-block-size:0;min-height:0}
+ .stApp .st-key-options-controls [data-testid="stHorizontalBlock"]>
+ :is([data-testid="stColumn"],[data-testid="column"]){flex:1 1 calc(50% - 8px);min-width:0}
+ .stApp .st-key-options-controls [data-testid="stHorizontalBlock"]:has(details[open])>
+ :is([data-testid="stColumn"],[data-testid="column"]){flex-basis:100%}
 }
 </style>
 """
-
 
 def _scenario_from_event(event: object) -> Scenario | None:
     if not isinstance(event, dict):
@@ -125,61 +146,75 @@ def _render_scenario_status(current: Evidence) -> None:
         st.caption(ui["scenario_stability"])
 
 
-def _reference_axis(option: Evidence, axis: str, irrigated: bool) -> str:
+def _reference(current: Evidence, irrigated: bool) -> None:
     ui = labels()
-    metrics = option["metrics"]
-    if axis == "soil":
-        return ui["option_reference_soil"].format(score=metrics["soil_score"]["median"])
-    if axis == "risk":
-        return ui["option_reference_risk"].format(risk=metrics["risk_hits"]["median"])
-    water = "et_mm" if irrigated else "dry_stress_frac"
-    template = ui["option_reference_irr"] if irrigated else ui["option_reference_rf"]
-    return template.format(water=metrics[water]["median"])
-
-
-def _option_head(option: Evidence, irrigated: bool) -> None:
-    ui = labels()
-    verdict = COUNT.sub(r'<span class="b-count">\g<0></span>', escape(option["verdict"]))
-    rows = []
-    for axis in ("soil", "water", "risk"):
-        if option["is_current"]:
-            status = escape(ui["option_reference"])
-            color = APP_COLOR["ash"]
-            counts = _reference_axis(option, axis, irrigated)
-        else:
-            tone = option["arrows"][axis]
-            color = APP_COLOR[tone]
-            status = f'<span aria-hidden="true">{ARROWS[tone]}</span> {escape(ui["tone"][tone])}'
-            counts = ui["option_count_line"].format(**option["wins_vs_current"][axis])
-        tally = NUMBER.sub(r'<span class="b-count">\g<0></span>', escape(counts))
-        rows.append(
-            f'<div class="b-option-axis"><dt>{escape(ui[axis])}</dt>'
-            f'<dd class="b-axis-direction" style="color:{color}">{status}</dd>'
-            f'<dd class="b-axis-counts">{tally}</dd></div>'
-        )
+    metrics = current["metrics"]
+    water_label = ui["option_water_irrigated"] if irrigated else ui["option_water_rainfed"]
+    water = metrics["et_mm" if irrigated else "dry_stress_frac"]["median"]
+    water_format = ui["option_reference_irr"] if irrigated else ui["option_reference_rf"]
+    values = (
+        (ui["soil"], ui["option_reference_soil"].format(score=metrics["soil_score"]["median"])),
+        (water_label, water_format.format(water=water)),
+        (ui["risk"], ui["option_reference_risk"].format(risk=metrics["risk_hits"]["median"])),
+    )
+    rows = "".join(f'<div><dt>{escape(label)}</dt><dd>{escape(value)}</dd></div>' for label, value in values)
     st.markdown(
-        f'<div class="b-option-head" data-current="{str(option["is_current"]).lower()}">'
-        f'<div class="b-option-lever">{escape(ui["lever"][option["lever"]])}</div>'
-        f'<h3>{escape(option["name"])}</h3>'
-        f'<p class="b-verdict" data-rotation="{escape(option["rotation_id"])}">{verdict}</p>'
-        f'<dl class="b-option-axes">{"".join(rows)}</dl></div>',
+        '<section class="b-rotation-reference"><div>'
+        f'<span class="b-reference-kicker">{escape(ui["lever"]["current"])}</span>'
+        f'<h3>{escape(current["name"])}</h3>'
+        f'<span class="b-reference-period">{escape(ui["option_reference_period"])}</span></div>'
+        f'<dl class="b-reference-metrics">{rows}</dl></section>',
         unsafe_allow_html=True,
     )
 
 
-def _option_notes(option: Evidence) -> None:
-    tags = copybook()["tags"]
+def _option_head(option: Evidence, irrigated: bool) -> None:
+    ui = labels()
+    water_ratings = ui["option_irrigated_ratings"] if irrigated else ui["option_rainfed_ratings"]
+    specific_ratings = {"water": water_ratings, "risk": ui["option_risk_ratings"]}
+    rows = []
+    for axis in ("soil", "water", "risk"):
+        tone = option["arrows"][axis]
+        rating = specific_ratings.get(axis, {}).get(tone, ui["tone"][tone])
+        rows.append(
+            f'<div class="b-option-axis"><dt>{escape(ui[axis])}</dt>'
+            f'<dd class="b-axis-direction" data-tone="{tone}">'
+            f'<span aria-hidden="true">{ARROWS[tone]}</span>{escape(rating)}</dd></div>'
+        )
+    st.markdown(
+        f'<div class="b-option-head" data-rotation="{escape(option["rotation_id"])}">'
+        f'<div class="b-option-title"><span class="b-option-lever">{escape(ui["lever"][option["lever"]])}</span>'
+        f'<h4>{escape(option["name"])}</h4></div><dl class="b-option-axes">{"".join(rows)}</dl></div>',
+        unsafe_allow_html=True,
+    )
+
+
+def _option_notices(option: Evidence) -> None:
     notes = []
-    tag_links = [
-        f'<abbr title="{escape(tags[tag_id]["description"])}">{escape(tags[tag_id]["label"])}</abbr>'
-        for tag_id in option["tags"] if tag_id in tags
-    ]
-    if tag_links:
-        notes.append('<div class="b-tag">' + " · ".join(tag_links) + "</div>")
-    if not option["is_current"]:
-        notes.append(f'<div>{escape(render_stability(option))}</div>')
+    if option["stability"]["badge"] == "depends" and not option["is_current"]:
+        notes.append(f'<div>{escape(labels()["option_sensitive"])}</div>')
     notes.extend(f'<div class="b-option-warning">{escape(warning)}</div>' for warning in constraint_warnings(option))
-    st.markdown(f'<div class="b-option-notes">{"".join(notes)}</div>', unsafe_allow_html=True)
+    if notes:
+        st.markdown(f'<div class="b-option-notices">{"".join(notes)}</div>', unsafe_allow_html=True)
+
+
+def _year_results(option: Evidence) -> None:
+    ui = labels()
+    verdict = COUNT.sub(r'<span class="b-count">\g<0></span>', escape(option["verdict"]))
+    rows = []
+    if not option["is_current"]:
+        for axis in ("soil", "water", "risk"):
+            counts = ui["option_count_line"].format(**option["wins_vs_current"][axis])
+            tally = NUMBER.sub(r'<span class="b-count">\g<0></span>', escape(counts))
+            rows.append(f'<div class="b-option-axis"><dt>{escape(ui[axis])}</dt><dd class="b-axis-counts">{tally}</dd></div>')
+    breakdown = f'<dl class="b-option-axes">{"".join(rows)}</dl>' if rows else ""
+    heading = f'<h4>{escape(ui["option_years"])}</h4>' if rows else ""
+    stability = f'<p>{escape(render_stability(option))}</p>' if rows else ""
+    st.markdown(
+        f'<section class="b-option-detail b-option-years" data-rotation="{escape(option["rotation_id"])}">'
+        f'{heading}<p class="b-verdict">{verdict}</p>{breakdown}{stability}</section>',
+        unsafe_allow_html=True,
+    )
 
 
 def _practice_bar(metric: dict, color: str, label: str) -> str:
@@ -210,68 +245,69 @@ def _practices(option: Evidence, current: Evidence) -> None:
         st.markdown(f'<div class="b-practice"><strong>{escape(title)}</strong>{bars}</div>', unsafe_allow_html=True)
 
 
-def _details(option: Evidence, current: Evidence, card: dict) -> None:
+def _details(option: Evidence, current: Evidence, card: dict, *, title: str) -> None:
     ui = labels()
-    with st.expander(ui["details"]):
+    with st.expander(title):
+        _year_results(option)
         for section in ("why", "evidence", "benefits", "gaps", "risks"):
             lines = card.get(section, ())
             if isinstance(lines, str):
                 lines = [lines]
+            if not lines:
+                continue
             heading = escape(ui[f"section_{section}"])
             items = "".join(f"<p>{escape(line)}</p>" for line in lines)
             st.markdown(f'<section class="b-option-detail"><h4>{heading}</h4>{items}</section>', unsafe_allow_html=True)
         _practices(option, current)
 
 
-def _option_card(option: Evidence, current: Evidence, bundle: dict, *, key: str) -> None:
+def _alternatives(options: list[Evidence], current: Evidence, bundle: dict) -> None:
     ui = labels()
-    identity = option["rotation_id"]
-    card = bundle.get("cards", {}).get(identity, {})
-    with st.container(border=True):
-        _option_head(option, bundle["setup"]["irrigated"])
-        strata = bundle["strata"][identity]
-        draw_strata(strata, key=f"{key}-{identity}", thumbnail=True)
-        _option_notes(option)
-        if strata.get("alternate_rows"):
-            st.caption(ui["phase_summary"])
-            with st.expander(ui["phase_other"]):
-                other = dict(strata, rows=strata["alternate_rows"])
-                draw_strata(other, key=f"{key}-{identity}-other", thumbnail=True)
-        _details(option, current, card)
+    st.markdown(f'<h3 class="b-alternatives-title">{escape(ui["option_alternatives"])}</h3>', unsafe_allow_html=True)
+    with st.container(key="options-grid"):
+        with st.container(key="options-single" if len(options) == 1 else "options-columns"):
+            for col, option in zip(st.columns(len(options)), options, strict=True):
+                with col, st.container(border=True):
+                    _option_head(option, bundle["setup"]["irrigated"])
+                    _option_notices(option)
+                    card = bundle.get("cards", {}).get(option["rotation_id"], {})
+                    _details(option, current, card, title=ui["option_results"])
+    st.caption(ui["option_count_guide"])
 
 
-def _comparison_legend(charts: list[dict]) -> None:
-    with st.container(key="options-full-key"):
-        draw_strata_legend(charts)
-    with st.container(key="options-compact-key"):
-        with st.popover(labels()["option_chart_key"]):
-            draw_strata_legend(charts)
-
-
-def _comparison_guide(options: list[Evidence], bundle: dict) -> None:
+def _season_charts(options: list[Evidence], bundle: dict, *, key: str) -> None:
     ui = labels()
-    charts = [bundle["strata"][option["rotation_id"]] for option in options]
-    if len(options) == 1:
-        _comparison_legend(charts)
-        return
-    reading, legend = st.columns([.52, .48], gap="large")
-    water_rule = ui["option_water_irrigated"] if bundle["setup"]["irrigated"] else ui["option_water_rainfed"]
-    with reading:
-        st.markdown(
-            f'<div class="b-options-guide"><p>{escape(ui["option_count_guide"])}</p>'
-            f'<p>{escape(water_rule)}</p></div>', unsafe_allow_html=True,
-        )
-    with legend:
-        _comparison_legend(charts)
+    views = [bundle["strata"][option["rotation_id"]] for option in options]
+    alternate = {option["rotation_id"]: {**strata, "rows": strata["alternate_rows"]}
+                 for option, strata in zip(options, views, strict=True) if strata.get("alternate_rows")}
+    title = ui["option_charts"] if len(options) > 1 else ui["option_single_chart"]
+    with st.expander(title):
+        draw_strata_legend([*views, *alternate.values()])
+        st.caption(ui["option_chart_guide"] if len(options) > 1 else ui["chart_reading"])
+        with st.container(key="options-charts"):
+            for col, option, strata in zip(st.columns(len(options)), options, views, strict=True):
+                identity = option["rotation_id"]
+                with col:
+                    heading = option["name"]
+                    if option["is_current"] and len(options) > 1:
+                        heading += f' ({ui["lever"]["current"].lower()})'
+                    st.markdown(f'<h3 class="b-replay-chart-name">{escape(heading)}</h3>', unsafe_allow_html=True)
+                    draw_strata(strata, key=f"{key}-{identity}", thumbnail=True)
+                    if identity in alternate:
+                        st.caption(ui["phase_summary"])
+                        st.markdown(
+                            f'<h4 class="b-replay-chart-name">{escape(ui["phase_other"])}</h4>', unsafe_allow_html=True,
+                        )
+                        draw_strata(alternate[identity], key=f"{key}-{identity}-other", thumbnail=True)
 
 
 def options_view(bundle: dict, *, key: str, on_scenario: Callable[[Scenario], None]) -> None:
-    """Present a comparable crop-rotation grid and controls for exploring the result."""
+    """Present the reference rotation, alternatives and archived replay evidence."""
     ui = labels()
     st.markdown(OPTIONS_STYLE, unsafe_allow_html=True)
     options = bundle["evidence"]
     current = next(option for option in options if option["is_current"])
-    context = ui["options_context"].format(current=current["name"], n=current["n_seasons"])
+    context = ui["options_context"].format(n=current["n_seasons"])
     st.markdown(
         f'<div class="b-options-intro"><h2>{escape(ui["options_title"])}</h2><p>{escape(context)}</p></div>',
         unsafe_allow_html=True,
@@ -283,22 +319,22 @@ def options_view(bundle: dict, *, key: str, on_scenario: Callable[[Scenario], No
         with climate_col:
             _scenario_controls(current, key=key, on_change=on_scenario)
     _render_scenario_status(current)
-    if len(options) == 1:
-        st.info(ui["no_options_available"])
+    _reference(current, bundle["setup"]["irrigated"])
+    _option_notices(current)
     ordered = order_evidence(options, priorities)
-    _comparison_guide(ordered, bundle)
-    with st.container(key="options-grid"):
-        if len(ordered) == 1:
-            with st.container(key="options-grid-single"):
-                _option_card(current, current, bundle, key=key)
-        else:
-            for col, option in zip(st.columns(len(ordered)), ordered, strict=True):
-                with col:
-                    _option_card(option, current, bundle, key=key)
-    if current["tier"] == "global" and bundle.get("rejections"):
-        with st.expander(ui["no_more"], expanded=True):
-            if len(options) > 1 and len(options) < 4:
-                st.write(ui["options_passed"].format(count=len(options) - 1))
-            for entry in bundle["rejections"]:
-                lever = ui["lever"].get(entry["lever"], entry["lever"])
-                st.markdown(f'**{lever}**. {entry["reason"]}')
+    alternatives = [option for option in ordered if not option["is_current"]]
+    if alternatives:
+        _alternatives(alternatives, current, bundle)
+    else:
+        st.info(ui["no_options_available"])
+    with st.container(key="options-secondary"):
+        _season_charts(ordered, bundle, key=key)
+        card = bundle.get("cards", {}).get(current["rotation_id"], {})
+        _details(current, current, card, title=ui["option_reference_detail"])
+        if current["tier"] == "global" and bundle.get("rejections"):
+            with st.expander(ui["no_more"]):
+                if len(alternatives) > 1 and len(alternatives) < 3:
+                    st.write(ui["options_passed"].format(count=len(alternatives)))
+                for entry in bundle["rejections"]:
+                    lever = ui["lever"].get(entry["lever"], entry["lever"])
+                    st.markdown(f'**{lever}**. {entry["reason"]}')
