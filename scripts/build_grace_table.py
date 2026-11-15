@@ -106,8 +106,11 @@ def build_grid(input_file: Path, output: Path, product: str = "jpl") -> None:
         else:
             print("No land gain factors supplied in the NetCDF")
         label, source = (GSFC_DATASET, GSFC_SOURCE) if product == "gsfc" else (JPL_DATASET, JPL_SOURCE)
-        detail = ("Public NASA Goddard grid. The JPL bulk archive requires Earthdata sign-in."
-                  if product == "gsfc" else "NASA JPL monthly land mascon grid.")
+        if product == "gsfc":
+            header = dataset.attrs.get("product_version", "unspecified")
+            detail = f"Public NASA Goddard grid. The catalog labels it RL06v2.0. The file header lists {header}."
+        else:
+            detail = "NASA JPL monthly land mascon grid."
         _write_trends(output, trend, water.lat.values, water.lon.values, dates[0], dates[-1],
                       label, source, detail)
     print(f"{label}: wrote {len(dates)} monthly time steps to {output}")

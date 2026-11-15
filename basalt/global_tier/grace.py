@@ -9,7 +9,7 @@ from basalt.global_tier.ggcmi import ggcmi_cell
 TABLE = DATA / "grace" / "grace_trend.npz"
 GLOBAL_TABLE = DATA / "grace" / "grace_global.npz"
 JPL_DATASET = "GRACE/GRACE-FO NASA JPL RL06.3Mv04"
-GSFC_DATASET = "GRACE/GRACE-FO NASA Goddard RL06v2.0"
+GSFC_DATASET = "GRACE/GRACE-FO NASA Goddard (catalog RL06v2.0)"
 UNAVAILABLE = "Regional water storage data are unavailable for this location."
 
 
