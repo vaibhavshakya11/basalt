@@ -177,20 +177,22 @@ def _option_head(option: Evidence, irrigated: bool, *, alternatives: Sequence[Ev
 
 def _detail_copy(option: Evidence, card: dict) -> str:
     ui = labels()
+    breakdown = ""
+    if not option["is_current"]:
+        counts = "".join(f'<div><dt>{escape(ui[axis])}</dt><dd class="b-axis-counts">'
+                         f'{_numbers(ui["option_count_line"].format(**option["wins_vs_current"][axis]))}</dd></div>'
+                         for axis in AXES)
+        breakdown = f'<dl aria-label="{escape(ui["option_years"])}">{counts}</dl>'
     sections = []
     for section in ("why", "evidence", "benefits", "gaps", "risks"):
         lines = card.get(section, ())
         if isinstance(lines, str):
             lines = [lines]
-        if lines:
+        extra = breakdown if section == "evidence" else ""
+        if lines or extra:
             title = escape(ui[f"section_{section}"])
             paragraphs = "".join(f"<p>{_numbers(line)}</p>" for line in lines)
-            sections.append(f"<section><h4>{title}</h4>{paragraphs}</section>")
-    if not option["is_current"]:
-        counts = "".join(f'<div><dt>{escape(ui[axis])}</dt><dd class="b-axis-counts">'
-                         f'{_numbers(ui["option_count_line"].format(**option["wins_vs_current"][axis]))}</dd></div>'
-                         for axis in AXES)
-        sections.append(f'<section><h4>{escape(ui["option_years"])}</h4><dl>{counts}</dl></section>')
+            sections.append(f"<section><h4>{title}</h4>{paragraphs}{extra}</section>")
     return "".join(sections)
 
 
