@@ -119,7 +119,7 @@ V2 uses calendars that overlap at Ludhiana. Rice, wheat and moong alone exceed o
 ## Deviations and assumptions
 
 - GGCMI v1.01 dates, with MapSPAM 2010 area because GGCMI flags alone cannot establish local crop coverage. Pea area is unavailable. Wheat area is unsplit.
-- The offline map uses bundled Natural Earth shapes instead of external tile and script servers. GRACE uses official JPL analysis values at the two demo cells. The global offline processing script supports the authenticated JPL product.
+- The offline map uses bundled Natural Earth shapes instead of external tile and script servers. GRACE uses official JPL analysis values at the two demo cells. Elsewhere the fallback is NASA Goddard, labelled separately because its catalog and embedded release labels differ. The offline script also supports the authenticated full JPL product.
 - Complete agricultural years determine trends. At these pins the 2025-starting season extends past the supplied weather archive. The bare-soil depletion fraction (0.55), proportional depletion when roots shrink, initial rooting depth{f' ({roots})' if roots else ''}, gap-crop heights and supplied uncertainty bounds are model assumptions. The crop YAML files record low-confidence additions.
 - Internal rotation runs retain both phases for two-year cycles. Reported counts can be half-integers after averaging phases; peak closure uses the larger phase residual. JSON Evidence fields follow the frozen structure.
 - V7 requires the authorized NASA AppEEARS point export at the Malawi pin.
