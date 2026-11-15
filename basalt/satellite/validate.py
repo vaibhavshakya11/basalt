@@ -1,4 +1,5 @@
 from collections.abc import Mapping
+from dataclasses import replace
 from datetime import timedelta
 
 import numpy as np
@@ -6,10 +7,13 @@ import pandas as pd
 from scipy.optimize import linear_sum_assignment
 from scipy.stats import spearmanr
 
-from basalt.calendar_utils import calendar_windows
+from basalt.calendar_utils import calendar_windows, validate_rotation
 from basalt.climate.et0 import example_18
 from basalt.config import DATA, YEARS
-from basalt.contracts import Crop, RotationRun, Site, ValidationResult
+from basalt.contracts import Crop, CropSlot, RotationRun, Site, ValidationResult
+from basalt.decision.replay import compare_runs, replay_runs
+from basalt.global_tier.ggcmi import calendar_slot, ggcmi_cell, local_calendars
+from basalt.knowledge.loader import load_soils
 
 FIRMS = DATA / "firms" / "ludhiana_pentads.parquet"
 SMAP = DATA / "smap" / "malawi_smap_l4.parquet"
@@ -30,6 +34,63 @@ def _result(check: str, site: Site, status: str, note: str, *, n: int = 0, value
     return ValidationResult(check_id=check, site=site.site_id, dataset=dataset, version=version, period=period,
                             n=n, metric=metric, value=value, unit=unit, pass_rule=rule,
                             status=status, note=note, figure_path=None)
+
+
+def _compare_tiers(site, climate, runs, crops):
+    if site.site_id != "ludhiana":
+        return _result("V2", site, "not_run", "The calibrated comparison applies to Ludhiana.")
+    if not site.irrigated:
+        return _result("V2", site, "not_run", "The Ludhiana comparison uses irrigated crop calendars.")
+    available = {row.crop_id: row for row in local_calendars(site.lat, site.lon, True, grown_only=False)
+                 if row.crop_code != "ri2"}
+    pairing = {"rice_pb": "rice", "wheat_pb": "wheat_winter", "maize_pb": "maize"}
+    if not set(pairing.values()) <= available.keys():
+        return _result("V2", site, "not_run", "The irrigated GGCMI calendars do not cover all the Punjab crops at this pin.")
+    global_site = replace(site, tier="global", ggcmi_cell=ggcmi_cell(site.lat, site.lon))
+    global_rotations = []
+    incompatible = []
+    for run in runs.values():
+        converted = []
+        for group in run.rotation.years:
+            slots = []
+            for slot in group:
+                if slot.crop_id == "moong_pb":
+                    month, day = map(int, slot.sow.split("-"))
+                    sow = pd.Timestamp(2001, month, day)
+                    harvest = (sow + timedelta(days=sum(crops["moong_pb"].stage_days) - 1)).strftime("%m-%d")
+                    slots.append(CropSlot("mungbean", slot.sow, harvest))
+                else:
+                    slots.append(calendar_slot(available[pairing[slot.crop_id]]))
+            converted.append(tuple(slots))
+        rotation = replace(run.rotation, years=tuple(converted))
+        try:
+            validate_rotation(rotation, crops, global_site.season_year_start)
+        except ValueError:
+            incompatible.append(run.rotation.name)
+        global_rotations.append(rotation)
+    if incompatible:
+        rice = calendar_slot(available["rice"])
+        wheat = calendar_slot(available["wheat_winter"])
+        rice_length = available["rice"].season_len
+        wheat_length = available["wheat_winter"].season_len
+        moong_length = sum(crops["moong_pb"].stage_days)
+        note = (f"GGCMI rice spans {rice.sow} to {rice.harvest}. Winter wheat spans "
+                f"{wheat.sow} to {wheat.harvest}. These dates overlap here. Rice, wheat and the "
+                f"Punjab moong window require {rice_length + wheat_length + moong_length} crop days before any gaps.")
+        return _result("V2", site, "not_run", note)
+    global_runs = replay_runs(global_site, climate, global_rotations, crops, load_soils()[site.soil_class])
+    calibrated, global_arrows = compare_runs(runs, site.irrigated), compare_runs(global_runs, site.irrigated)
+    pairs = [(arrow, global_arrows[key][axis])
+             for key, row in calibrated.items() for axis, arrow in row.items()]
+    percent = 100 * sum(left == right for left, right in pairs) / len(pairs)
+    metrics = {}
+    for field, label in (("et_mm", "ET difference (mm)"), ("soil_score", "Soil score difference")):
+        metrics[label] = float(np.median([abs(np.median([getattr(year, field) for year in run.seasons]) -
+                                                    np.median([getattr(year, field) for year in global_runs[key].seasons]))
+                                         for key, run in runs.items()]))
+    status = "pass" if percent >= 75 else "caveat" if percent >= 50 else "fail"
+    return _result("V2", site, status, "Compared each arrow using the same soil and weather.",
+                   n=len(pairs), value={"Arrow agreement (%)": percent, **metrics})
 
 
 def _calendar_validation(site: Site, rotation, crops, phenology):
@@ -124,7 +185,12 @@ def _modis_water(site: Site, current, satellite):
     if satellite is None or satellite.empty:
         return _result("V8", site, "not_run", "The ORNL satellite water-use product is unavailable for this run.")
     biases = []
+    first_obs = satellite.index.min()
+    last_obs = satellite.index.max()
+    coverage_through = last_obs + timedelta(days=min(7, (pd.Timestamp(last_obs.year, 12, 31) - last_obs).days))
     for season in current.phases[0]:
+        if first_obs > season.dates[0] or coverage_through < season.dates[-1]:
+            continue
         observed = satellite.loc[season.dates[0]:season.dates[-1], "et_mm"].dropna()
         model = pd.Series(season.daily.etc_adj, index=season.dates)
         pairs = []
@@ -147,9 +213,7 @@ def build_validation(site: Site, climate, runs: Mapping[str, RotationRun], crops
     current = next(run for run in runs.values() if run.rotation.is_current)
     example = float(example_18().et0)
     v1 = _result("V1", site, "pass" if abs(example - 3.9) <= .1 else "fail", "Reproduces the reference calculation in Brussels.", n=1, value=example)
-    v2_note = ("The published rice and wheat calendars overlap here. Rice, wheat and moong also exceed a year before any planting gaps. The four rotations cannot be compared as specified."
-               if site.site_id == "ludhiana" else "The calibrated comparison applies to Ludhiana.")
-    v2 = _result("V2", site, "not_run", v2_note)
+    v2 = _compare_tiers(site, climate, runs, crops)
     v3 = _calendar_validation(site, assumed_calendar or current.rotation, crops, phenology)
     years = [year for run in runs.values() for phase in run.phases for year in phase]
     residual = max(year.result.wb_residual_max_mm for year in years)

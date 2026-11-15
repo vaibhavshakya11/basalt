@@ -44,9 +44,9 @@ def field_patterns(run: RotationRun, crops: dict[str, Crop], trends: list[dict],
         for event, name in EVENT_NAMES.items():
             daily = season.daily
             flags = getattr(daily, event)
-            if name == "heat" and np.count_nonzero(flags) < 3:
-                continue
-            hits.update(set(zip(daily.crop_id[flags], daily.stage[flags], [name] * np.count_nonzero(flags))))
+            counts = Counter(zip(daily.crop_id[flags], daily.stage[flags]))
+            hits.update((crop_id, stage, name) for (crop_id, stage), count in counts.items()
+                        if count >= (3 if name == "heat" else 1))
     if hits:
         (crop_id, stage, event), count = min(hits.items(), key=lambda row: (-row[1], row[0]))
         if count >= 3:

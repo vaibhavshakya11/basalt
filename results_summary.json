@@ -66,7 +66,7 @@
         "unit": "%",
         "pass_rule": "Pass at 75% or more. Caveat at 50% to under 75%.",
         "status": "not_run",
-        "note": "The published rice and wheat calendars overlap here. Rice, wheat and moong also exceed a year before any planting gaps. The four rotations cannot be compared as specified.",
+        "note": "GGCMI rice spans 06-29 to 11-26. Winter wheat spans 11-04 to 04-16. These dates overlap here. Rice, wheat and the Punjab moong window require 378 crop days before any gaps.",
         "figure_path": null
       },
       {
