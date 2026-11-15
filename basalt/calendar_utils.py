@@ -23,7 +23,7 @@ def season_bounds(year: int, start: str) -> tuple[pd.Timestamp, pd.Timestamp]:
 def doy_month_day(day: int) -> str:
     if not 1 <= day <= 366:
         raise ValueError(f"Invalid day of year: {day}")
-    return (pd.Timestamp("2000-01-01") + pd.Timedelta(days=day - 1 if day == 366 else day - 1 + (day >= 60))).strftime("%m-%d") if day < 366 else "12-31"
+    return (pd.Timestamp("2001-01-01") + pd.Timedelta(min(day, 365) - 1, unit="D")).strftime("%m-%d")
 
 
 def stage_lengths(crop: Crop, total: int | None = None) -> tuple[int, int, int, int]:
@@ -51,11 +51,11 @@ def calendar_windows(rotation: Rotation, crops: Mapping[str, Crop], start: str,
             crop = crops[slot.crop_id]
             if slot.harvest is None:
                 lengths = stage_lengths(crop)
-                harvest = sow + pd.Timedelta(days=sum(lengths) - 1)
+                harvest = sow + pd.Timedelta(int(sum(lengths)) - 1, unit="D")
             else:
                 harvest = month_day(sow.year + (slot.harvest < slot.sow), slot.harvest)
                 lengths = stage_lengths(crop, (harvest - sow).days + 1)
-            shift = pd.Timedelta(days=shift_days)
+            shift = pd.Timedelta(int(shift_days), unit="D")
             windows.append(CropWindow(crop, sow + shift, harvest + shift, year, lengths))
     windows.sort(key=lambda window: window.sow)
     if minimum_gap is not None:

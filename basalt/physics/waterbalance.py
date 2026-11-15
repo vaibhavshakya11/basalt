@@ -38,7 +38,7 @@ def root_day(dr: float, taw: float, raw: float, rain: float, etc: float,
     ks = 1. if pre_et_dr <= raw else (taw - pre_et_dr) / (taw - raw)
     et = min(etc * ks, taw - dr + inputs)
     drainage = max(0., inputs - et - dr)
-    final = dr - inputs + et + drainage
+    final = max(0., min(taw, dr - inputs + et + drainage))
     residual = final - dr + pond - (et + drainage + runoff - rain - irrigation)
     return WaterDay(final, 0., ks, et, runoff, irrigation, irrigation / efficiency, drainage, residual)
 

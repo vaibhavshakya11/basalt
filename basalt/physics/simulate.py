@@ -177,13 +177,13 @@ def _run_phase(site: Site, climate: ClimateTable, rotation: Rotation, crops: Map
     windows = calendar_windows(rotation, crops, site.season_year_start, range(years[0] - 2, years[-1] + 2),
                                phase, shift_days, minimum_gap=0)
     latest = max((w.harvest for w in windows if w.season <= years[-1]), default=end)
-    stop = min(max(end - pd.Timedelta(days=1), latest), climate.index[-1])
+    stop = min(max(end - pd.Timedelta(1, unit="D"), latest), climate.index[-1])
     dates = pd.date_range(start, stop)
     weather = climate.reindex(dates)
     for column in ("et0", "precip", "tmax", "tmin", "ws2"):
         if not np.isfinite(weather[column]).all():
             raise ValueError(f"Missing {column} in the replay period")
-    if dates[-1] < end - pd.Timedelta(days=1):
+    if dates[-1] < end - pd.Timedelta(1, unit="D"):
         raise ValueError("Climate does not cover the complete replay period")
     days, burn = _schedule(dates, weather, site, windows, constraints, parameters)
     daily, residuals, events = _water(days, weather.precip.to_numpy(), weather.et0.to_numpy(), soil, site, parameters)
