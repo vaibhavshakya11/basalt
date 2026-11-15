@@ -84,7 +84,10 @@ def _validation_value(check: dict) -> str:
     value = check["value"]
     if value is None:
         return check["status"].replace("_", " ")
-    if isinstance(value, dict):
+    if check["check_id"] == "V2" and isinstance(value, dict) and "Compared alternative arrows" in value:
+        display = (f"{value['Matching alternative arrows']}/{value['Compared alternative arrows']} alternative ratings agreed, "
+                   f"{value['Matching arrows']}/{value['Compared arrows']} overall")
+    elif isinstance(value, dict):
         display = ", ".join(f"{key} {item:.4g}" for key, item in value.items())
     else:
         display = f"{value:.4g} {check['unit']}"
