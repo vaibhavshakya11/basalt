@@ -1,0 +1,296 @@
+verdict:
+  current: "This is your current rotation. Every other option is compared with it."
+  all_similar: "Soil, water and weather risk were similar."
+  join: "{first} and {second}; {third}."
+  axis:
+    soil:
+      better: "better for your soil in {k} of {n} seasons"
+      worse: "worse for your soil in {k} of {n} seasons"
+      similar: "soil similar"
+    water:
+      better: "needed less water in {k} of {n} seasons"
+      worse: "needed more water in {k} of {n} seasons"
+      similar: "water similar"
+    risk:
+      better: "lower weather risk in {k} of {n} seasons"
+      worse: "higher weather risk in {k} of {n} seasons"
+      similar: "weather risk similar"
+lever_labels:
+  current: Current rotation
+  fill_the_gap: Fill the gap
+  swap_weak_link: Swap the weak link
+  take_turns: Take turns
+  combine: Combine
+calendar_sources:
+  pau: PAU crop calendar
+  ggcmi: GGCMI crop calendar
+  ndvi: MODIS greenness and the regional crop calendar
+model_sources:
+  - FAO-56 (Allen et al. 1998)
+  - USDA Technical Release 55
+  - RUSLE (Renard et al. 1997)
+tags:
+  nitrogen_fixing:
+    label: Nitrogen-fixing
+    description: "Legumes host bacteria that pull nitrogen from the air into the soil, so the next crop may need less fertiliser."
+  cover:
+    label: Cover
+    description: "Living roots and leaves protect bare soil from sun, wind and heavy rain, and feed soil life."
+  deep_rooting:
+    label: Deep-rooting
+    description: "Deep roots can break up compacted layers and reach water further down."
+  drought_tolerant:
+    label: Drought-tolerant
+    description: "Keeps growing through dry spells better than most crops."
+  fodder_value:
+    label: Fodder
+    description: "Leaves or stalks can feed livestock."
+  extra_harvest:
+    label: Extra harvest
+    description: "Adds a harvest you could eat or sell. Check local prices."
+soil_factors:
+  living_cover: Days with living roots
+  residue_kept: Crop residue kept, not burned
+  legume_months: Time with nitrogen-fixing crops
+  no_puddling: No puddling (puddling compacts a hard layer under the topsoil)
+  pest_cycle_break: Crop families rotated (breaks pest and disease cycles)
+  erosive_rain_bare: Heavy rain landing on bare soil
+why:
+  current: "This rotation is the baseline for the season-by-season comparison."
+  fill_the_gap: "Your field is usually bare for about {bare_days} days from {window_start} to {window_end}. {crop} fits that window in {pct}% of the last {n} seasons."
+  swap_weak_link: "{weak_crop} was hit by {risk_type} in {k} of {n} seasons. {new_crop} is grown in this area and fits the same slot."
+  swap_no_risk: "{new_crop} is grown in this area and fits the {weak_crop} slot."
+  take_turns: "Your field grows one main crop a year. Alternating with {legume}, a crop grown in this area, adds a legume every other year."
+  combine: "Combines '{lever1}' and '{lever2}'."
+  pb_rw_moong: "The Punjab crop calendar leaves room for summer moong between wheat harvest and rice transplanting."
+  pb_mw: "Maize fits the summer crop slot and avoids puddling the field for rice. The rotation keeps wheat in winter."
+  pb_mw_moong: "Maize replaces rice in the summer crop slot. Summer moong adds a short legume crop after wheat."
+evidence:
+  overview: "Replayed through {n} real seasons ({start} to {end}) of NASA POWER weather."
+  comparison: "Median soil score {soil:.1f} (range {soil_p10:.1f} to {soil_p90:.1f}) vs {current_soil:.1f} now. Water used by crops and soil {et:.0f} mm/yr vs {current_et:.0f} mm/yr."
+  pumping: "Pumping {irr:.0f} mm/yr vs {current_irr:.0f} mm/yr."
+  calendar: "Calendar from {calendar_source}."
+benefits:
+  soil_factor: "The score for {factor_name} rose from {current:.2f} to {option:.2f}."
+  comparable: "Compare the soil factors and the season counts below."
+gaps:
+  disease: "Disease and nutrient balance are not modelled."
+  global: "Crop dates are regional defaults from GGCMI. Check them for your field."
+  regional_ndvi: "Satellite greenness helps time the seasons. Check the crop types and field dates locally."
+  income: "Income is not modelled. Check local prices."
+risks:
+  local: "Check this with your local agriculture office or extension service (for example a Krishi Vigyan Kendra in India) before changing your rotation."
+  irrigation: "Needs more irrigations than your limit in {k} of {n} seasons."
+  assured_market_dropped: "This option drops a crop with guaranteed government purchase. Check market access."
+  heat: "{crop} faced heat at flowering in {k} of {n} seasons."
+  heat_phases: "{crop} faced heat at flowering in at least one phase in {k} of {n} seasons."
+  gap_crop: "Check seed availability and the time needed to prepare the field between crops."
+stability:
+  robust: "Holds under all assumptions we tested"
+  depends: "Depends on {drivers}"
+  scenario: "Stability shown for today's climate."
+stability_drivers:
+  rice_percolation:
+    label: rice field water loss into the ground
+    local: "How fast water drains from your rice fields changes this comparison."
+  irrigation_efficiency:
+    label: irrigation losses
+    local: "Check how much pumped water reaches the crop roots."
+  wheat_kc_ini:
+    label: early-season water use by wheat
+    local: "Check how much water young wheat uses with your planting and residue practices."
+  heat_threshold:
+    label: crop tolerance to heat
+    local: "Check the flowering heat tolerance of the varieties you grow."
+  sowing_date:
+    label: crop sowing dates
+    local: "Check your sowing and harvest dates. A different calendar changes this comparison."
+  root_depth:
+    label: depth reached by crop roots
+    local: "Check for shallow or compacted layers that could limit roots in your field."
+  soil_class:
+    label: your soil texture
+    local: "Confirm your soil texture with a sample or a local adviser."
+  burn_window:
+    label: time to manage crop residue
+    local: "Check how much time and equipment you have for handling residue before the next sowing."
+  soil_weight_living_cover:
+    label: the weight given to living roots
+    local: "The comparison changes with the importance placed on keeping living roots."
+  soil_weight_residue_kept:
+    label: the weight given to keeping crop residue
+    local: "The comparison changes with the importance placed on retaining residue."
+  soil_weight_legume_months:
+    label: the weight given to legumes
+    local: "The comparison changes with the importance placed on time growing legumes."
+  soil_weight_no_puddling:
+    label: the weight given to avoiding puddling
+    local: "The comparison changes with the importance placed on avoiding puddling."
+  soil_weight_pest_cycle_break:
+    label: the weight given to crop diversity
+    local: "The comparison changes with the importance placed on rotating crop families."
+  soil_weight_erosive_rain_bare:
+    label: the weight given to heavy rain on bare soil
+    local: "The comparison changes with the importance placed on protecting soil from heavy rain."
+  arrow_threshold:
+    label: the number of seasons needed for an arrow
+    local: "Look at the season counts. The arrow changes when we require more or fewer wins."
+assumptions:
+  both:
+    - "A soil arrow needs a difference of at least 2 points in a season. An arrow changes when the option wins or loses in at least 16 of 24 seasons."
+    - "Bare soil uses a crop coefficient of 0.25 after at least 5 mm of rain or irrigation in 3 days, and 0.10 otherwise."
+    - "A crop is heat-hit after 3 hot days in its flowering window. The frost threshold, when applied, is 2 °C."
+    - "The heavy-rain index uses rain events of at least 12.7 mm. Local slope is omitted."
+    - "The soil score averages six indicators of field practices. Newly reached soil is assumed to start at field capacity."
+    - "The residue model uses the time between crops. Residue machinery multiplies predicted burning pressure by 0.3."
+  irrigated:
+    - "The water arrow compares water use by crops and soil, with a 3% threshold in each season. Irrigation pumping is shown alongside it."
+    - "For crops outside ponded rice, the model assumes 60% of pumped water reaches the crop roots and tests 50% to 75%."
+  puddled:
+    - "The model assumes 200 mm of water for puddling over 7 days (150 to 300 mm range). It tests rice field drainage from 2 to 15 mm/day."
+  demo_soil:
+    - "The demo soil class is a default. Confirm the texture with a local adviser."
+  global:
+    - "Crop stages use global fractions applied to the length of the local calendar."
+    - "For rainfed crops, the water arrow compares the fraction of mid-season days with strong dry stress, using a 0.05 difference to count a win."
+  gap:
+    - "Gap-crop screening uses approximate warmth and frost limits. Check the variety with a local adviser."
+  added: "{value}. {reason}"
+glossary:
+  evapotranspiration: "Water that leaves the field as vapour, evaporating from the soil and released by plants. It is the water your crops actually use."
+  ndvi: "A satellite measure of how green and dense plants are. It rises as crops grow and falls at harvest."
+  soil_moisture: "How much wetter or drier the soil is than usual for that time of year."
+  frost_risk: "The chance of temperatures near freezing while a crop is sensitive."
+  water_balance: "Bookkeeping of water in the root zone: rain and irrigation in; crop use, runoff and drainage out."
+  growing_degree_days: "A count of warmth a crop needs to grow; warmer days add more."
+  season: "One farming year at this place, starting {season_year_start}."
+ui:
+  brand: Basalt
+  page_title: A stress test for crop rotations
+  page_intro: Before you change your rotation, see how each option would have done in each of the last 24 seasons on your field.
+  demo_india: Try Ludhiana, India
+  demo_malawi: Try central Malawi
+  slides: Slides
+  slides_unavailable: Slides are pending.
+  how_it_works: How it works
+  how_steps:
+    - NASA POWER daily weather since 1990 feeds a FAO-56 estimate of crop water use.
+    - A daily soil-water model replays each rotation through 24 seasons.
+    - Each option is compared season by season with your current rotation.
+    - Satellites check the calendar and water use.
+    - A sensitivity test lists what to check locally.
+  choose_location: Or choose your own location
+  use_location: Use this location
+  location_help: Pick a spot on the map or enter its coordinates.
+  latitude: Latitude
+  longitude: Longitude
+  data_caption: Built on NASA POWER, MODIS, SMAP, GRACE-FO and FIRMS, with GGCMI crop calendars and SoilGrids soil data.
+  hero_caption: Ludhiana, 2001 to 2024. Each row is one season. Sand colour is bare soil.
+  local_advice: Basalt supports, and does not replace, local agricultural advice.
+  try_other_site: Choose another location
+  replaying: Replaying crop rotations
+  demo_unavailable: This demo has no verified replay on disk.
+  pick_soil: Choose a soil type to continue.
+  fetch_error: Basalt could not load the field data.
+  invalid_location: Choose a latitude from −90 to 90 and a longitude from −180 to 180.
+  tab_field: Your field
+  tab_options: Your options
+  tab_sure: How sure are we?
+  field_header: "Your field: what's happening, and is it changing?"
+  options_header: "Your options: what each one would have done, season by season."
+  soil_type: Soil type
+  crops: Current crops
+  irrigated: Irrigated?
+  my_limits: My limits
+  limit_known: I know my yearly irrigation limit
+  irrigations_max: Irrigations per year
+  residue_machinery: I have residue machinery (e.g., Happy Seeder)
+  assured_market: I prefer crops with guaranteed government purchase
+  update_field: Update field
+  calibrated: Calibrated for Punjab
+  global: Global defaults. Check crop dates locally.
+  strata: Season Strata
+  older_lower: Newest seasons are at the top. Each row shows one farming year.
+  patterns: Patterns in your field
+  storage: Regional water storage
+  storage_caption: GRACE and GRACE-FO measure water storage across regions about 300 km wide.
+  storage_none: No regional water-storage trend is available for this pin.
+  storage_drier: Falling
+  storage_wetter: Rising
+  storage_unit: cm/year
+  calendar: Where the calendar came from
+  calendar_source:
+    ndvi: MODIS greenness helped identify the season dates. Check these dates for your field.
+    ggcmi: GGCMI gives regional estimates of crop dates. Check these dates for your field.
+    pau: Dates follow the Punjab Agricultural University crop calendar for this rotation.
+  ndvi_detected: MODIS identified {n} growing periods in the satellite record.
+  priorities: What matters most to you
+  soil: Soil
+  water: Water
+  risk: Weather risk
+  scenario: Try a different climate
+  warm: What if it gets warmer?
+  rain: What if rainfall changes?
+  scenario_banner: "Scenario: {temperature:+g} °C, {rain:+d}% rain"
+  scenario_stability: Stability shown for today's climate.
+  use_scenario: Replay this climate
+  lever:
+    current: Current rotation
+    fill_the_gap: Fill the gap
+    swap_weak_link: Swap the weak link
+    take_turns: Take turns
+    combine: Combine
+  tone:
+    better: Better
+    similar: Similar
+    worse: Worse
+  details: Details
+  current_first: Current rotation
+  section_why: Why suggested
+  section_evidence: Evidence
+  section_benefits: Benefits
+  section_gaps: Information gaps
+  section_risks: Risks to check locally
+  soil_factors: Soil practices
+  soil_practices_caption: The model estimates these practice scores. Bars show the median and the middle 80% of seasons.
+  no_more: Why not more options?
+  options_passed: Only {count} options passed the checks here.
+  validation: Validation checks
+  assumptions: What this tool assumes
+  no_assumptions: See the crop dates and local checks for each option.
+  satellites_heading: Satellites vs ground measurements
+  satellites_text: Satellites see large areas often but indirectly; ground sensors are exact but only at one spot. Basalt uses satellites and NASA weather to describe your area, and asks you to confirm what you know about your own field.
+  datasets_heading: How the data fit together
+  datasets_text: "Every dataset is aligned to your field's location and a daily timeline: NASA POWER weather (~50 km, daily), MODIS greenness (250 m, every 16 days), MODIS water use (500 m, 8-day), SMAP soil moisture (9 km), GRACE-FO water storage (~300 km, monthly), crop calendars (GGCMI, 0.5°), soil texture (SoilGrids, 250 m)."
+  limitations: Limits of the comparison
+  limits:
+    - The model uses a single point for your field.
+    - Disease and nutrient balance are not modelled.
+    - The soil score compares practices that can affect soil over time.
+    - Regional crop calendars reflect conditions around the 2000s.
+    - NASA POWER combines a weather model and observations.
+    - GRACE and GRACE-FO measure water storage across regions.
+    - FIRMS can miss small fires or afternoon fires.
+  validation_status:
+    pass: Pass
+    caveat: Caveat
+    fail: Fail
+    not_run: Not run
+  validation_columns: [Check, Status, Value, Dataset, What it means]
+  categories:
+    bare: Bare soil
+    Poaceae: Rice/wheat/maize (grasses)
+    Fabaceae: Legumes
+    Malvaceae: Cotton
+    Brassicaceae: Mustard/rapeseed
+  events:
+    heat: Too hot at flowering
+    frost: Frost
+    rain: Heavy rain on bare soil
+    dry: Crop short of water
+  stages:
+    bare: Bare soil
+    ini: Getting established
+    dev: Growing
+    mid: Mid-season
+    late: Ripening
