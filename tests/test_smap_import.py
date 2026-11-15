@@ -41,7 +41,7 @@ def test_valid_samples_are_averaged_in_time_then_space():
 def test_other_locations_or_versions_cannot_fill_the_malawi_validation_input():
     samples = _point_rows()
     wrong_version = samples.rename(columns={f"SPL4SMGP_008_{LAYER}": f"SPL4SMGP_007_{LAYER}"})
-    with pytest.raises(ValueError, match="V8 root-zone wetness"):
+    with pytest.raises(ValueError, match="SMAP version 8 root-zone wetness"):
         daily_wetness([wrong_version])
     first = samples.iloc[0]
     other_points = samples[~(samples.Latitude.eq(first.Latitude) & samples.Longitude.eq(first.Longitude))]
