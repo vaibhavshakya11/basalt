@@ -7,10 +7,10 @@ import pandas as pd
 from scipy.optimize import linear_sum_assignment
 from scipy.stats import spearmanr
 
-from basalt.calendar_utils import calendar_windows, validate_rotation
+from basalt.calendar_utils import calendar_windows, stage_lengths, validate_rotation
 from basalt.climate.et0 import example_18
 from basalt.config import DATA, YEARS
-from basalt.contracts import Crop, CropSlot, RotationRun, Site, ValidationResult
+from basalt.contracts import Constraints, Crop, RotationRun, Site, ValidationResult
 from basalt.decision.replay import compare_runs, replay_runs
 from basalt.global_tier.ggcmi import calendar_slot, ggcmi_cell, local_calendars
 from basalt.knowledge.loader import load_soils
@@ -19,7 +19,7 @@ FIRMS = DATA / "firms" / "ludhiana_pentads.parquet"
 SMAP = DATA / "smap" / "malawi_smap_l4.parquet"
 CHECKS = {
     "V1": ("FAO-56 Example 18", "1998", "6 July", "Reference water use", "mm/day", "3.9 ± 0.1 mm/day"),
-    "V2": ("GGCMI Phase 3 and PAU crop calendars", "1.01 / 2026", "2001 to 2024", "Global and calibrated arrow agreement", "%", "Pass at 75% or more. Caveat at 50% to under 75%."),
+    "V2": ("GGCMI Phase 3, PAU crop calendars and FAO-56", "GGCMI 1.01", "2001 to 2024", "Global and calibrated arrow agreement", "%", "At least 75% agreement meets the numerical threshold. Calendar infeasibility remains a caveat."),
     "V3": ("MODIS MOD13Q1 via ORNL DAAC", "061", "2001 to 2024", "Median calendar date difference", "days", "Pass at 14 days or less. Caveat at 28 days or less."),
     "V4": ("NASA POWER and FAO-56", "Daily AG / Eq. 85", "2001 to 2024", "Largest daily water balance difference", "mm/day", "Under 0.1 mm/day."),
     "V5": ("NASA FIRMS VIIRS S-NPP", "375 m", "2012 to 2024", "Fires in the post-rice window", "%", "Consistent at 50% or more of September to December fires."),
@@ -36,66 +36,103 @@ def _result(check: str, site: Site, status: str, note: str, *, n: int = 0, value
                             status=status, note=note, figure_path=None)
 
 
-def _compare_tiers(site, climate, runs, crops):
+GLOBAL_CROP_FOR = {"rice_pb": "rice", "wheat_pb": "wheat_winter", "maize_pb": "maize", "moong_pb": "mungbean"}
+
+
+def _matched_crop_parameters(crops):
+    matched = {}
+    for local_id, global_id in GLOBAL_CROP_FOR.items():
+        generic = crops[global_id]
+        # Use the PAU duration for an implicit harvest, including seasons that cross a leap day.
+        stages = stage_lengths(generic, sum(stage_lengths(crops[local_id])))
+        matched[local_id] = replace(generic, crop_id=local_id, stage_days=stages)
+    return matched
+
+
+def _raw_calendars(site, rotations, crops):
+    regional_ids = set(GLOBAL_CROP_FOR.values()) - {"mungbean"}
+    available = {row.crop_id: row for row in local_calendars(site.lat, site.lon, True, grown_only=False)
+                 if row.crop_code != "ri2"}
+    if not regional_ids <= available.keys():
+        return None, "The GGCMI cell lacks irrigated dates for at least one crop."
+    slots = {crop_id: calendar_slot(available[crop_id]) for crop_id in regional_ids}
+    raw_crops = dict(crops)
+    raw_crops["mungbean"] = replace(crops["mungbean"], stage_days=stage_lengths(
+        crops["mungbean"], sum(stage_lengths(crops["moong_pb"]))))
+    plan = tuple(replace(rotation, years=tuple(
+        tuple(slots[GLOBAL_CROP_FOR[slot.crop_id]] if slot.crop_id != "moong_pb" else replace(slot, crop_id="mungbean")
+              for slot in group) for group in rotation.years
+    )) for rotation in rotations)
+    feasible = []
+    for rotation in plan:
+        try:
+            validate_rotation(rotation, raw_crops, site.season_year_start)
+        except ValueError:
+            continue
+        feasible.append(rotation)
+    if len(feasible) == len(plan):
+        return (plan, raw_crops), ""
+    rice, wheat = slots["rice"], slots["wheat_winter"]
+    rice_end = pd.Timestamp(f"2001-{rice.harvest}").strftime("%d %B")
+    wheat_start = pd.Timestamp(f"2001-{wheat.sow}").strftime("%d %B")
+    detail = (f"Unadjusted GGCMI dates fit {len(feasible)} of {len(plan)} rotations. "
+              f"Rice ends on {rice_end} and wheat starts on {wheat_start}. The shared-calendar check isolates "
+              "the effect of global crop parameters.")
+    return None, detail
+
+
+def _agreement(site, calibrated_runs, global_runs):
+    calibrated = compare_runs(calibrated_runs, site.irrigated)
+    alternative = compare_runs(global_runs, site.irrigated)
+    matches = {key: sum(arrow == alternative[key][axis] for axis, arrow in row.items())
+               for key, row in calibrated.items()}
+    n = sum(map(len, calibrated.values()))
+    current = next(key for key, run in calibrated_runs.items() if run.rotation.is_current)
+    total_matches = sum(matches.values())
+    no_baseline = n - len(calibrated[current])
+    metrics = {"Arrow agreement (%)": 100 * total_matches / n,
+               "Matching arrows": total_matches, "Compared arrows": n,
+               "Matching alternative arrows": total_matches - matches[current],
+               "Compared alternative arrows": no_baseline}
+    for field, label in (("et_mm", "Median ET difference (mm/year)"),
+                         ("soil_score", "Median soil-score difference (points)")):
+        gaps = []
+        for key, run in calibrated_runs.items():
+            baseline = np.median([getattr(season, field) for season in run.seasons])
+            generic = np.median([getattr(season, field) for season in global_runs[key].seasons])
+            gaps.append(abs(baseline - generic))
+        metrics[label] = float(np.median(gaps))
+    return metrics, n
+
+
+def _compare_tiers(site, climate, runs, crops, constraints=Constraints()):
     if site.site_id != "ludhiana":
         return _result("V2", site, "not_run", "The calibrated comparison applies to Ludhiana.")
     if not site.irrigated:
         return _result("V2", site, "not_run", "The Ludhiana comparison uses irrigated crop calendars.")
-    available = {row.crop_id: row for row in local_calendars(site.lat, site.lon, True, grown_only=False)
-                 if row.crop_code != "ri2"}
-    pairing = {"rice_pb": "rice", "wheat_pb": "wheat_winter", "maize_pb": "maize"}
-    if not set(pairing.values()) <= available.keys():
-        return _result("V2", site, "not_run", "The irrigated GGCMI calendars do not cover all the Punjab crops at this pin.")
+    rotations = tuple(run.rotation for run in runs.values())
+    regional, calendar_note = _raw_calendars(site, rotations, crops)
     global_site = replace(site, tier="global", ggcmi_cell=ggcmi_cell(site.lat, site.lon))
-    global_rotations = []
-    incompatible = []
-    for run in runs.values():
-        converted = []
-        for group in run.rotation.years:
-            slots = []
-            for slot in group:
-                if slot.crop_id == "moong_pb":
-                    month, day = map(int, slot.sow.split("-"))
-                    sow = pd.Timestamp(2001, month, day)
-                    harvest = (sow + timedelta(days=sum(crops["moong_pb"].stage_days) - 1)).strftime("%m-%d")
-                    slots.append(CropSlot("mungbean", slot.sow, harvest))
-                else:
-                    slots.append(calendar_slot(available[pairing[slot.crop_id]]))
-            converted.append(tuple(slots))
-        rotation = replace(run.rotation, years=tuple(converted))
-        try:
-            validate_rotation(rotation, crops, global_site.season_year_start)
-        except ValueError:
-            incompatible.append(run.rotation.name)
-        global_rotations.append(rotation)
-    if incompatible:
-        rice = calendar_slot(available["rice"])
-        wheat = calendar_slot(available["wheat_winter"])
-        rice_length = available["rice"].season_len
-        wheat_length = available["wheat_winter"].season_len
-        moong_length = sum(crops["moong_pb"].stage_days)
-        note = (f"GGCMI rice spans {rice.sow} to {rice.harvest}. Winter wheat spans "
-                f"{wheat.sow} to {wheat.harvest}. These dates overlap here. Rice, wheat and the "
-                f"Punjab moong window require {rice_length + wheat_length + moong_length} crop days before any gaps.")
-        return _result("V2", site, "not_run", note)
-    global_runs = replay_runs(global_site, climate, global_rotations, crops, load_soils()[site.soil_class])
-    calibrated, global_arrows = compare_runs(runs, site.irrigated), compare_runs(global_runs, site.irrigated)
-    pairs = [(arrow, global_arrows[key][axis])
-             for key, row in calibrated.items() for axis, arrow in row.items()]
-    percent = 100 * sum(left == right for left, right in pairs) / len(pairs)
-    metrics = {}
-    for field, label in (("et_mm", "ET difference (mm)"), ("soil_score", "Soil score difference")):
-        metrics[label] = float(np.median([abs(np.median([getattr(year, field) for year in run.seasons]) -
-                                                    np.median([getattr(year, field) for year in global_runs[key].seasons]))
-                                         for key, run in runs.items()]))
-    status = "pass" if percent >= 75 else "caveat" if percent >= 50 else "fail"
-    return _result("V2", site, status, "Compared each arrow using the same soil and weather.",
-                   n=len(pairs), value={"Arrow agreement (%)": percent, **metrics})
+    soil = load_soils()[site.soil_class]
+    if regional:
+        global_rotations, global_crops = regional
+        note = "Used complete GGCMI rotation dates with the same weather, soil and field settings."
+    else:
+        global_rotations, global_crops = rotations, _matched_crop_parameters(crops)
+        note = ("Both runs used the same PAU planting and harvest dates, weather, soil and field settings. "
+                f"{calendar_note}")
+    global_runs = replay_runs(global_site, climate, global_rotations, global_crops, soil, constraints)
+    values, n = _agreement(site, runs, global_runs)
+    percent = values["Arrow agreement (%)"]
+    status = "fail" if percent < 50 else "pass" if regional and percent >= 75 else "caveat"
+    return _result("V2", site, status, note, n=n, value=values)
 
 
 def _calendar_validation(site: Site, rotation, crops, phenology):
-    if phenology is None or not phenology["seasons"]:
-        return _result("V3", site, "not_run", "There are no usable satellite growing periods for comparison.")
+    if phenology is None:
+        return _result("V3", site, "not_run", "This replay does not have a local MODIS greenness series.")
+    if not phenology["seasons"]:
+        return _result("V3", site, "not_run", "The MODIS series did not identify a growing period suitable for comparison.")
     windows = calendar_windows(rotation, crops, site.season_year_start, YEARS)
     by_year = {}
     for window in windows:
@@ -165,7 +202,7 @@ def _soil_moisture(site: Site, current):
     if site.site_id != "malawi":
         return _result("V7", site, "not_run", "The satellite root-zone wetness check is specific to the Malawi demo.")
     if not SMAP.is_file():
-        return _result("V7", site, "not_run", "NASA Earthdata sign-in is required to request the AppEEARS sample.")
+        return _result("V7", site, "not_run", "The NASA AppEEARS wetness export has not been added to this replay yet.")
     smap = pd.read_parquet(SMAP)
     wetness = pd.concat([pd.Series(1 - season.daily.dr_mm / season.daily.taw_mm, index=season.dates)
                          for season in current.phases[0]]).rename("model")
@@ -178,7 +215,9 @@ def _soil_moisture(site: Site, current):
     if not np.isfinite(value):
         return _result("V7", site, "not_run", "The soil wetness anomalies have no variation to compare.")
     return _result("V7", site, "pass" if value >= .5 else "caveat" if value >= .3 else "fail",
-                   "Compared matched daily values after removing the typical wetness for each date.", n=len(anomalous), value=value)
+                   ("For each calendar date, the check removes the usual soil wetness from each series before it compares "
+                    "the paired days. The 9 km SMAP product combines satellite measurements with a land model."),
+                   n=len(anomalous), value=value)
 
 
 def _modis_water(site: Site, current, satellite):
@@ -209,11 +248,11 @@ def _modis_water(site: Site, current, satellite):
 
 
 def build_validation(site: Site, climate, runs: Mapping[str, RotationRun], crops: Mapping[str, Crop],
-                     *, phenology=None, modis_et=None, assumed_calendar=None) -> list[ValidationResult]:
+                     *, phenology=None, modis_et=None, assumed_calendar=None, constraints=Constraints()) -> list[ValidationResult]:
     current = next(run for run in runs.values() if run.rotation.is_current)
     example = float(example_18().et0)
     v1 = _result("V1", site, "pass" if abs(example - 3.9) <= .1 else "fail", "Reproduces the reference calculation in Brussels.", n=1, value=example)
-    v2 = _compare_tiers(site, climate, runs, crops)
+    v2 = _compare_tiers(site, climate, runs, crops, constraints)
     v3 = _calendar_validation(site, assumed_calendar or current.rotation, crops, phenology)
     years = [year for run in runs.values() for phase in run.phases for year in phase]
     residual = max(year.result.wb_residual_max_mm for year in years)
