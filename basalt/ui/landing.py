@@ -2,10 +2,12 @@ from html import escape
 
 import streamlit as st
 
-from basalt.config import SCOPE, SLIDES_URL
+from basalt.config import DEMO_PROFILES, SCOPE, SLIDES_URL
 from basalt.ui.components import goto, how_it_works, labels, stage_navigation
 from basalt.ui.map import map_view
 from basalt.ui.strata import draw_strata_legend, strata_figure
+
+LEAD_DEMOS = ("ludhiana", "malawi")
 
 
 def _location_picker() -> None:
@@ -33,7 +35,7 @@ def _location_picker() -> None:
                         goto(lat=latitude, lon=longitude)
 
 
-def _intro() -> None:
+def _intro(extra_count: int) -> None:
     ui = labels()
     with st.container(key="landing-lead"):
         st.markdown(
@@ -41,12 +43,36 @@ def _intro() -> None:
             unsafe_allow_html=True,
         )
         with st.container(key="landing-demos"):
-            ludhiana, malawi = st.columns(2, gap="small")
-            ludhiana.button(ui["demo_india"], type="primary", use_container_width=True,
-                            on_click=stage_navigation, kwargs={"site": "ludhiana"})
-            malawi.button(ui["demo_malawi"], use_container_width=True,
-                          on_click=stage_navigation, kwargs={"site": "malawi"})
+            columns = st.columns(2, gap="small")
+            captions = (ui["demo_india"], ui["demo_malawi"])
+            for column, site, label in zip(columns, LEAD_DEMOS, captions, strict=True):
+                profile = DEMO_PROFILES[site]
+                with column:
+                    st.button(
+                        label, type="primary" if site == "ludhiana" else "secondary",
+                        use_container_width=True, on_click=stage_navigation, kwargs={"site": site},
+                    )
+                    st.caption(profile.get("teaser") or profile["summary"])
+        if extra_count:
+            jump = ui["demos_jump"].format(count=extra_count)
+            st.markdown(f'<a class="b-demo-jump" href="#more-demo-fields">{escape(jump)}</a>',
+                        unsafe_allow_html=True)
         _location_picker()
+
+
+def _directory(fields: dict) -> None:
+    if not fields:
+        return
+    ui = labels()
+    with st.container(key="landing-directory"):
+        st.header(ui["demos_heading"], anchor="more-demo-fields")
+        st.markdown(f'<p class="b-demo-intro">{escape(ui["demos_intro"])}</p>', unsafe_allow_html=True)
+        with st.container(key="landing-city-list"):
+            for column, (site, profile) in zip(st.columns(len(fields)), fields.items(), strict=True):
+                with column:
+                    st.button(profile["label"], key=f"demo-directory-{site}", use_container_width=True,
+                              on_click=stage_navigation, kwargs={"site": site})
+                    st.markdown(f'<p class="b-city-summary">{escape(profile["summary"])}</p>', unsafe_allow_html=True)
 
 
 def _preview(bundle: dict | None) -> None:
@@ -97,11 +123,13 @@ def _supporting_information() -> None:
 
 def landing(bundle: dict | None) -> None:
     """Show the demo entry points and their precomputed field preview."""
+    more_fields = {site: profile for site, profile in DEMO_PROFILES.items() if site not in LEAD_DEMOS}
     with st.container(key="landing"):
         with st.container(key="landing-grid"):
             intro, figure = st.columns([.43, .57], gap="large")
             with intro:
-                _intro()
+                _intro(len(more_fields))
             with figure:
                 _preview(bundle)
+        _directory(more_fields)
         _supporting_information()

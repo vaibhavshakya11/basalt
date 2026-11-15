@@ -66,6 +66,24 @@
 .stApp .b-preview-heading p{margin:2px 0 0;color:var(--ash);font-size:14px}
 .b-preview-period{white-space:nowrap;color:var(--ash);font:12px/1.6 'IBM Plex Mono',monospace}
 .stApp .st-key-landing-preview .b-chart-legend{margin-top:0}
+.stApp .st-key-landing-demos [data-testid="stVerticalBlock"]{row-gap:6px}
+.stApp a.b-demo-jump{display:inline-flex;align-items:center;min-height:32px;font-weight:600;color:var(--iron);text-underline-offset:4px}
+.stApp a.b-demo-jump:hover{color:var(--basalt)}
+.stApp .st-key-landing-directory{margin-top:16px;padding-top:20px;border-top:1px solid var(--fracture)}
+.stApp .st-key-landing-directory [data-testid="stVerticalBlock"]{row-gap:10px}
+.stApp .st-key-landing-directory h2{margin:0;padding:0;font-size:26px;line-height:1.2;scroll-margin-top:24px}
+.stApp .b-demo-intro{color:var(--ash);margin:0;max-width:66ch;font-size:16px}
+.stApp .st-key-landing-city-list [data-testid="stHorizontalBlock"]{
+ display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px 24px}
+.stApp .st-key-landing-city-list [data-testid="stColumn"]{
+ width:auto;min-width:0;border-top:1px solid var(--fracture);padding-block:8px 12px}
+.stApp .st-key-landing-city-list [data-testid="stVerticalBlock"]{row-gap:2px}
+.stApp .st-key-landing-city-list button[kind="secondary"]{
+ min-height:40px;padding:0;border:0;background:transparent;color:var(--iron);justify-content:flex-start;text-align:left}
+.stApp .st-key-landing-city-list button[kind="secondary"] p{
+ font-size:18px;font-weight:600;text-decoration:underline;text-decoration-color:#A4472A80;text-underline-offset:4px}
+.stApp .st-key-landing-city-list button[kind="secondary"]:hover p{text-decoration-color:var(--iron)}
+.stApp .b-city-summary{color:var(--ash);font-size:14px;line-height:1.45;margin:0}
 .stApp .st-key-landing-support{margin-top:20px;padding-top:20px;border-top:1px solid var(--fracture)}
 .stApp .st-key-landing-support [data-testid="stVerticalBlock"]{row-gap:8px}
 .stApp .st-key-landing-method details{background:var(--plate);border-radius:4px}
@@ -74,6 +92,7 @@
  .stApp .st-key-landing-grid [data-testid="stHorizontalBlock"]{gap:24px}
  .stApp .st-key-landing-demos [data-testid="stHorizontalBlock"]{gap:8px}
  .stApp .st-key-landing-lead{padding-top:8px}
+ .stApp .st-key-landing-city-list [data-testid="stHorizontalBlock"]{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 16px}
 }
 @media(max-width:700px){
  .b-masthead{min-height:52px;padding:0 12px}
@@ -87,6 +106,10 @@
  .stApp .st-key-landing-demos [data-testid="stHorizontalBlock"]{display:grid;grid-template-columns:1fr 1fr}
  .stApp .st-key-landing-demos [data-testid="stHorizontalBlock"] > [data-testid="stColumn"]{width:100%;min-width:0}
  .stApp .st-key-landing-demos button p{font-size:14px}
+ .stApp .st-key-landing-directory{margin-top:8px;padding-top:16px}
+ .stApp .st-key-landing-directory h2{font-size:23px}
+ .stApp .b-demo-intro{font-size:15px}
+ .stApp .st-key-landing-city-list button[kind="secondary"] p{font-size:16px}
  .stApp .st-key-landing-preview{padding:12px}
  .stApp .b-hero h1{max-width:13ch;margin-bottom:12px}
  .stApp .b-hero p{font-size:16px}
