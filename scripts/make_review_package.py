@@ -91,13 +91,13 @@ def _report(summary, bundles, browser, pytest, deployed, commit) -> str:
     missing = [f"{site['site']['site_id']} {check['check_id']}"
                for site in summary.values() for check in site["validations"]
                if check["status"] == "not_run" and (site["site"]["site_id"], check["check_id"]) not in
-               {("malawi", "V2"), ("malawi", "V5"), ("malawi", "V6"), ("ludhiana", "V7")}]
+               {("ludhiana", "V2"), ("malawi", "V2"), ("malawi", "V5"), ("malawi", "V6"), ("ludhiana", "V7")}]
     tests = " ".join(pytest.strip().splitlines()[-1:]) or "Pytest output is empty."
     roots = ", ".join(a.value for a in load_assumptions() if a.parameter == "initial_root_depth")
     return f"""# basalt review
 
 1. [Repository]({REPO_URL}) · {f'[Public app]({deployed})' if deployed else 'Public deployment pending'} · `{commit}`
-2. M0–M3 implemented. M4 {'verified in a signed-out browser' if deployed else 'verified locally, public deployment pending'}. M5 {'complete' if not missing else 'partial (' + ', '.join(missing) + ' pending or infeasible)'}.
+2. M0–M3 implemented, with V2 infeasible using the supplied calendars. M4 {'verified in a signed-out browser' if deployed else 'verified locally, public deployment pending'}. M5 {'complete' if not missing else 'partial (' + ', '.join(missing) + ' pending or infeasible)'}.
 3. Tests. {tests}
 
 ## Validation

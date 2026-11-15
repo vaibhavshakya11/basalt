@@ -2,7 +2,7 @@
 
 Explore how your current rotation and up to three alternatives would have done through 24 seasons of NASA weather.
 
-[Source repository](https://github.com/vaibhavshakya11/basalt)
+[Public app](https://basalt-nasa.streamlit.app/) · [Slides](https://basalt-nasa.streamlit.app/?view=slides)
 
 ![Season Strata for the Ludhiana rice and wheat rotation. Each row shows one agricultural year.](docs/season-strata.png)
 
@@ -35,7 +35,7 @@ Open [the Ludhiana demo](http://localhost:8501/?site=ludhiana) or [the central M
 | [MOD13Q1 v061](https://doi.org/10.5067/MODIS/MOD13Q1.061) | 250 m, 16 days | Greenness and calendar checks. ORNL DAAC and local cache. |
 | [MOD16A2GF v061](https://doi.org/10.5067/MODIS/MOD16A2GF.061) | 500 m, 8 days | Satellite water-use estimate. ORNL DAAC and local cache. |
 | [SMAP SPL4SMGP v008](https://doi.org/10.5067/T5RUATAQREF8) | 9 km, 3 hours | Root-zone wetness check in Malawi. Offline AppEEARS extract. |
-| [JPL GRACE/GRACE-FO mascons RL06.3 v4](https://podaac.jpl.nasa.gov/dataset/TELLUS_GRAC-GRFO_MASCON_CRI_GRID_RL06.3_V4) | 0.5° grid, effective scale about 300 km, monthly | Regional change in water stored on land. The demos ship exact JPL point trends. The full grid can be built from the NASA Earthdata download. |
+| [JPL GRACE/GRACE-FO mascons RL06.3 v4](https://podaac.jpl.nasa.gov/dataset/TELLUS_GRAC-GRFO_MASCON_CRI_GRID_RL06.3_V4) | 0.5° grid, effective scale about 300 km, monthly | Regional change in water stored on land. The demos ship exact JPL point trends. Other sites use the public NASA Goddard grid, labelled by source. The full JPL grid can be built from NASA Earthdata. |
 | [FIRMS VIIRS S-NPP](https://firms.modaps.eosdis.nasa.gov/download/) | 375 m, satellite overpasses | Fire detections around Ludhiana after rice harvest. Offline archive extract. |
 | [GGCMI Phase 3](https://doi.org/10.5281/zenodo.5062513) | 0.5°, crop calendar | Regional planting and harvest dates. Offline calendar table. |
 | [MapSPAM 2010 v2.0](https://doi.org/10.7910/DVN/PRFF8V) | About 10 km, circa 2010 | Local harvested-area share where GGCMI supplies dates only. Public Harvard Dataverse data, CC BY 4.0. |
