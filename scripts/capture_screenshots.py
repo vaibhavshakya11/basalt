@@ -142,6 +142,16 @@ def _audit_option_numbers(page: Page, bundle: dict, *, expanded: bool = False) -
     if actual != expected:
         return False
 
+    layout = read_yaml("copy.yaml")["ui"]["option_count_line"]
+    counts = {option["rotation_id"]: [layout.format(**option["wins_vs_current"][axis])
+              for axis in ("soil", "water", "risk")] for option in options if not option["is_current"]}
+    measured = {
+        card.locator(".b-verdict").get_attribute("data-rotation"): card.locator(".b-axis-counts").all_inner_texts()
+        for card in page.locator('.b-option-head[data-current="false"]:visible').all()
+    }
+    if measured != counts:
+        return False
+
     year_axes = [axis.text_content() or "" for axis in page.locator(".yaxislayer-above:visible").all()]
     years = {season for option in options for season in range(option["season_range"][0], option["season_range"][1] + 1)}
     if any(int(year) not in years for axis in year_axes for year in re.findall(r"\b(20\d{2})/", axis)):
@@ -201,7 +211,8 @@ def _capture_desktop(page: Page, base: str, destination: Path) -> dict:
     _save(page, destination, "08_slider_scenario.png")
     ui = read_yaml("copy.yaml")["ui"]
     page.frame_locator(SCENARIO).get_by_role("button", name=ui["scenario_reset"], exact=True).click()
-    page.locator(".b-scenario:visible").wait_for(state="hidden")
+    page.locator(".b-scenario").wait_for(state="detached")
+    page.get_by_role("tab", name=ui["tab_options"], exact=True, selected=True).wait_for(state="visible")
 
     page.goto(base, wait_until="domcontentloaded")
     _ready(page)

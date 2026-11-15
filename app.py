@@ -195,12 +195,14 @@ def _show_field(route: Route, load: Callable[..., dict]) -> None:
 
     ui = labels()
     field = _field_state(route.key)
+    # Preserve the tabs' frontend position when the initial spinner is removed.
+    progress = st.container()
     try:
         if "bundle" in field:
             bundle = _resolve_field(field, load) if "pending" in field else field["bundle"]
         else:
             label = "lookup_field" if route.kind == "pin" else "replaying"
-            with st.spinner(ui[label]):
+            with progress, st.spinner(ui[label]):
                 bundle = _resolve_field(field, load)
     except SoilGridsUnavailable:
         _choose_soil(field)
