@@ -14,15 +14,14 @@
   canvas:focus-visible{outline:2px solid #a4472a;outline-offset:-2px}
   #controls{position:absolute;top:8px;right:8px;display:grid;gap:4px}
   [hidden]{display:none!important}
-  button{display:grid;place-items:center;font:400 19px/1 'IBM Plex Mono',monospace;width:36px;height:36px;
-    background:#fff;border:1px solid #d5d8db;border-radius:4px;color:#24272b;cursor:pointer}
+  button{display:grid;place-items:center;font:400 19px/1 'IBM Plex Mono',monospace;width:44px;height:44px;
+    background:#fff;border:1px solid #d5d8db;border-radius:4px;color:#24272b}
   button:focus-visible{outline:2px solid #a4472a;outline-offset:-2px}
   button:disabled{color:#70767a;cursor:default;background:#f7f7f6}
   #point{position:absolute;bottom:8px;left:8px;margin:0;padding:4px 8px;background:#fff;
-    border:1px solid #d5d8db;border-radius:4px;font-size:12px;pointer-events:none}
+    border:1px solid #d5d8db;border-radius:4px;font-size:12px}
   #map-error{position:absolute;inset:40% 16px auto;font:14px/1.45 sans-serif;text-align:center}
   .sr-only{position:absolute;clip-path:inset(50%);width:1px;height:1px;overflow:hidden;white-space:nowrap}
-  @media(pointer:coarse){button{width:44px;height:44px}}
 </style>
 </head>
 <body>

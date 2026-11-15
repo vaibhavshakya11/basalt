@@ -30,7 +30,7 @@ VALIDATION_STYLE = """
 .stApp .b-check-values dd{margin:0}
 .stApp .b-check-note{font-size:14px;line-height:1.45;margin:0 0 4px;overflow-wrap:anywhere}
 .stApp .b-check-details{margin:3px 0 0;color:var(--ash);font-size:13px}
-.stApp .b-check-details summary{width:fit-content;cursor:pointer;color:var(--iron);padding-block:3px}
+.stApp .b-check-details summary{width:fit-content;color:var(--iron);padding-block:3px}
 .stApp .b-check-details summary:focus-visible{outline:2px solid var(--iron);outline-offset:3px}
 .stApp .b-check-source{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:4px 10px;margin:5px 0 0}
 .stApp .b-check-source dt{font-weight:600}
@@ -104,7 +104,7 @@ def _check_row(check: dict, ui: dict) -> str:
 
 
 def validation_table(checks: list[dict], *, totals: bool = False) -> None:
-    """Show results, their interpretation, and the rule behind each check."""
+    """Show each check, its result, and the rule used."""
     ui = labels()
     if not checks:
         st.caption(ui["validation_empty"])
