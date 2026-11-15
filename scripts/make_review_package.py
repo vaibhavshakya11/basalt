@@ -54,6 +54,7 @@ def _audit(browser: dict, bundles: dict) -> list[tuple[str, bool]]:
     emoji = re.compile(r"[\U0001F000-\U0001FAFF\u2600-\u26FF\u2700-\u27BF]")
     code = re.compile(r"TODO|FIXME|\bprint\(|except:\s*pass")
     ui = _files(ROOT / "basalt/ui")
+    visual_assets = ui + [path for suffix in (".css", ".html", ".js") for path in _files(ROOT / "basalt/ui", suffix)]
     copy = (ROOT / "basalt/knowledge/copy.yaml").read_text().replace("\n  robust:", "\n  stable:")
     visible_copy = copy + "\n" + "\n".join(path.read_text() for path in ui + [ROOT / "README.md"])
     mobile = browser.get("mobile", {})
@@ -63,7 +64,7 @@ def _audit(browser: dict, bundles: dict) -> list[tuple[str, bool]]:
     )
     links = re.search(r"^(https://\S+\.streamlit\.app)/?", browser.get("verified_public_url", ""), re.M)
     return [
-        ("Visual and font scan, app.py, basalt/ui, .streamlit", not any(visual.search(path.read_text()) for path in ui + [ROOT / "app.py", ROOT / ".streamlit/config.toml"])),
+        ("Visual and font scan, app.py, basalt/ui, .streamlit", not any(visual.search(path.read_text()) for path in visual_assets + [ROOT / "app.py", ROOT / ".streamlit/config.toml"])),
         ("Emoji scan, tracked source and commit subjects", not any(emoji.search(path.read_text()) for path in tracked) and not emoji.search(_git("log", "--format=%s"))),
         ("Copy vocabulary, copy.yaml, UI and README", not words.search(visible_copy)),
         ("Em dash scan, copy.yaml and UI", chr(8212) not in visible_copy),
@@ -73,7 +74,7 @@ def _audit(browser: dict, bundles: dict) -> list[tuple[str, bool]]:
         ("Chart legends and practice labels, screenshots 01, 02, 04, 06, 10", bool(browser.get("chart_labels_verified"))),
         ("All three field tabs fit at 390 px", len(mobile.get("workspaceWidths", {})) == 3 and
          all(width <= 390 for width in mobile["workspaceWidths"].values())),
-        ("Instant local demos and scenario replay", all(0 < browser.get(key, 99) < limit for key, limit in (
+        ("Local demo and scenario latency", all(0 < browser.get(key, 99) < limit for key, limit in (
             ("ludhiana_demo_seconds", 2), ("malawi_demo_seconds", 2), ("scenario_replay_seconds", 3)))),
         ("Public replay routes, signed-out browser", bool(links)),
     ]
