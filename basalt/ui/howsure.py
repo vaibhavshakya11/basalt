@@ -56,9 +56,13 @@ VALIDATION_STYLE = """
 .stApp .b-validation-board .b-check-coverage .b-check-notice{font-weight:500;font-size:14px}
 .stApp .b-validation-board .b-check-coverage .b-check-absent{font-size:14px;color:var(--ash)}
 .stApp .b-check-spotlights{list-style:none;padding:0;margin:0 0 24px}
-.stApp .b-validation-board .b-check-spotlight{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);
+.stApp .b-validation-board .b-check-spotlight{--check-tone:var(--ash);display:grid;
+ grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);
  gap:20px 32px;padding:18px 22px;border:1px solid var(--fracture);border-top:3px solid var(--check-tone);
  background:var(--plate)}
+.stApp .b-check-spotlight[data-status="pass"]{--check-tone:var(--green)}
+.stApp .b-check-spotlight[data-status="caveat"]{--check-tone:var(--iron)}
+.stApp .b-check-spotlight[data-status="fail"]{--check-tone:#9B2D2D}
 .stApp .b-check-spotlight h3{font-size:23px;line-height:1.2;margin:3px 0;padding:0}
 .stApp .b-check-spotlight p{margin:4px 0 0;font-size:14px;line-height:1.45}
 .stApp .b-check-spotlight .b-check-hero-number{font:500 38px/1 'IBM Plex Sans',sans-serif;letter-spacing:-.035em}
@@ -86,7 +90,7 @@ VALIDATION_STYLE = """
  .stApp .b-check-spotlight h3{font-size:20px}
  .stApp .b-check-spotlight .b-check-hero-number{font-size:32px}
  .stApp .b-validation-board .b-check-list .b-check{gap:4px}
- .stApp .b-validation-board .b-check-note{margin-left:2.9rem}
+ .stApp .b-validation-board .b-check-list .b-check-note{margin-left:2.9rem}
  .stApp .b-method-check .b-check-source{grid-template-columns:minmax(0,1fr);gap:2px}
  .stApp .b-method-check .b-check-source dd{margin-bottom:5px}
 }
@@ -161,6 +165,9 @@ def _check_row(check: dict, ui: dict, *, include_source: bool) -> str:
     if include_source:
         threshold = (f'<details class="b-check-details"><summary>{escape(ui["validation_details"])}</summary>'
                      f'{_source_terms(check, ui, measurements)}</details>')
+    if status == "fail" and not include_source:
+        threshold = (f'<p class="b-check-note"><strong>{escape(ui["validation_rule"])}</strong> '
+                     f'{escape(check["pass_rule"])}</p>')
     return (
         f'<li class="b-check" data-status="{escape(status)}"><div><div class="b-check-heading">'
         f'<span class="b-check-id">{escape(check["check_id"])}</span>'
@@ -200,9 +207,8 @@ def _spotlight(check: dict, ui: dict) -> str:
         number = _format_value(value)
         measure = ui["validation_v7_scale"]
         summary = ui["validation_v7_pairs"].format(n=check["n"])
-    tone = APP_COLOR[STATUS_TONES[status]]
     return (
-        f'<li class="b-check b-check-spotlight" data-status="{escape(status)}" style="--check-tone:{tone}"><div>'
+        f'<li class="b-check b-check-spotlight" data-status="{escape(status)}"><div>'
         f'<span class="b-check-id">{escape(identifier)}</span><h3>{escape(title)}</h3>'
         f'<span class="b-check-status">{escape(ui["validation_status"][status])}</span>'
         f'<p class="b-check-note">{escape(note)}</p></div><div>'
