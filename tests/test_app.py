@@ -35,18 +35,24 @@ def test_each_demo_has_three_tabs_and_needs_no_network(site, network_off):
     assert any("Validation checks" in paragraph.value for paragraph in app.markdown)
 
 
-def test_demo_sliders_replay_archived_weather_without_network(network_off):
+def test_demo_scenario_replays_archived_weather_without_network(network_off, monkeypatch):
+    events = []
+    monkeypatch.setattr("basalt.ui.options.scenario_picker", lambda *args, **kwargs: events[-1] if events else None)
     app = AppTest.from_file(str(ROOT / "app.py"))
     app.query_params["site"] = "ludhiana"
     app.run(timeout=12)
-    app.slider(key="temperature-ludhiana").set_value(2.0).run(timeout=12)
-    app.slider(key="rainfall-ludhiana").set_value(-10).run(timeout=12)
     assert not any("Scenario: +2 °C, -10% rain" in paragraph.value for paragraph in app.markdown)
-    next(button for button in app.button if button.label == "Apply scenario").click().run(timeout=12)
+
+    events.append({"receipt": "app-test-1", "temperature": 2, "rainfall": -10})
+    app.run(timeout=12)
     assert not app.exception
     assert not app.error
     assert any("Scenario: +2 °C, -10% rain" in paragraph.value for paragraph in app.markdown)
 
+    events.append({"receipt": "app-test-2", "temperature": 0, "rainfall": 0})
+    app.run(timeout=12)
+    assert not app.exception
+    assert not any("Scenario: +2 °C, -10% rain" in paragraph.value for paragraph in app.markdown)
 
 
 def test_invalid_location_link_leaves_demos_reachable(network_off):
@@ -80,3 +86,54 @@ def test_overlapping_crop_update_preserves_current_replay(network_off):
     assert not app.exception
     assert any("previous replay is still shown" in item.value for item in app.warning)
     assert any(item.label == "Your options" for item in app.tabs)
+
+
+
+def test_weather_failure_can_retry_the_same_location(network_off, monkeypatch):
+    from basalt.climate.power import PowerError
+    from basalt.service import load_demo
+
+    attempts = []
+
+    def analyze(lat, lon, **setup):
+        attempts.append((lat, lon))
+        if len(attempts) == 1:
+            raise PowerError("upstream temporarily unavailable")
+        return load_demo("ludhiana")
+
+    monkeypatch.setattr("basalt.service.analyze_location", analyze)
+    app = AppTest.from_file(str(ROOT / "app.py"))
+    app.query_params["lat"], app.query_params["lon"] = "30.79", "75.71"
+    app.run(timeout=12)
+    assert "NASA POWER weather is temporarily unavailable" in app.error[0].value
+    next(button for button in app.button if button.label == "Try again").click().run(timeout=12)
+    assert not app.exception
+    assert not app.error
+    assert attempts == [(30.79, 75.71), (30.79, 75.71)]
+    assert any(tab.label == "Your field" for tab in app.tabs)
+
+
+def test_unavailable_soil_can_be_entered_without_losing_the_pin(network_off, monkeypatch):
+    from basalt.service import load_demo
+    from basalt.soil.soilgrids import SoilGridsUnavailable
+
+    attempts = []
+
+    def analyze(lat, lon, **setup):
+        soil = setup.get("soil_class")
+        attempts.append((lat, lon, soil))
+        if soil is None:
+            raise SoilGridsUnavailable("upstream temporarily unavailable")
+        return load_demo("ludhiana")
+
+    monkeypatch.setattr("basalt.service.analyze_location", analyze)
+    app = AppTest.from_file(str(ROOT / "app.py"))
+    app.query_params["lat"], app.query_params["lon"] = "30.89", "75.81"
+    app.run(timeout=12)
+    assert "soil data service" in app.warning[0].value
+    app.selectbox[0].set_value("loam").run(timeout=12)
+    next(button for button in app.button if button.label == "Use this soil").click().run(timeout=12)
+    assert not app.exception
+    assert not app.error
+    assert attempts[-1] == (30.89, 75.81, "loam")
+    assert all((lat, lon) == (30.89, 75.81) for lat, lon, _ in attempts)
