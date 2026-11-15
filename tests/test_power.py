@@ -3,7 +3,7 @@ from copy import deepcopy
 import pandas as pd
 import pytest
 
-from basalt.climate.et0 import extraterrestrial_radiation, hargreaves
+from basalt.climate.et0 import extraterrestrial_radiation, hargreaves, saturation_vapor_pressure
 from basalt.climate.power import POWER_FIELDS, PowerError, fetch_power, parse_power
 from basalt.climate.scenario import apply_scenario
 from basalt.contracts import Scenario
@@ -81,3 +81,14 @@ def test_scenario_changes_weather_then_recomputes_et0(payload):
     assert shifted["precip"].iat[0] == pytest.approx(baseline["precip"].iat[0] * 0.9)
     assert shifted["et0"].iat[0] != pytest.approx(baseline["et0"].iat[0])
     pd.testing.assert_frame_equal(apply_scenario(shifted, Scenario()), baseline)
+
+
+
+def test_missing_dewpoint_uses_relative_humidity_instead(payload):
+    for day in ("20200602", "20200603", "20200604", "20200605"):
+        payload["properties"]["parameter"]["T2MDEW"][day] = -999
+    table = parse_power(payload)
+    day = table.loc["2020-06-02"]
+    expected_pressure = 0.54 * (saturation_vapor_pressure(32) + saturation_vapor_pressure(19)) / 2
+    assert saturation_vapor_pressure(day["tdew"]) == pytest.approx(expected_pressure)
+    assert day["qc_filled"]

@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 import requests
 
-from basalt.climate.et0 import reference_et0
+from basalt.climate.et0 import reference_et0, saturation_vapor_pressure
 from basalt.config import CACHE
 from basalt.contracts import CLIMATE_UNITS, ClimateTable
 
@@ -38,6 +38,19 @@ def _interpolate_short_gaps(series: pd.Series) -> pd.Series:
     return series.mask(missing & (gap_lengths <= 3), filled)
 
 
+def _fill_humidity(table: ClimateTable) -> None:
+    # FAO-56 Eqs. 11 and 19 are inverse expressions for the same vapour pressure.
+    es = (saturation_vapor_pressure(table["tmax"]) + saturation_vapor_pressure(table["tmin"])) / 2
+    dew_gaps = table["tdew"].isna() & table["rh"].gt(0)
+    if dew_gaps.any():
+        vapor = table.loc[dew_gaps, "rh"] * es[dew_gaps] / 100
+        log_pressure = np.log(vapor / 0.6108)
+        table.loc[dew_gaps, "tdew"] = 237.3 * log_pressure / (17.27 - log_pressure)
+    rh_gaps = table["rh"].isna() & table["tdew"].notna()
+    if rh_gaps.any():
+        table.loc[rh_gaps, "rh"] = 100 * saturation_vapor_pressure(table.loc[rh_gaps, "tdew"]) / es[rh_gaps]
+
+
 def _assert_climate(table: ClimateTable) -> None:
     if list(table.columns) != list(CLIMATE_UNITS) or table.attrs.get("units") != CLIMATE_UNITS:
         raise PowerError("Climate cache schema or units do not match the replay contract.")
@@ -48,7 +61,7 @@ def _assert_climate(table: ClimateTable) -> None:
         or not table.index.equals(pd.date_range(table.index[0], table.index[-1], name="date"))
     ):
         raise PowerError("Climate records must have one row per consecutive day.")
-    if not np.isfinite(table[["tmax", "tmin", "ws2", "precip", "ps", "et0"]]).all().all():
+    if not np.isfinite(table[["tmax", "tmin", "tdew", "rh", "ws2", "precip", "ps", "et0"]]).all().all():
         raise PowerError("Daily weather has missing or non-finite values required by the model.")
     if table["qc_filled"].dtype != bool:
         raise PowerError("Climate quality markers must be Boolean.")
@@ -71,6 +84,7 @@ def parse_power(payload: dict, *, fetched_utc: str | None = None) -> ClimateTabl
     table = table.reindex(pd.date_range(start, end, name="date"))
     missing = table.isna().any(axis=1)
     table = table.apply(_interpolate_short_gaps)
+    _fill_humidity(table)
     table.attrs.update(
         lat=lat, lon=lon, elevation_m=elevation, source=POWER_SOURCE,
         fetched_utc=fetched_utc or datetime.now(timezone.utc).isoformat(),
