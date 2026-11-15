@@ -322,7 +322,7 @@ ui:
   field_irrigation_unknown: Leave blank if you are unsure.
   field_confirmed: Field settings updated.
   options_title: Compare crop rotations
-  options_context: "Compared with {current} in {n} farming years, {start} to {end}."
+  options_context: "Compared with {current} across {n} farming years."
   priorities_help: These weights change the order of the alternatives.
   scenario_apply: Apply scenario
   scenario_reset: Reset to historical weather
@@ -352,3 +352,4 @@ ui:
   choose_soil_hint: The soil data service did not respond. Select the soil texture for this field to continue.
   field_demo_label: Demo replay
   field_pin_label: Field pin
+  lookup_field: Checking the crop calendar, soil and NASA weather for this pin

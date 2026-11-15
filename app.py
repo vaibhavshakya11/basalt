@@ -3,6 +3,7 @@ from logging import getLogger
 
 import requests
 import streamlit as st
+from streamlit.components.v1 import html as component_html
 
 from basalt.climate.power import PowerError
 from basalt.contracts import Scenario
@@ -17,6 +18,38 @@ from basalt.ui.slides import slides_view
 
 LOGGER = getLogger(__name__)
 FIELDS_KEPT = 4
+WORKSPACE_STYLE = """
+<style>
+.stApp .st-key-field-workspace{padding-top:22px}
+.stApp .st-key-location-actions [data-testid="stButton"]{display:flex;justify-content:flex-end}
+.stApp .st-key-location-actions button{min-height:42px}
+.stApp .st-key-field-workspace [role="tablist"]{gap:20px}
+.stApp .st-key-field-workspace button[role="tab"]{min-height:44px}
+@media(max-width:640px){
+ .stApp .st-key-field-workspace{padding-top:12px}
+ .stApp .st-key-location-actions [data-testid="stButton"]{justify-content:flex-start}
+ .stApp .st-key-field-workspace [role="tablist"]{gap:9px}
+}
+</style>
+"""
+HISTORY_HANDLER = """
+<script>
+const scopes = [window.parent];
+try {
+  if (window.top !== window.parent && window.top.location.origin === window.parent.location.origin) {
+    scopes.push(window.top);
+  }
+} catch (error) {
+  if (error.name !== "SecurityError") throw error;
+}
+for (const host of scopes) {
+  const routeListener = Symbol.for("basalt.history");
+  if (host[routeListener]) continue;
+  host[routeListener] = true;
+  host.addEventListener("popstate", () => host.location.reload());
+}
+</script>
+"""
 
 
 @st.cache_data(show_spinner=False)
@@ -87,11 +120,14 @@ def _render_tabs(bundle: dict, key: str, field: dict) -> None:
     ui = labels()
     story = bundle["field_story"]
     current = next(option for option in bundle["evidence"] if option["is_current"])
+    st.markdown(WORKSPACE_STYLE, unsafe_allow_html=True)
     with st.container(key="field-workspace"):
         heading, navigate = st.columns([.74, .26], vertical_alignment="center")
         heading.title(story["site"]["name"])
-        if navigate.button(ui["try_other_site"], key="field-home"):
-            goto()
+        with navigate:
+            with st.container(key="location-actions"):
+                if st.button(ui["try_other_site"], key="field-home"):
+                    goto()
         start, end = current["season_range"]
         source = ui["field_pin_label"] if story["site"]["site_id"] == "custom" else ui["field_demo_label"]
         st.caption(ui["field_context"].format(details=source, start=start, end=end))
@@ -153,7 +189,8 @@ def _show_field(route: Route, load: Callable[..., dict]) -> None:
         if "bundle" in field and "pending" not in field:
             bundle = field["bundle"]
         else:
-            with st.spinner(ui["replaying"]):
+            label = "lookup_field" if route.kind == "pin" and "bundle" not in field else "replaying"
+            with st.spinner(ui[label]):
                 bundle = _resolve_field(field, load)
     except SoilGridsUnavailable:
         _choose_soil(field)
@@ -194,6 +231,9 @@ def run() -> None:
     """Route offline demos, public field pins and presentation slides."""
     st.set_page_config(page_title="basalt", page_icon=favicon(), layout="wide", initial_sidebar_state="collapsed")
     apply_navigation()
+    with st.container(key="browser-history"):
+        st.markdown("<style>.st-key-browser-history{display:none}</style>", unsafe_allow_html=True)
+        component_html(HISTORY_HANDLER, width=0, height=0, tab_index=-1)
     header()
     query = st.query_params
     route = parse_route({name: query.get_all(name) for name in ROUTE_FIELDS if name in query})

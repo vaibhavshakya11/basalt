@@ -23,6 +23,16 @@ CORE = (
 )
 KNOWLEDGE = ("crops.yaml", "gap_crops.yaml", "rotations_punjab.yaml", "soils.yaml", "copy.yaml")
 NAMES = {"soil": "soil", "water": "water", "risk": "weather risk"}
+VALIDATION_NOTES = {
+    "V1": "The daily formula reproduces the FAO example.",
+    "V2": "Regional rice and wheat dates overlap in Ludhiana.",
+    "V3": "Paired calendar dates match more closely in Ludhiana.",
+    "V4": "Daily input, output and storage close within tolerance.",
+    "V5": "The post-rice share is below the 50% rule.",
+    "V6": "The rice reference estimate exceeds the published range.",
+    "V7": "The Malawi AppEEARS sample requires Earthdata access.",
+    "V8": "Bias is relative to the satellite estimate, which has irrigation limits.",
+}
 NUMBER = re.compile(r"\d+(?:\.\d+)?")
 
 
@@ -77,8 +87,10 @@ def _validation_value(check: dict) -> str:
 
 
 def _report(summary, bundles, browser, pytest, deployed, commit) -> str:
-    validation = [f"| {left['check_id']} | {_validation_value(left)} | {_validation_value(right)} |"
-                  for left, right in zip(summary["ludhiana"]["validations"], summary["malawi"]["validations"], strict=True)]
+    validation = [
+        f"| {left['check_id']} | {_validation_value(left)} | {_validation_value(right)} | {VALIDATION_NOTES[left['check_id']]} |"
+        for left, right in zip(summary["ludhiana"]["validations"], summary["malawi"]["validations"], strict=True)
+    ]
     headlines = []
     for site in summary.values():
         headlines.append(f"**{site['site']['name']}**")
@@ -102,11 +114,9 @@ def _report(summary, bundles, browser, pytest, deployed, commit) -> str:
 
 ## Validation
 
-| Check | Ludhiana | Malawi |
-|---|---|---|
+| Check | Ludhiana | Malawi | Note |
+|---|---|---|---|
 {chr(10).join(validation)}
-
-V2 uses calendars that overlap at Ludhiana. Rice, wheat and moong alone exceed one farming year. V4 is a model bookkeeping check. V6 applies the published range without adjusting crop dates or reference weather. V8 measures seasonal model bias relative to the MODIS estimate.
 
 ## Headline results
 
