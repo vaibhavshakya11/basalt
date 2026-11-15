@@ -46,7 +46,19 @@ for (const host of scopes) {
   const routeListener = Symbol.for("basalt.history");
   if (host[routeListener]) continue;
   host[routeListener] = true;
-  host.addEventListener("popstate", () => host.location.reload());
+  const route = () => host.location.pathname + host.location.search;
+  let previousRoute = route();
+  for (const method of ["pushState", "replaceState"]) {
+    const original = host.history[method];
+    host.history[method] = function (...args) {
+      const result = original.apply(this, args);
+      previousRoute = route();
+      return result;
+    };
+  }
+  host.addEventListener("popstate", () => {
+    if (route() !== previousRoute) host.location.reload();
+  });
 }
 </script>
 """
@@ -185,10 +197,10 @@ def _show_field(route: Route, load: Callable[..., dict]) -> None:
     ui = labels()
     field = _field_state(route.key)
     try:
-        if "bundle" in field and "pending" not in field:
-            bundle = field["bundle"]
+        if "bundle" in field:
+            bundle = _resolve_field(field, load) if "pending" in field else field["bundle"]
         else:
-            label = "lookup_field" if route.kind == "pin" and "bundle" not in field else "replaying"
+            label = "lookup_field" if route.kind == "pin" else "replaying"
             with st.spinner(ui[label]):
                 bundle = _resolve_field(field, load)
     except SoilGridsUnavailable:

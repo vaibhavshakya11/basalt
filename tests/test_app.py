@@ -4,7 +4,7 @@ import pytest
 import requests
 from streamlit.testing.v1 import AppTest
 
-from basalt.config import ROOT
+from basalt.config import DEMO_COORDS, ROOT
 
 
 @pytest.fixture
@@ -23,7 +23,7 @@ def test_landing_has_public_offline_demo_buttons(network_off):
     assert len(app.get("plotly_chart")) == 1
 
 
-@pytest.mark.parametrize("site", ("ludhiana", "malawi"))
+@pytest.mark.parametrize("site", tuple(DEMO_COORDS))
 def test_each_demo_has_three_tabs_and_needs_no_network(site, network_off):
     app = AppTest.from_file(str(ROOT / "app.py"))
     app.query_params["site"] = site

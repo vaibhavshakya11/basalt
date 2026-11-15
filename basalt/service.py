@@ -10,7 +10,7 @@ from requests import RequestException
 from basalt.calendar_utils import calendar_windows, validate_rotation
 from basalt.climate.power import fetch_power, load_climate
 from basalt.climate.trends import annual_trends
-from basalt.config import DEMO, DEMO_COORDS, YEARS, in_punjab
+from basalt.config import DEMO, DEMO_COORDS, DEMO_PROFILES, YEARS, in_punjab
 from basalt.contracts import Constraints, Rotation, Scenario, Site
 from basalt.decision.levers import make_current, propose_levers
 from basalt.decision.replay import replay, replay_runs
@@ -29,7 +29,7 @@ class FieldInputError(ValueError):
     """The selected field inputs cannot form a supported replay."""
 
 
-@lru_cache(maxsize=2)
+@lru_cache(maxsize=len(DEMO_COORDS))
 def load_demo(site_id: str) -> dict:
     if site_id not in DEMO_COORDS:
         raise ValueError("Unknown demo location")
@@ -48,7 +48,7 @@ def _find_soil(site_id: str, lat: float, lon: float, soil_class):
             return json.loads(path.read_text())["soil_class"], "soilgrids"
         if site_id == "ludhiana":
             return "sandy_loam", "demo_default"
-        raise ValueError("SoilGrids texture is unavailable for the Malawi demo.")
+        raise ValueError(f"SoilGrids texture is unavailable for the {site_id} demo.")
     try:
         return fetch_soilgrids(lat, lon)["soil_class"], "soilgrids"
     except SoilGridsUnavailable as error:
@@ -94,7 +94,10 @@ def _setup(site_id, name, lat, lon, crop_ids, irrigated, soil_class, crops):
         if len(set(crop_ids)) != len(crop_ids) or not set(crop_ids) <= options.keys():
             raise FieldInputError("Choose each current crop once from the crops available for this water source.")
         start = default_season_start(next(row for row in calendars if row.crop_id == crop_ids[0]))
-        rotations = (make_current(crop_ids, calendars),)
+        crop_names = [crops[crop_id].name.lower() for crop_id in crop_ids]
+        rotation_name = (f"Continuous {crop_names[0]}" if len(crop_names) == 1
+                         else " and ".join(crop_names).capitalize())
+        rotations = (replace(make_current(crop_ids, calendars), name=rotation_name),)
         calendar_source = "ggcmi"
     try:
         validate_rotation(rotations[0], crops, start)
@@ -216,7 +219,7 @@ def _assemble(site_id, name, lat, lon, climate, *, crop_ids=None, irrigated=None
         trends = annual_trends(climate, site, current, crops)
         grace = regional_trend(lat, lon)
         validations = build_validation(site, climate, baseline_runs, crops, phenology=phenology, modis_et=modis_et,
-                                       assumed_calendar=assumed_calendar)
+                                       assumed_calendar=assumed_calendar, constraints=constraints)
         story = {"site": asdict(site), "tier": site.tier, "current_rotation_id": current.rotation_id,
                  "ndvi_seasons_detected": phenology["n_seasons"] if phenology else 0, "calendar_source": calendar_source,
                  "patterns": field_patterns(baseline_runs[current.rotation_id], crops, trends, grace), "trends": trends, "grace": grace}
@@ -252,7 +255,8 @@ def analyze_location(lat: float, lon: float, *, soil_class=None, irrigated=None,
 def precompute_demo(site_id: str) -> dict:
     name, lat, lon = DEMO_COORDS[site_id]
     climate = load_climate(DEMO / site_id / "climate.parquet")
-    return _assemble(site_id, name, lat, lon, climate, irrigated=(site_id == "ludhiana"))
+    profile = DEMO_PROFILES[site_id]
+    return _assemble(site_id, name, lat, lon, climate, irrigated=profile["irrigated"], crop_ids=profile["crop_ids"])
 
 
 def demo_scenario(site_id: str, scenario: Scenario = Scenario(), *, soil_class=None, irrigated=None,
@@ -267,6 +271,9 @@ def demo_scenario(site_id: str, scenario: Scenario = Scenario(), *, soil_class=N
         return baseline
     name, lat, lon = DEMO_COORDS[site_id]
     climate = load_climate(DEMO / site_id / "climate.parquet")
+    matching_water = irrigated is None or irrigated == setup["irrigated"]
+    if crop_ids is None and matching_water:
+        crop_ids = tuple(setup["current_crop_ids"])
     return _assemble(site_id, name, lat, lon, climate, crop_ids=crop_ids, irrigated=setup["irrigated"] if irrigated is None else irrigated,
                      soil_class=None if soil_class == setup["soil_class"] else soil_class,
                      constraints=constraints, scenario=scenario, base=baseline if unchanged else None)

@@ -57,16 +57,24 @@
       {
         "check_id": "V2",
         "site": "ludhiana",
-        "dataset": "GGCMI Phase 3 and PAU crop calendars",
-        "version": "1.01 / 2026",
+        "dataset": "GGCMI Phase 3, PAU crop calendars and FAO-56",
+        "version": "GGCMI 1.01",
         "period": "2001 to 2024",
-        "n": 0,
+        "n": 12,
         "metric": "Global and calibrated arrow agreement",
-        "value": null,
+        "value": {
+          "Arrow agreement (%)": 100.0,
+          "Matching arrows": 12,
+          "Compared arrows": 12,
+          "Matching alternative arrows": 9,
+          "Compared alternative arrows": 9,
+          "Median ET difference (mm/year)": 17.04018226151038,
+          "Median soil-score difference (points)": 0.1610088701282848
+        },
         "unit": "%",
-        "pass_rule": "Pass at 75% or more. Caveat at 50% to under 75%.",
-        "status": "not_run",
-        "note": "GGCMI rice spans 06-29 to 11-26. Winter wheat spans 11-04 to 04-16. These dates overlap here. Rice, wheat and the Punjab moong window require 378 crop days before any gaps.",
+        "pass_rule": "At least 75% agreement meets the numerical threshold. Calendar infeasibility remains a caveat.",
+        "status": "caveat",
+        "note": "Both runs used the same PAU planting and harvest dates, weather, soil and field settings. Unadjusted GGCMI dates fit 1 of 4 rotations. Rice ends on 26 November and wheat starts on 04 November. The shared-calendar check isolates the effect of global crop parameters.",
         "figure_path": null
       },
       {
@@ -392,14 +400,14 @@
       {
         "check_id": "V2",
         "site": "malawi",
-        "dataset": "GGCMI Phase 3 and PAU crop calendars",
-        "version": "1.01 / 2026",
+        "dataset": "GGCMI Phase 3, PAU crop calendars and FAO-56",
+        "version": "GGCMI 1.01",
         "period": "2001 to 2024",
         "n": 0,
         "metric": "Global and calibrated arrow agreement",
         "value": null,
         "unit": "%",
-        "pass_rule": "Pass at 75% or more. Caveat at 50% to under 75%.",
+        "pass_rule": "At least 75% agreement meets the numerical threshold. Calendar infeasibility remains a caveat.",
         "status": "not_run",
         "note": "The calibrated comparison applies to Ludhiana.",
         "figure_path": null
@@ -476,7 +484,7 @@
         "unit": "Spearman r",
         "pass_rule": "Pass at 0.5 or above. Caveat at 0.3 or above.",
         "status": "not_run",
-        "note": "NASA Earthdata sign-in is required to request the AppEEARS sample.",
+        "note": "The NASA AppEEARS wetness export has not been added to this replay yet.",
         "figure_path": null
       },
       {
@@ -682,6 +690,1622 @@
           "irr_gross_mm": 0.0,
           "risk_hits": 0.0,
           "bare_days": 172.0
+        }
+      }
+    ]
+  },
+  "jaipur": {
+    "site": {
+      "site_id": "jaipur",
+      "name": "Jaipur, Rajasthan, India",
+      "lat": 26.88,
+      "lon": 75.582,
+      "tier": "global",
+      "soil_class": "clay_loam",
+      "soil_source": "soilgrids",
+      "irrigated": false,
+      "season_year_start": "05-01",
+      "ggcmi_cell": [
+        26.75,
+        75.75
+      ]
+    },
+    "scope": "Runs for any cultivated region covered by the global datasets. Calibrated in Punjab (with Punjab Agricultural University guidance); global defaults elsewhere, with the accuracy cost measured and confidence always shown.",
+    "tier": "global",
+    "current_rotation": "Continuous millet",
+    "calendar_source": "ggcmi",
+    "field_patterns": [
+      {
+        "id": "bare",
+        "text": "Bare for about 273 days each farming year, from 05 Oct to 04 Jul.",
+        "severity": "context"
+      },
+      {
+        "id": "weather_trend",
+        "text": "Reference evapotranspiration is falling since 1991, a statistically clear trend in NASA POWER data (98.2 mm per decade).",
+        "severity": "context"
+      },
+      {
+        "id": "water_storage",
+        "text": "Water stored on land in this region (~300 km) has fallen about 2.96 cm per year since 2002 (GRACE/GRACE-FO).",
+        "severity": "context"
+      }
+    ],
+    "validations": [
+      {
+        "check_id": "V1",
+        "site": "jaipur",
+        "dataset": "FAO-56 Example 18",
+        "version": "1998",
+        "period": "6 July",
+        "n": 1,
+        "metric": "Reference water use",
+        "value": 3.879506166923254,
+        "unit": "mm/day",
+        "pass_rule": "3.9 ± 0.1 mm/day",
+        "status": "pass",
+        "note": "Reproduces the reference calculation in Brussels.",
+        "figure_path": null
+      },
+      {
+        "check_id": "V2",
+        "site": "jaipur",
+        "dataset": "GGCMI Phase 3, PAU crop calendars and FAO-56",
+        "version": "GGCMI 1.01",
+        "period": "2001 to 2024",
+        "n": 0,
+        "metric": "Global and calibrated arrow agreement",
+        "value": null,
+        "unit": "%",
+        "pass_rule": "At least 75% agreement meets the numerical threshold. Calendar infeasibility remains a caveat.",
+        "status": "not_run",
+        "note": "The calibrated comparison applies to Ludhiana.",
+        "figure_path": null
+      },
+      {
+        "check_id": "V3",
+        "site": "jaipur",
+        "dataset": "MODIS MOD13Q1 via ORNL DAAC",
+        "version": "061",
+        "period": "2001 to 2024",
+        "n": 0,
+        "metric": "Median calendar date difference",
+        "value": null,
+        "unit": "days",
+        "pass_rule": "Pass at 14 days or less. Caveat at 28 days or less.",
+        "status": "not_run",
+        "note": "This replay does not have a local MODIS greenness series.",
+        "figure_path": null
+      },
+      {
+        "check_id": "V4",
+        "site": "jaipur",
+        "dataset": "NASA POWER and FAO-56",
+        "version": "Daily AG / Eq. 85",
+        "period": "2001 to 2024",
+        "n": 17532,
+        "metric": "Largest daily water balance difference",
+        "value": 2.6645352591003757e-14,
+        "unit": "mm/day",
+        "pass_rule": "Under 0.1 mm/day.",
+        "status": "pass",
+        "note": "Largest daily difference between inputs, outputs and modelled storage.",
+        "figure_path": null
+      },
+      {
+        "check_id": "V5",
+        "site": "jaipur",
+        "dataset": "NASA FIRMS VIIRS S-NPP",
+        "version": "375 m",
+        "period": "2012 to 2024",
+        "n": 0,
+        "metric": "Fires in the post-rice window",
+        "value": null,
+        "unit": "%",
+        "pass_rule": "Consistent at 50% or more of September to December fires.",
+        "status": "not_run",
+        "note": "The fire overlap check is specific to the Ludhiana demo.",
+        "figure_path": null
+      },
+      {
+        "check_id": "V6",
+        "site": "jaipur",
+        "dataset": "NASA POWER and published Punjab ranges",
+        "version": "Daily AG",
+        "period": "2001 to 2024",
+        "n": 0,
+        "metric": "Rice reference water and wheat irrigation",
+        "value": null,
+        "unit": "",
+        "pass_rule": "430 to 510 mm and 3 to 6 applications.",
+        "status": "not_run",
+        "note": "The published comparison applies to irrigated rice and wheat at Ludhiana.",
+        "figure_path": null
+      },
+      {
+        "check_id": "V7",
+        "site": "jaipur",
+        "dataset": "NASA SMAP root-zone wetness",
+        "version": "SPL4SMGP.008",
+        "period": "2015 to 2024",
+        "n": 0,
+        "metric": "Soil wetness agreement",
+        "value": null,
+        "unit": "Spearman r",
+        "pass_rule": "Pass at 0.5 or above. Caveat at 0.3 or above.",
+        "status": "not_run",
+        "note": "The satellite root-zone wetness check is specific to the Malawi demo.",
+        "figure_path": null
+      },
+      {
+        "check_id": "V8",
+        "site": "jaipur",
+        "dataset": "MODIS MOD16A2GF via ORNL DAAC",
+        "version": "061",
+        "period": "2001 to 2024",
+        "n": 0,
+        "metric": "Median seasonal water use bias",
+        "value": null,
+        "unit": "%",
+        "pass_rule": "Always shown with a caveat about satellite water use.",
+        "status": "not_run",
+        "note": "The ORNL satellite water-use product is unavailable for this run.",
+        "figure_path": null
+      }
+    ],
+    "lever_rejections": [
+      {
+        "lever": "fill_the_gap",
+        "reason": "No catch crop met the local window, warmth and water checks often enough."
+      },
+      {
+        "lever": "take_turns",
+        "reason": "This lever needs one current crop and a locally grown legume that fits its season."
+      },
+      {
+        "lever": "combine",
+        "reason": "The two changes needed for this option did not both pass."
+      }
+    ],
+    "datasets": [
+      "NASA POWER daily, AG community",
+      "GGCMI crop calendar",
+      "SoilGrids 2.0",
+      "GGCMI Phase 3 v1.01 and MapSPAM 2010",
+      "GRACE/GRACE-FO NASA Goddard (catalog RL06v2.0)"
+    ],
+    "options": [
+      {
+        "rotation_id": "global_current",
+        "name": "Continuous millet",
+        "lever": "current",
+        "verdict": "This is your current rotation. Every other option is compared with it.",
+        "arrows": {
+          "soil": "similar",
+          "water": "similar",
+          "risk": "similar"
+        },
+        "wins": {
+          "soil": {
+            "better": 0,
+            "worse": 0,
+            "tie": 24
+          },
+          "water": {
+            "better": 0,
+            "worse": 0,
+            "tie": 24
+          },
+          "risk": {
+            "better": 0,
+            "worse": 0,
+            "tie": 24
+          }
+        },
+        "stability": {
+          "badge": "robust",
+          "drivers": []
+        },
+        "stability_line": "Holds under all assumptions we tested",
+        "medians": {
+          "soil_score": 46.34359038795664,
+          "et_mm": 398.6181325215259,
+          "irr_gross_mm": 0.0,
+          "risk_hits": 0.0,
+          "bare_days": 273.0
+        }
+      },
+      {
+        "rotation_id": "global_swap_sorghum",
+        "name": "Sorghum",
+        "lever": "swap_weak_link",
+        "verdict": "Soil, water and weather risk were similar.",
+        "arrows": {
+          "soil": "similar",
+          "water": "similar",
+          "risk": "similar"
+        },
+        "wins": {
+          "soil": {
+            "better": 0,
+            "worse": 4,
+            "tie": 20
+          },
+          "water": {
+            "better": 0,
+            "worse": 6,
+            "tie": 18
+          },
+          "risk": {
+            "better": 0,
+            "worse": 3,
+            "tie": 21
+          }
+        },
+        "stability": {
+          "badge": "robust",
+          "drivers": []
+        },
+        "stability_line": "Holds under all assumptions we tested",
+        "medians": {
+          "soil_score": 45.32712663992286,
+          "et_mm": 438.2514539184286,
+          "irr_gross_mm": 0.0,
+          "risk_hits": 0.0,
+          "bare_days": 253.0
+        }
+      }
+    ]
+  },
+  "fresno": {
+    "site": {
+      "site_id": "fresno",
+      "name": "Fresno County, California, United States",
+      "lat": 36.664,
+      "lon": -119.95,
+      "tier": "global",
+      "soil_class": "loam",
+      "soil_source": "soilgrids",
+      "irrigated": true,
+      "season_year_start": "02-01",
+      "ggcmi_cell": [
+        36.75,
+        -119.75
+      ]
+    },
+    "scope": "Runs for any cultivated region covered by the global datasets. Calibrated in Punjab (with Punjab Agricultural University guidance); global defaults elsewhere, with the accuracy cost measured and confidence always shown.",
+    "tier": "global",
+    "current_rotation": "Continuous cotton",
+    "calendar_source": "ggcmi",
+    "field_patterns": [
+      {
+        "id": "bare",
+        "text": "Bare for about 181 days each farming year, from 24 Oct to 22 Apr.",
+        "severity": "context"
+      },
+      {
+        "id": "vulnerable",
+        "text": "Cotton at mid-season faced heat in 10 of the last 10 seasons.",
+        "severity": "caution"
+      },
+      {
+        "id": "weather_trend",
+        "text": "Main-season rainfall is falling since 1991, a statistically clear trend in NASA POWER data (7.0 mm per decade).",
+        "severity": "context"
+      },
+      {
+        "id": "water_storage",
+        "text": "Water stored on land in this region (~300 km) has fallen about 2.11 cm per year since 2002 (GRACE/GRACE-FO).",
+        "severity": "context"
+      }
+    ],
+    "validations": [
+      {
+        "check_id": "V1",
+        "site": "fresno",
+        "dataset": "FAO-56 Example 18",
+        "version": "1998",
+        "period": "6 July",
+        "n": 1,
+        "metric": "Reference water use",
+        "value": 3.879506166923254,
+        "unit": "mm/day",
+        "pass_rule": "3.9 ± 0.1 mm/day",
+        "status": "pass",
+        "note": "Reproduces the reference calculation in Brussels.",
+        "figure_path": null
+      },
+      {
+        "check_id": "V2",
+        "site": "fresno",
+        "dataset": "GGCMI Phase 3, PAU crop calendars and FAO-56",
+        "version": "GGCMI 1.01",
+        "period": "2001 to 2024",
+        "n": 0,
+        "metric": "Global and calibrated arrow agreement",
+        "value": null,
+        "unit": "%",
+        "pass_rule": "At least 75% agreement meets the numerical threshold. Calendar infeasibility remains a caveat.",
+        "status": "not_run",
+        "note": "The calibrated comparison applies to Ludhiana.",
+        "figure_path": null
+      },
+      {
+        "check_id": "V3",
+        "site": "fresno",
+        "dataset": "MODIS MOD13Q1 via ORNL DAAC",
+        "version": "061",
+        "period": "2001 to 2024",
+        "n": 0,
+        "metric": "Median calendar date difference",
+        "value": null,
+        "unit": "days",
+        "pass_rule": "Pass at 14 days or less. Caveat at 28 days or less.",
+        "status": "not_run",
+        "note": "This replay does not have a local MODIS greenness series.",
+        "figure_path": null
+      },
+      {
+        "check_id": "V4",
+        "site": "fresno",
+        "dataset": "NASA POWER and FAO-56",
+        "version": "Daily AG / Eq. 85",
+        "period": "2001 to 2024",
+        "n": 35064,
+        "metric": "Largest daily water balance difference",
+        "value": 2.398081733190338e-14,
+        "unit": "mm/day",
+        "pass_rule": "Under 0.1 mm/day.",
+        "status": "pass",
+        "note": "Largest daily difference between inputs, outputs and modelled storage.",
+        "figure_path": null
+      },
+      {
+        "check_id": "V5",
+        "site": "fresno",
+        "dataset": "NASA FIRMS VIIRS S-NPP",
+        "version": "375 m",
+        "period": "2012 to 2024",
+        "n": 0,
+        "metric": "Fires in the post-rice window",
+        "value": null,
+        "unit": "%",
+        "pass_rule": "Consistent at 50% or more of September to December fires.",
+        "status": "not_run",
+        "note": "The fire overlap check is specific to the Ludhiana demo.",
+        "figure_path": null
+      },
+      {
+        "check_id": "V6",
+        "site": "fresno",
+        "dataset": "NASA POWER and published Punjab ranges",
+        "version": "Daily AG",
+        "period": "2001 to 2024",
+        "n": 0,
+        "metric": "Rice reference water and wheat irrigation",
+        "value": null,
+        "unit": "",
+        "pass_rule": "430 to 510 mm and 3 to 6 applications.",
+        "status": "not_run",
+        "note": "The published comparison applies to irrigated rice and wheat at Ludhiana.",
+        "figure_path": null
+      },
+      {
+        "check_id": "V7",
+        "site": "fresno",
+        "dataset": "NASA SMAP root-zone wetness",
+        "version": "SPL4SMGP.008",
+        "period": "2015 to 2024",
+        "n": 0,
+        "metric": "Soil wetness agreement",
+        "value": null,
+        "unit": "Spearman r",
+        "pass_rule": "Pass at 0.5 or above. Caveat at 0.3 or above.",
+        "status": "not_run",
+        "note": "The satellite root-zone wetness check is specific to the Malawi demo.",
+        "figure_path": null
+      },
+      {
+        "check_id": "V8",
+        "site": "fresno",
+        "dataset": "MODIS MOD16A2GF via ORNL DAAC",
+        "version": "061",
+        "period": "2001 to 2024",
+        "n": 0,
+        "metric": "Median seasonal water use bias",
+        "value": null,
+        "unit": "%",
+        "pass_rule": "Always shown with a caveat about satellite water use.",
+        "status": "not_run",
+        "note": "The ORNL satellite water-use product is unavailable for this run.",
+        "figure_path": null
+      }
+    ],
+    "lever_rejections": [
+      {
+        "lever": "take_turns",
+        "reason": "This lever needs one current crop and a locally grown legume that fits its season."
+      }
+    ],
+    "datasets": [
+      "NASA POWER daily, AG community",
+      "GGCMI crop calendar",
+      "SoilGrids 2.0",
+      "GGCMI Phase 3 v1.01 and MapSPAM 2010",
+      "GRACE/GRACE-FO NASA Goddard (catalog RL06v2.0)"
+    ],
+    "options": [
+      {
+        "rotation_id": "global_current",
+        "name": "Continuous cotton",
+        "lever": "current",
+        "verdict": "This is your current rotation. Every other option is compared with it.",
+        "arrows": {
+          "soil": "similar",
+          "water": "similar",
+          "risk": "similar"
+        },
+        "wins": {
+          "soil": {
+            "better": 0,
+            "worse": 0,
+            "tie": 24
+          },
+          "water": {
+            "better": 0,
+            "worse": 0,
+            "tie": 24
+          },
+          "risk": {
+            "better": 0,
+            "worse": 0,
+            "tie": 24
+          }
+        },
+        "stability": {
+          "badge": "robust",
+          "drivers": []
+        },
+        "stability_line": "Holds under all assumptions we tested",
+        "medians": {
+          "soil_score": 51.34889555288068,
+          "et_mm": 1334.8945629531254,
+          "irr_gross_mm": 1922.7476661830992,
+          "risk_hits": 1.0,
+          "bare_days": 181.0
+        }
+      },
+      {
+        "rotation_id": "global_gap",
+        "name": "Continuous cotton + hairy vetch",
+        "lever": "fill_the_gap",
+        "verdict": "Better for your soil in 24 of 24 seasons and needed more water in 24 of 24 seasons; weather risk similar.",
+        "arrows": {
+          "soil": "better",
+          "water": "worse",
+          "risk": "similar"
+        },
+        "wins": {
+          "soil": {
+            "better": 24,
+            "worse": 0,
+            "tie": 0
+          },
+          "water": {
+            "better": 0,
+            "worse": 24,
+            "tie": 0
+          },
+          "risk": {
+            "better": 0,
+            "worse": 0,
+            "tie": 24
+          }
+        },
+        "stability": {
+          "badge": "robust",
+          "drivers": []
+        },
+        "stability_line": "Holds under all assumptions we tested",
+        "medians": {
+          "soil_score": 86.46814559398298,
+          "et_mm": 1443.7490906858302,
+          "irr_gross_mm": 1948.7518904938092,
+          "risk_hits": 1.0,
+          "bare_days": 63.0
+        }
+      },
+      {
+        "rotation_id": "global_swap_wheat_spring",
+        "name": "Spring wheat",
+        "lever": "swap_weak_link",
+        "verdict": "Soil similar and needed less water in 24 of 24 seasons; weather risk similar.",
+        "arrows": {
+          "soil": "similar",
+          "water": "better",
+          "risk": "similar"
+        },
+        "wins": {
+          "soil": {
+            "better": 9,
+            "worse": 2,
+            "tie": 13
+          },
+          "water": {
+            "better": 24,
+            "worse": 0,
+            "tie": 0
+          },
+          "risk": {
+            "better": 1,
+            "worse": 0,
+            "tie": 23
+          }
+        },
+        "stability": {
+          "badge": "depends",
+          "drivers": [
+            {
+              "param": "soil_weight_erosive_rain_bare",
+              "label": "the weight given to heavy rain on bare soil"
+            }
+          ]
+        },
+        "stability_line": "Depends on the weight given to heavy rain on bare soil",
+        "medians": {
+          "soil_score": 52.26944753775648,
+          "et_mm": 1150.5405605402163,
+          "irr_gross_mm": 1622.8290981325827,
+          "risk_hits": 1.0,
+          "bare_days": 220.0
+        }
+      },
+      {
+        "rotation_id": "global_combine",
+        "name": "Spring wheat + hairy vetch",
+        "lever": "combine",
+        "verdict": "Better for your soil in 24 of 24 seasons and needed less water in 21 of 24 seasons; weather risk similar.",
+        "arrows": {
+          "soil": "better",
+          "water": "better",
+          "risk": "similar"
+        },
+        "wins": {
+          "soil": {
+            "better": 24,
+            "worse": 0,
+            "tie": 0
+          },
+          "water": {
+            "better": 21,
+            "worse": 0,
+            "tie": 3
+          },
+          "risk": {
+            "better": 1,
+            "worse": 0,
+            "tie": 23
+          }
+        },
+        "stability": {
+          "badge": "depends",
+          "drivers": [
+            {
+              "param": "wheat_kc_ini",
+              "label": "early-season water use by wheat"
+            },
+            {
+              "param": "sowing_date",
+              "label": "crop sowing dates"
+            }
+          ]
+        },
+        "stability_line": "Depends on early-season water use by wheat, crop sowing dates",
+        "medians": {
+          "soil_score": 83.96046382645764,
+          "et_mm": 1256.7562601828142,
+          "irr_gross_mm": 1659.5806109331916,
+          "risk_hits": 1.0,
+          "bare_days": 102.0
+        }
+      }
+    ]
+  },
+  "cordoba": {
+    "site": {
+      "site_id": "cordoba",
+      "name": "Córdoba, Andalusia, Spain",
+      "lat": 37.92,
+      "lon": -4.68,
+      "tier": "global",
+      "soil_class": "clay_loam",
+      "soil_source": "soilgrids",
+      "irrigated": false,
+      "season_year_start": "09-01",
+      "ggcmi_cell": [
+        37.75,
+        -4.75
+      ]
+    },
+    "scope": "Runs for any cultivated region covered by the global datasets. Calibrated in Punjab (with Punjab Agricultural University guidance); global defaults elsewhere, with the accuracy cost measured and confidence always shown.",
+    "tier": "global",
+    "current_rotation": "Continuous winter wheat",
+    "calendar_source": "ggcmi",
+    "field_patterns": [
+      {
+        "id": "bare",
+        "text": "Bare for about 203 days each farming year, from 09 May to 27 Nov.",
+        "severity": "context"
+      },
+      {
+        "id": "vulnerable",
+        "text": "Winter wheat at mid-season faced frost in 6 of the last 10 seasons.",
+        "severity": "caution"
+      },
+      {
+        "id": "weather_trend",
+        "text": "Average daytime maximum in the hottest month is rising since 1991, a statistically clear trend in NASA POWER data (0.8 °C per decade).",
+        "severity": "context"
+      },
+      {
+        "id": "water_storage",
+        "text": "Water stored on land in this region (~300 km) has fallen about 0.32 cm per year since 2002 (GRACE/GRACE-FO).",
+        "severity": "context"
+      }
+    ],
+    "validations": [
+      {
+        "check_id": "V1",
+        "site": "cordoba",
+        "dataset": "FAO-56 Example 18",
+        "version": "1998",
+        "period": "6 July",
+        "n": 1,
+        "metric": "Reference water use",
+        "value": 3.879506166923254,
+        "unit": "mm/day",
+        "pass_rule": "3.9 ± 0.1 mm/day",
+        "status": "pass",
+        "note": "Reproduces the reference calculation in Brussels.",
+        "figure_path": null
+      },
+      {
+        "check_id": "V2",
+        "site": "cordoba",
+        "dataset": "GGCMI Phase 3, PAU crop calendars and FAO-56",
+        "version": "GGCMI 1.01",
+        "period": "2001 to 2024",
+        "n": 0,
+        "metric": "Global and calibrated arrow agreement",
+        "value": null,
+        "unit": "%",
+        "pass_rule": "At least 75% agreement meets the numerical threshold. Calendar infeasibility remains a caveat.",
+        "status": "not_run",
+        "note": "The calibrated comparison applies to Ludhiana.",
+        "figure_path": null
+      },
+      {
+        "check_id": "V3",
+        "site": "cordoba",
+        "dataset": "MODIS MOD13Q1 via ORNL DAAC",
+        "version": "061",
+        "period": "2001 to 2024",
+        "n": 0,
+        "metric": "Median calendar date difference",
+        "value": null,
+        "unit": "days",
+        "pass_rule": "Pass at 14 days or less. Caveat at 28 days or less.",
+        "status": "not_run",
+        "note": "This replay does not have a local MODIS greenness series.",
+        "figure_path": null
+      },
+      {
+        "check_id": "V4",
+        "site": "cordoba",
+        "dataset": "NASA POWER and FAO-56",
+        "version": "Daily AG / Eq. 85",
+        "period": "2001 to 2024",
+        "n": 8766,
+        "metric": "Largest daily water balance difference",
+        "value": 2.6645352591003757e-14,
+        "unit": "mm/day",
+        "pass_rule": "Under 0.1 mm/day.",
+        "status": "pass",
+        "note": "Largest daily difference between inputs, outputs and modelled storage.",
+        "figure_path": null
+      },
+      {
+        "check_id": "V5",
+        "site": "cordoba",
+        "dataset": "NASA FIRMS VIIRS S-NPP",
+        "version": "375 m",
+        "period": "2012 to 2024",
+        "n": 0,
+        "metric": "Fires in the post-rice window",
+        "value": null,
+        "unit": "%",
+        "pass_rule": "Consistent at 50% or more of September to December fires.",
+        "status": "not_run",
+        "note": "The fire overlap check is specific to the Ludhiana demo.",
+        "figure_path": null
+      },
+      {
+        "check_id": "V6",
+        "site": "cordoba",
+        "dataset": "NASA POWER and published Punjab ranges",
+        "version": "Daily AG",
+        "period": "2001 to 2024",
+        "n": 0,
+        "metric": "Rice reference water and wheat irrigation",
+        "value": null,
+        "unit": "",
+        "pass_rule": "430 to 510 mm and 3 to 6 applications.",
+        "status": "not_run",
+        "note": "The published comparison applies to irrigated rice and wheat at Ludhiana.",
+        "figure_path": null
+      },
+      {
+        "check_id": "V7",
+        "site": "cordoba",
+        "dataset": "NASA SMAP root-zone wetness",
+        "version": "SPL4SMGP.008",
+        "period": "2015 to 2024",
+        "n": 0,
+        "metric": "Soil wetness agreement",
+        "value": null,
+        "unit": "Spearman r",
+        "pass_rule": "Pass at 0.5 or above. Caveat at 0.3 or above.",
+        "status": "not_run",
+        "note": "The satellite root-zone wetness check is specific to the Malawi demo.",
+        "figure_path": null
+      },
+      {
+        "check_id": "V8",
+        "site": "cordoba",
+        "dataset": "MODIS MOD16A2GF via ORNL DAAC",
+        "version": "061",
+        "period": "2001 to 2024",
+        "n": 0,
+        "metric": "Median seasonal water use bias",
+        "value": null,
+        "unit": "%",
+        "pass_rule": "Always shown with a caveat about satellite water use.",
+        "status": "not_run",
+        "note": "The ORNL satellite water-use product is unavailable for this run.",
+        "figure_path": null
+      }
+    ],
+    "lever_rejections": [
+      {
+        "lever": "fill_the_gap",
+        "reason": "No catch crop met the local window, warmth and water checks often enough."
+      },
+      {
+        "lever": "swap_weak_link",
+        "reason": "No other supported crop grown here fits the same slot."
+      },
+      {
+        "lever": "take_turns",
+        "reason": "This lever needs one current crop and a locally grown legume that fits its season."
+      },
+      {
+        "lever": "combine",
+        "reason": "The two changes needed for this option did not both pass."
+      }
+    ],
+    "datasets": [
+      "NASA POWER daily, AG community",
+      "GGCMI crop calendar",
+      "SoilGrids 2.0",
+      "GGCMI Phase 3 v1.01 and MapSPAM 2010",
+      "GRACE/GRACE-FO NASA Goddard (catalog RL06v2.0)"
+    ],
+    "options": [
+      {
+        "rotation_id": "global_current",
+        "name": "Continuous winter wheat",
+        "lever": "current",
+        "verdict": "This is your current rotation. Every other option is compared with it.",
+        "arrows": {
+          "soil": "similar",
+          "water": "similar",
+          "risk": "similar"
+        },
+        "wins": {
+          "soil": {
+            "better": 0,
+            "worse": 0,
+            "tie": 24
+          },
+          "water": {
+            "better": 0,
+            "worse": 0,
+            "tie": 24
+          },
+          "risk": {
+            "better": 0,
+            "worse": 0,
+            "tie": 24
+          }
+        },
+        "stability": {
+          "badge": "robust",
+          "drivers": []
+        },
+        "stability_line": "Holds under all assumptions we tested",
+        "medians": {
+          "soil_score": 50.512433547324044,
+          "et_mm": 355.1572376214615,
+          "irr_gross_mm": 0.0,
+          "risk_hits": 1.0,
+          "bare_days": 203.0
+        }
+      }
+    ]
+  },
+  "toowoomba": {
+    "site": {
+      "site_id": "toowoomba",
+      "name": "Toowoomba, Queensland, Australia",
+      "lat": -27.477,
+      "lon": 151.801,
+      "tier": "global",
+      "soil_class": "clay",
+      "soil_source": "soilgrids",
+      "irrigated": false,
+      "season_year_start": "09-01",
+      "ggcmi_cell": [
+        -27.25,
+        151.75
+      ]
+    },
+    "scope": "Runs for any cultivated region covered by the global datasets. Calibrated in Punjab (with Punjab Agricultural University guidance); global defaults elsewhere, with the accuracy cost measured and confidence always shown.",
+    "tier": "global",
+    "current_rotation": "Continuous sorghum",
+    "calendar_source": "ggcmi",
+    "field_patterns": [
+      {
+        "id": "bare",
+        "text": "Bare for about 213 days each farming year, from 01 May to 29 Nov.",
+        "severity": "context"
+      },
+      {
+        "id": "vulnerable",
+        "text": "Sorghum at mid-season faced dry spells in 10 of the last 10 seasons.",
+        "severity": "caution"
+      },
+      {
+        "id": "weather_trend",
+        "text": "Reference evapotranspiration is rising since 1991, a statistically clear trend in NASA POWER data (20.3 mm per decade).",
+        "severity": "context"
+      },
+      {
+        "id": "water_storage",
+        "text": "Water stored on land in this region (~300 km) has risen about 0.53 cm per year since 2002 (GRACE/GRACE-FO).",
+        "severity": "context"
+      }
+    ],
+    "validations": [
+      {
+        "check_id": "V1",
+        "site": "toowoomba",
+        "dataset": "FAO-56 Example 18",
+        "version": "1998",
+        "period": "6 July",
+        "n": 1,
+        "metric": "Reference water use",
+        "value": 3.879506166923254,
+        "unit": "mm/day",
+        "pass_rule": "3.9 ± 0.1 mm/day",
+        "status": "pass",
+        "note": "Reproduces the reference calculation in Brussels.",
+        "figure_path": null
+      },
+      {
+        "check_id": "V2",
+        "site": "toowoomba",
+        "dataset": "GGCMI Phase 3, PAU crop calendars and FAO-56",
+        "version": "GGCMI 1.01",
+        "period": "2001 to 2024",
+        "n": 0,
+        "metric": "Global and calibrated arrow agreement",
+        "value": null,
+        "unit": "%",
+        "pass_rule": "At least 75% agreement meets the numerical threshold. Calendar infeasibility remains a caveat.",
+        "status": "not_run",
+        "note": "The calibrated comparison applies to Ludhiana.",
+        "figure_path": null
+      },
+      {
+        "check_id": "V3",
+        "site": "toowoomba",
+        "dataset": "MODIS MOD13Q1 via ORNL DAAC",
+        "version": "061",
+        "period": "2001 to 2024",
+        "n": 0,
+        "metric": "Median calendar date difference",
+        "value": null,
+        "unit": "days",
+        "pass_rule": "Pass at 14 days or less. Caveat at 28 days or less.",
+        "status": "not_run",
+        "note": "This replay does not have a local MODIS greenness series.",
+        "figure_path": null
+      },
+      {
+        "check_id": "V4",
+        "site": "toowoomba",
+        "dataset": "NASA POWER and FAO-56",
+        "version": "Daily AG / Eq. 85",
+        "period": "2001 to 2024",
+        "n": 17532,
+        "metric": "Largest daily water balance difference",
+        "value": 2.708944180085382e-14,
+        "unit": "mm/day",
+        "pass_rule": "Under 0.1 mm/day.",
+        "status": "pass",
+        "note": "Largest daily difference between inputs, outputs and modelled storage.",
+        "figure_path": null
+      },
+      {
+        "check_id": "V5",
+        "site": "toowoomba",
+        "dataset": "NASA FIRMS VIIRS S-NPP",
+        "version": "375 m",
+        "period": "2012 to 2024",
+        "n": 0,
+        "metric": "Fires in the post-rice window",
+        "value": null,
+        "unit": "%",
+        "pass_rule": "Consistent at 50% or more of September to December fires.",
+        "status": "not_run",
+        "note": "The fire overlap check is specific to the Ludhiana demo.",
+        "figure_path": null
+      },
+      {
+        "check_id": "V6",
+        "site": "toowoomba",
+        "dataset": "NASA POWER and published Punjab ranges",
+        "version": "Daily AG",
+        "period": "2001 to 2024",
+        "n": 0,
+        "metric": "Rice reference water and wheat irrigation",
+        "value": null,
+        "unit": "",
+        "pass_rule": "430 to 510 mm and 3 to 6 applications.",
+        "status": "not_run",
+        "note": "The published comparison applies to irrigated rice and wheat at Ludhiana.",
+        "figure_path": null
+      },
+      {
+        "check_id": "V7",
+        "site": "toowoomba",
+        "dataset": "NASA SMAP root-zone wetness",
+        "version": "SPL4SMGP.008",
+        "period": "2015 to 2024",
+        "n": 0,
+        "metric": "Soil wetness agreement",
+        "value": null,
+        "unit": "Spearman r",
+        "pass_rule": "Pass at 0.5 or above. Caveat at 0.3 or above.",
+        "status": "not_run",
+        "note": "The satellite root-zone wetness check is specific to the Malawi demo.",
+        "figure_path": null
+      },
+      {
+        "check_id": "V8",
+        "site": "toowoomba",
+        "dataset": "MODIS MOD16A2GF via ORNL DAAC",
+        "version": "061",
+        "period": "2001 to 2024",
+        "n": 0,
+        "metric": "Median seasonal water use bias",
+        "value": null,
+        "unit": "%",
+        "pass_rule": "Always shown with a caveat about satellite water use.",
+        "status": "not_run",
+        "note": "The ORNL satellite water-use product is unavailable for this run.",
+        "figure_path": null
+      }
+    ],
+    "lever_rejections": [
+      {
+        "lever": "swap_weak_link",
+        "reason": "No other supported crop grown here fits the same slot."
+      },
+      {
+        "lever": "take_turns",
+        "reason": "This lever needs one current crop and a locally grown legume that fits its season."
+      },
+      {
+        "lever": "combine",
+        "reason": "The two changes needed for this option did not both pass."
+      }
+    ],
+    "datasets": [
+      "NASA POWER daily, AG community",
+      "GGCMI crop calendar",
+      "SoilGrids 2.0",
+      "GGCMI Phase 3 v1.01 and MapSPAM 2010",
+      "GRACE/GRACE-FO NASA Goddard (catalog RL06v2.0)"
+    ],
+    "options": [
+      {
+        "rotation_id": "global_current",
+        "name": "Continuous sorghum",
+        "lever": "current",
+        "verdict": "This is your current rotation. Every other option is compared with it.",
+        "arrows": {
+          "soil": "similar",
+          "water": "similar",
+          "risk": "similar"
+        },
+        "wins": {
+          "soil": {
+            "better": 0,
+            "worse": 0,
+            "tie": 24
+          },
+          "water": {
+            "better": 0,
+            "worse": 0,
+            "tie": 24
+          },
+          "risk": {
+            "better": 0,
+            "worse": 0,
+            "tie": 24
+          }
+        },
+        "stability": {
+          "badge": "robust",
+          "drivers": []
+        },
+        "stability_line": "Holds under all assumptions we tested",
+        "medians": {
+          "soil_score": 49.91192587675636,
+          "et_mm": 542.1760121581535,
+          "irr_gross_mm": 0.0,
+          "risk_hits": 1.0,
+          "bare_days": 213.0
+        }
+      },
+      {
+        "rotation_id": "global_gap",
+        "name": "Continuous sorghum + hairy vetch",
+        "lever": "fill_the_gap",
+        "verdict": "Better for your soil in 24 of 24 seasons and water similar; weather risk similar.",
+        "arrows": {
+          "soil": "better",
+          "water": "similar",
+          "risk": "similar"
+        },
+        "wins": {
+          "soil": {
+            "better": 24,
+            "worse": 0,
+            "tie": 0
+          },
+          "water": {
+            "better": 0,
+            "worse": 2,
+            "tie": 22
+          },
+          "risk": {
+            "better": 0,
+            "worse": 5,
+            "tie": 19
+          }
+        },
+        "stability": {
+          "badge": "robust",
+          "drivers": []
+        },
+        "stability_line": "Holds under all assumptions we tested",
+        "medians": {
+          "soil_score": 66.4730391998597,
+          "et_mm": 653.1796661445603,
+          "irr_gross_mm": 0.0,
+          "risk_hits": 1.0,
+          "bare_days": 120.0
+        }
+      }
+    ]
+  },
+  "sinop": {
+    "site": {
+      "site_id": "sinop",
+      "name": "Sinop, Mato Grosso, Brazil",
+      "lat": -11.918,
+      "lon": -55.552,
+      "tier": "global",
+      "soil_class": "clay_loam",
+      "soil_source": "soilgrids",
+      "irrigated": false,
+      "season_year_start": "08-01",
+      "ggcmi_cell": [
+        -11.75,
+        -55.75
+      ]
+    },
+    "scope": "Runs for any cultivated region covered by the global datasets. Calibrated in Punjab (with Punjab Agricultural University guidance); global defaults elsewhere, with the accuracy cost measured and confidence always shown.",
+    "tier": "global",
+    "current_rotation": "Soybean and maize",
+    "calendar_source": "ggcmi",
+    "field_patterns": [
+      {
+        "id": "bare",
+        "text": "Bare for about 142 days each farming year, from 11 Jun to 30 Oct.",
+        "severity": "context"
+      },
+      {
+        "id": "weather_trend",
+        "text": "Main-season rainfall is falling since 1991, a statistically clear trend in NASA POWER data (153.5 mm per decade).",
+        "severity": "context"
+      },
+      {
+        "id": "water_storage",
+        "text": "GRACE/GRACE-FO shows no strong regional water storage trend.",
+        "severity": "context"
+      }
+    ],
+    "validations": [
+      {
+        "check_id": "V1",
+        "site": "sinop",
+        "dataset": "FAO-56 Example 18",
+        "version": "1998",
+        "period": "6 July",
+        "n": 1,
+        "metric": "Reference water use",
+        "value": 3.879506166923254,
+        "unit": "mm/day",
+        "pass_rule": "3.9 ± 0.1 mm/day",
+        "status": "pass",
+        "note": "Reproduces the reference calculation in Brussels.",
+        "figure_path": null
+      },
+      {
+        "check_id": "V2",
+        "site": "sinop",
+        "dataset": "GGCMI Phase 3, PAU crop calendars and FAO-56",
+        "version": "GGCMI 1.01",
+        "period": "2001 to 2024",
+        "n": 0,
+        "metric": "Global and calibrated arrow agreement",
+        "value": null,
+        "unit": "%",
+        "pass_rule": "At least 75% agreement meets the numerical threshold. Calendar infeasibility remains a caveat.",
+        "status": "not_run",
+        "note": "The calibrated comparison applies to Ludhiana.",
+        "figure_path": null
+      },
+      {
+        "check_id": "V3",
+        "site": "sinop",
+        "dataset": "MODIS MOD13Q1 via ORNL DAAC",
+        "version": "061",
+        "period": "2001 to 2024",
+        "n": 0,
+        "metric": "Median calendar date difference",
+        "value": null,
+        "unit": "days",
+        "pass_rule": "Pass at 14 days or less. Caveat at 28 days or less.",
+        "status": "not_run",
+        "note": "This replay does not have a local MODIS greenness series.",
+        "figure_path": null
+      },
+      {
+        "check_id": "V4",
+        "site": "sinop",
+        "dataset": "NASA POWER and FAO-56",
+        "version": "Daily AG / Eq. 85",
+        "period": "2001 to 2024",
+        "n": 17532,
+        "metric": "Largest daily water balance difference",
+        "value": 2.631228568361621e-14,
+        "unit": "mm/day",
+        "pass_rule": "Under 0.1 mm/day.",
+        "status": "pass",
+        "note": "Largest daily difference between inputs, outputs and modelled storage.",
+        "figure_path": null
+      },
+      {
+        "check_id": "V5",
+        "site": "sinop",
+        "dataset": "NASA FIRMS VIIRS S-NPP",
+        "version": "375 m",
+        "period": "2012 to 2024",
+        "n": 0,
+        "metric": "Fires in the post-rice window",
+        "value": null,
+        "unit": "%",
+        "pass_rule": "Consistent at 50% or more of September to December fires.",
+        "status": "not_run",
+        "note": "The fire overlap check is specific to the Ludhiana demo.",
+        "figure_path": null
+      },
+      {
+        "check_id": "V6",
+        "site": "sinop",
+        "dataset": "NASA POWER and published Punjab ranges",
+        "version": "Daily AG",
+        "period": "2001 to 2024",
+        "n": 0,
+        "metric": "Rice reference water and wheat irrigation",
+        "value": null,
+        "unit": "",
+        "pass_rule": "430 to 510 mm and 3 to 6 applications.",
+        "status": "not_run",
+        "note": "The published comparison applies to irrigated rice and wheat at Ludhiana.",
+        "figure_path": null
+      },
+      {
+        "check_id": "V7",
+        "site": "sinop",
+        "dataset": "NASA SMAP root-zone wetness",
+        "version": "SPL4SMGP.008",
+        "period": "2015 to 2024",
+        "n": 0,
+        "metric": "Soil wetness agreement",
+        "value": null,
+        "unit": "Spearman r",
+        "pass_rule": "Pass at 0.5 or above. Caveat at 0.3 or above.",
+        "status": "not_run",
+        "note": "The satellite root-zone wetness check is specific to the Malawi demo.",
+        "figure_path": null
+      },
+      {
+        "check_id": "V8",
+        "site": "sinop",
+        "dataset": "MODIS MOD16A2GF via ORNL DAAC",
+        "version": "061",
+        "period": "2001 to 2024",
+        "n": 0,
+        "metric": "Median seasonal water use bias",
+        "value": null,
+        "unit": "%",
+        "pass_rule": "Always shown with a caveat about satellite water use.",
+        "status": "not_run",
+        "note": "The ORNL satellite water-use product is unavailable for this run.",
+        "figure_path": null
+      }
+    ],
+    "lever_rejections": [
+      {
+        "lever": "fill_the_gap",
+        "reason": "No catch crop met the local window, warmth and water checks often enough."
+      },
+      {
+        "lever": "take_turns",
+        "reason": "This lever needs one current crop and a locally grown legume that fits its season."
+      },
+      {
+        "lever": "combine",
+        "reason": "The two changes needed for this option did not both pass."
+      }
+    ],
+    "datasets": [
+      "NASA POWER daily, AG community",
+      "GGCMI crop calendar",
+      "SoilGrids 2.0",
+      "GGCMI Phase 3 v1.01 and MapSPAM 2010",
+      "GRACE/GRACE-FO NASA Goddard (catalog RL06v2.0)"
+    ],
+    "options": [
+      {
+        "rotation_id": "global_current",
+        "name": "Soybean and maize",
+        "lever": "current",
+        "verdict": "This is your current rotation. Every other option is compared with it.",
+        "arrows": {
+          "soil": "similar",
+          "water": "similar",
+          "risk": "similar"
+        },
+        "wins": {
+          "soil": {
+            "better": 0,
+            "worse": 0,
+            "tie": 24
+          },
+          "water": {
+            "better": 0,
+            "worse": 0,
+            "tie": 24
+          },
+          "risk": {
+            "better": 0,
+            "worse": 0,
+            "tie": 24
+          }
+        },
+        "stability": {
+          "badge": "robust",
+          "drivers": []
+        },
+        "stability_line": "Holds under all assumptions we tested",
+        "medians": {
+          "soil_score": 74.50713160149124,
+          "et_mm": 663.3456703361628,
+          "irr_gross_mm": 0.0,
+          "risk_hits": 0.0,
+          "bare_days": 147.0
+        }
+      },
+      {
+        "rotation_id": "global_swap_beans",
+        "name": "Beans and Maize",
+        "lever": "swap_weak_link",
+        "verdict": "Worse for your soil in 16 of 24 seasons and water similar; weather risk similar.",
+        "arrows": {
+          "soil": "worse",
+          "water": "similar",
+          "risk": "similar"
+        },
+        "wins": {
+          "soil": {
+            "better": 0,
+            "worse": 16,
+            "tie": 8
+          },
+          "water": {
+            "better": 0,
+            "worse": 0,
+            "tie": 24
+          },
+          "risk": {
+            "better": 0,
+            "worse": 2,
+            "tie": 22
+          }
+        },
+        "stability": {
+          "badge": "depends",
+          "drivers": [
+            {
+              "param": "sowing_date",
+              "label": "crop sowing dates"
+            },
+            {
+              "param": "arrow_threshold",
+              "label": "the number of seasons needed for an arrow"
+            }
+          ]
+        },
+        "stability_line": "Depends on crop sowing dates, the number of seasons needed for an arrow",
+        "medians": {
+          "soil_score": 71.70810557401903,
+          "et_mm": 627.8345151486053,
+          "irr_gross_mm": 0.0,
+          "risk_hits": 0.0,
+          "bare_days": 157.0
+        }
+      }
+    ]
+  },
+  "damanhur": {
+    "site": {
+      "site_id": "damanhur",
+      "name": "Damanhur, Nile Delta, Egypt",
+      "lat": 30.74,
+      "lon": 30.48,
+      "tier": "global",
+      "soil_class": "clay_loam",
+      "soil_source": "soilgrids",
+      "irrigated": true,
+      "season_year_start": "09-01",
+      "ggcmi_cell": [
+        30.75,
+        30.25
+      ]
+    },
+    "scope": "Runs for any cultivated region covered by the global datasets. Calibrated in Punjab (with Punjab Agricultural University guidance); global defaults elsewhere, with the accuracy cost measured and confidence always shown.",
+    "tier": "global",
+    "current_rotation": "Spring wheat and maize",
+    "calendar_source": "ggcmi",
+    "field_patterns": [
+      {
+        "id": "vulnerable",
+        "text": "Maize at mid-season faced heat in 10 of the last 10 seasons.",
+        "severity": "caution"
+      },
+      {
+        "id": "weather_trend",
+        "text": "Reference evapotranspiration is rising since 1991, a statistically clear trend in NASA POWER data (15.2 mm per decade).",
+        "severity": "context"
+      },
+      {
+        "id": "water_storage",
+        "text": "GRACE/GRACE-FO shows no strong regional water storage trend.",
+        "severity": "context"
+      }
+    ],
+    "validations": [
+      {
+        "check_id": "V1",
+        "site": "damanhur",
+        "dataset": "FAO-56 Example 18",
+        "version": "1998",
+        "period": "6 July",
+        "n": 1,
+        "metric": "Reference water use",
+        "value": 3.879506166923254,
+        "unit": "mm/day",
+        "pass_rule": "3.9 ± 0.1 mm/day",
+        "status": "pass",
+        "note": "Reproduces the reference calculation in Brussels.",
+        "figure_path": null
+      },
+      {
+        "check_id": "V2",
+        "site": "damanhur",
+        "dataset": "GGCMI Phase 3, PAU crop calendars and FAO-56",
+        "version": "GGCMI 1.01",
+        "period": "2001 to 2024",
+        "n": 0,
+        "metric": "Global and calibrated arrow agreement",
+        "value": null,
+        "unit": "%",
+        "pass_rule": "At least 75% agreement meets the numerical threshold. Calendar infeasibility remains a caveat.",
+        "status": "not_run",
+        "note": "The calibrated comparison applies to Ludhiana.",
+        "figure_path": null
+      },
+      {
+        "check_id": "V3",
+        "site": "damanhur",
+        "dataset": "MODIS MOD13Q1 via ORNL DAAC",
+        "version": "061",
+        "period": "2001 to 2024",
+        "n": 0,
+        "metric": "Median calendar date difference",
+        "value": null,
+        "unit": "days",
+        "pass_rule": "Pass at 14 days or less. Caveat at 28 days or less.",
+        "status": "not_run",
+        "note": "This replay does not have a local MODIS greenness series.",
+        "figure_path": null
+      },
+      {
+        "check_id": "V4",
+        "site": "damanhur",
+        "dataset": "NASA POWER and FAO-56",
+        "version": "Daily AG / Eq. 85",
+        "period": "2001 to 2024",
+        "n": 8766,
+        "metric": "Largest daily water balance difference",
+        "value": 2.042810365310288e-14,
+        "unit": "mm/day",
+        "pass_rule": "Under 0.1 mm/day.",
+        "status": "pass",
+        "note": "Largest daily difference between inputs, outputs and modelled storage.",
+        "figure_path": null
+      },
+      {
+        "check_id": "V5",
+        "site": "damanhur",
+        "dataset": "NASA FIRMS VIIRS S-NPP",
+        "version": "375 m",
+        "period": "2012 to 2024",
+        "n": 0,
+        "metric": "Fires in the post-rice window",
+        "value": null,
+        "unit": "%",
+        "pass_rule": "Consistent at 50% or more of September to December fires.",
+        "status": "not_run",
+        "note": "The fire overlap check is specific to the Ludhiana demo.",
+        "figure_path": null
+      },
+      {
+        "check_id": "V6",
+        "site": "damanhur",
+        "dataset": "NASA POWER and published Punjab ranges",
+        "version": "Daily AG",
+        "period": "2001 to 2024",
+        "n": 0,
+        "metric": "Rice reference water and wheat irrigation",
+        "value": null,
+        "unit": "",
+        "pass_rule": "430 to 510 mm and 3 to 6 applications.",
+        "status": "not_run",
+        "note": "The published comparison applies to irrigated rice and wheat at Ludhiana.",
+        "figure_path": null
+      },
+      {
+        "check_id": "V7",
+        "site": "damanhur",
+        "dataset": "NASA SMAP root-zone wetness",
+        "version": "SPL4SMGP.008",
+        "period": "2015 to 2024",
+        "n": 0,
+        "metric": "Soil wetness agreement",
+        "value": null,
+        "unit": "Spearman r",
+        "pass_rule": "Pass at 0.5 or above. Caveat at 0.3 or above.",
+        "status": "not_run",
+        "note": "The satellite root-zone wetness check is specific to the Malawi demo.",
+        "figure_path": null
+      },
+      {
+        "check_id": "V8",
+        "site": "damanhur",
+        "dataset": "MODIS MOD16A2GF via ORNL DAAC",
+        "version": "061",
+        "period": "2001 to 2024",
+        "n": 0,
+        "metric": "Median seasonal water use bias",
+        "value": null,
+        "unit": "%",
+        "pass_rule": "Always shown with a caveat about satellite water use.",
+        "status": "not_run",
+        "note": "The ORNL satellite water-use product is unavailable for this run.",
+        "figure_path": null
+      }
+    ],
+    "lever_rejections": [
+      {
+        "lever": "fill_the_gap",
+        "reason": "No catch crop met the local window, warmth and water checks often enough."
+      },
+      {
+        "lever": "swap_weak_link",
+        "reason": "No other supported crop grown here fits the same slot."
+      },
+      {
+        "lever": "take_turns",
+        "reason": "This lever needs one current crop and a locally grown legume that fits its season."
+      },
+      {
+        "lever": "combine",
+        "reason": "The two changes needed for this option did not both pass."
+      }
+    ],
+    "datasets": [
+      "NASA POWER daily, AG community",
+      "GGCMI crop calendar",
+      "SoilGrids 2.0",
+      "GGCMI Phase 3 v1.01 and MapSPAM 2010",
+      "GRACE/GRACE-FO NASA Goddard (catalog RL06v2.0)"
+    ],
+    "options": [
+      {
+        "rotation_id": "global_current",
+        "name": "Spring wheat and maize",
+        "lever": "current",
+        "verdict": "This is your current rotation. Every other option is compared with it.",
+        "arrows": {
+          "soil": "similar",
+          "water": "similar",
+          "risk": "similar"
+        },
+        "wins": {
+          "soil": {
+            "better": 0,
+            "worse": 0,
+            "tie": 24
+          },
+          "water": {
+            "better": 0,
+            "worse": 0,
+            "tie": 24
+          },
+          "risk": {
+            "better": 0,
+            "worse": 0,
+            "tie": 24
+          }
+        },
+        "stability": {
+          "badge": "robust",
+          "drivers": []
+        },
+        "stability_line": "Holds under all assumptions we tested",
+        "medians": {
+          "soil_score": 56.7351598173516,
+          "et_mm": 1692.4817409150505,
+          "irr_gross_mm": 2434.0070896887282,
+          "risk_hits": 1.0,
+          "bare_days": 35.0
         }
       }
     ]

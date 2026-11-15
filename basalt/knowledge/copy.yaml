@@ -278,7 +278,7 @@ ui:
   validation_columns: [Check, Status, Value, Dataset, What it means]
   categories:
     bare: Bare soil
-    Poaceae: Rice/wheat/maize (grasses)
+    Poaceae: Cereal crops (grasses)
     Fabaceae: Legumes
     Malvaceae: Cotton
     Brassicaceae: Mustard/rapeseed
@@ -354,3 +354,46 @@ ui:
   field_pin_label: Field pin
   lookup_field: Checking the crop calendar, soil and NASA weather for this pin
   location_missing: Enter both latitude and longitude, or choose a pin on the map.
+  chart_reading: "Read each row from left to right to follow one farming year. The newest year is at the top."
+  chart_hover_help: On the chart, point at or tap a day to see the date, crop and weather events.
+  chart_cover_legend: Crop cover
+  chart_weather_legend: Weather events
+  chart_crop_hover: "{crop} covered the soil. The crop stage was {stage}."
+  chart_bare_hover: The soil was bare.
+  chart_event_hover: "The replay marked {events} on this day."
+  chart_farming_year: Farming year
+  chart_month: Months of the farming year
+  chart_filter: Focus the chart
+  chart_years_shown: Farming years shown
+  chart_years_all: All farming years
+  chart_years_recent: Most recent {n} farming years
+  chart_events_shown: Weather markers shown
+  chart_events_all: All weather events
+  chart_events_none: Crop cover only
+  chart_visible_rows: "The chart shows {shown} of the {total} farming years in the replay."
+  field_bare_summary: "The field was bare for a total of {days} days in a typical simulated farming year."
+  field_bare_lead: Total days of bare soil
+  field_bare_cadence: Median per farming year
+  option_count_line: "{better} better · {worse} worse · {tie} about the same"
+  option_reference: Reference
+  option_reference_soil: "{score:.0f} out of 100"
+  option_reference_irr: "{water:.0f} mm used a year"
+  option_reference_rf: "{water:.0%} of sensitive days stressed"
+  option_reference_risk: "Weather risks per year {risk:g}"
+  option_count_guide: "The counts show how often an option did better, worse or about the same as the current rotation. An arrow shows a consistent direction across the replay. A dot shows a mixed or small difference."
+  option_water_irrigated: The water comparison tracks water used by the crops and soil.
+  option_water_rainfed: The water comparison tracks how often crops were short of water.
+  option_chart_guide: Each small chart shows the same farming years in the same order, so you can compare the seasonal patterns.
+  field_bare_phrase: "The longest spell without a crop lasted {period}"
+  field_storage_statement: "Regional water storage was {direction} by about {rate} centimetres per year."
+  demos_heading: Explore more demo fields
+  demos_intro: These fields show how crop rotation comparisons change with local crops, rainfall, and irrigation.
+  demos_jump: Browse {count} more demo fields
+  validation_local: Local comparisons
+  validation_model: Model checks
+  validation_deferred: Checks without results ({n})
+  validation_model_only: The results here cover the model calculations. Local comparisons need supporting data for this location.
+  validation_v2_counts: "{matched} of {total} ratings agreed, including {alternatives} of {alternative_total} ratings for alternative rotations."
+  validation_v7_pairs: "Both sources had values for {n:,} days."
+  validation_water_gap: Median difference in crop water use
+  validation_soil_gap: Median difference in soil score

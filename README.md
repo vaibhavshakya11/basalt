@@ -8,7 +8,7 @@ Explore how your current rotation and up to three alternatives would have done t
 
 ## What it does
 
-- Starts with a field pin or two offline demos in Ludhiana, India, and central Malawi.
+- Starts with a field pin or eight offline demo fields across six continents.
 - Uses crop calendars and satellite greenness to help you confirm what grows and when.
 - Replays 2001 to 2024, comparing soil practices, crop water use and weather risks season by season.
 - Shows crop cover, bare soil and weather events in Season Strata.
@@ -26,6 +26,21 @@ python3.11 -m streamlit run app.py
 ```
 
 Open [the Ludhiana demo](http://localhost:8501/?site=ludhiana) or [the central Malawi demo](http://localhost:8501/?site=malawi). The demo screens load prepared results. A climate change runs a new replay using the same local weather file.
+
+## Why these demo fields
+
+The pins represent cultivated land near each named city. The crop choices illustrate locally supported calendars and water sources. They are model scenarios rather than records of individual farms. All eight run on the historical NASA POWER weather for their location. The six added field pins were checked against [ESA WorldCover](https://esa-worldcover.org/en/data-access).
+
+| Demo field | Why it is in the set |
+| --- | --- |
+| [Ludhiana, India](https://basalt-nasa.streamlit.app/?site=ludhiana) | Irrigated rice and wheat show how replacing ponded rice can change pumping demand. [Punjab Agricultural University](https://pau.edu/content/ccil/pf/pp_kharif.pdf) |
+| [Lilongwe plain, Malawi](https://basalt-nasa.streamlit.app/?site=malawi) | Rainfed maize provides a comparison with legumes and dry-season cover in a system that relies on one rainy season. [GGCMI Phase 3](https://zenodo.org/records/5062513) |
+| [Jaipur, India](https://basalt-nasa.streamlit.app/?site=jaipur) | Rainfed millet shows how a short monsoon limits crop choices in the drier part of Rajasthan. [India's district crop figures](https://sansad.in/getFile/annex/267/AU3859_GVwFkG.pdf) |
+| [Fresno County, United States](https://basalt-nasa.streamlit.app/?site=fresno) | Irrigated cotton adds a different crop family and a summer irrigation comparison from California's Central Valley. [Fresno County crop reports](https://www.fresnocountyca.gov/Departments/Agricultural-Commissioner/Annual-Crop-Livestock-Report) |
+| [Córdoba, Spain](https://basalt-nasa.streamlit.app/?site=cordoba) | Rainfed winter wheat illustrates a Mediterranean calendar that makes use of the cooler, wetter months. [Andalusia municipal statistics](https://www.juntadeandalucia.es/institutodeestadisticaycartografia/sima/ficha.htm?mun=14021) |
+| [Toowoomba, Australia](https://basalt-nasa.streamlit.app/?site=toowoomba) | Rainfed sorghum adds a Southern Hemisphere summer cereal where dry spells can matter within the crop season. [Darling Downs drought resilience program](https://rdrpqld.org.au/region/darling-downs-region/) |
+| [Sinop, Brazil](https://basalt-nasa.streamlit.app/?site=sinop) | A rainfed soybean–maize sequence shows how two crops can fit within a tropical rainy season. [Embrapa field study](https://www.alice.cnptia.embrapa.br/alice/bitstream/doc/1103798/1/2019cpamtagrossilvipastorilpart4cap1estabelecimentosistemailpffocogadocortep145163.pdf) |
+| [Damanhur, Egypt](https://basalt-nasa.streamlit.app/?site=damanhur) | Irrigated wheat and maize show how a two-crop year depends on irrigation in a dry Nile Delta climate. [FAO Egypt crop calendar](https://www.fao.org/4/Y4632e/y4632e0c.htm) |
 
 ## NASA and partner data
 
@@ -57,13 +72,19 @@ Open **How sure are we?** on either demo. It reports V1 (FAO reference water use
 | Validation | Ludhiana | Malawi |
 | --- | --- | --- |
 | V1 FAO reference water use | Pass | Pass |
-| V2 Global and calibrated agreement | Not run | Not run |
+| V2 Global parameters on shared crop dates | Caveat | Not run |
 | V3 Satellite calendar | Pass | Fail |
 | V4 Daily water balance | Pass | Pass |
 | V5 Fire timing | Caveat | Not run |
 | V6 Published Punjab ranges | Fail | Not run |
 | V7 SMAP root-zone wetness | Not run | Not run |
 | V8 MODIS crop water use | Caveat | Caveat |
+
+### How the V2 comparison handles overlapping calendars
+
+GGCMI provides regional crop averages and does not design sequences for one field. At Ludhiana its irrigated rice calendar reaches 26 November and its winter wheat calendar begins 4 November. Only one of the four rotations fits the original dates with the required turnaround, and the rice–wheat reference is infeasible. [GGCMI Phase 3 dataset](https://zenodo.org/records/5062513)
+
+The controlled replay holds each PAU rotation's planting and harvest dates, the soil, weather, field settings and 24 seasons fixed, including leap years. It replaces crop parameters and the relative time spent in each crop stage with global defaults, then reruns all four rotations. The result measures agreement conditional on a feasible local schedule. It cannot establish the accuracy of the overlapping regional dates.
 
 ## Limits
 

@@ -25,12 +25,12 @@ KNOWLEDGE = ("crops.yaml", "gap_crops.yaml", "rotations_punjab.yaml", "soils.yam
 NAMES = {"soil": "soil", "water": "water", "risk": "weather risk"}
 VALIDATION_NOTES = {
     "V1": "The daily formula reproduces the FAO example.",
-    "V2": "Regional rice and wheat dates overlap in Ludhiana.",
+    "V2": "Same-date crop parameters agree. Regional dates overlap.",
     "V3": "Paired calendar dates match more closely in Ludhiana.",
     "V4": "Daily input, output and storage close within tolerance.",
     "V5": "The post-rice share is below the 50% rule.",
     "V6": "The rice reference estimate exceeds the published range.",
-    "V7": "The Malawi AppEEARS sample requires Earthdata access.",
+    "V7": "Malawi wetness anomalies are compared with NASA SMAP when the export is present.",
     "V8": "Bias is relative to the satellite estimate, which has irrigation limits.",
 }
 NUMBER = re.compile(r"\d+(?:\.\d+)?")
@@ -97,7 +97,8 @@ def _report(summary, bundles, browser, pytest, deployed, commit) -> str:
         for left, right in zip(summary["ludhiana"]["validations"], summary["malawi"]["validations"], strict=True)
     ]
     headlines = []
-    for site in summary.values():
+    for site_id in ("ludhiana", "malawi"):
+        site = summary[site_id]
         headlines.append(f"**{site['site']['name']}**")
         for option in site["options"]:
             arrows = ", ".join(f"{NAMES[axis]} {state}" for axis, state in option["arrows"].items())
@@ -107,14 +108,15 @@ def _report(summary, bundles, browser, pytest, deployed, commit) -> str:
     audit = "\n".join(f"- {'Pass' if good else 'Needs review'}. {name}." for name, good in _audit(browser, bundles))
     missing = [f"{site['site']['site_id']} {check['check_id']}"
                for site in summary.values() for check in site["validations"]
-               if check["status"] == "not_run" and (site["site"]["site_id"], check["check_id"]) not in
-               {("ludhiana", "V2"), ("malawi", "V2"), ("malawi", "V5"), ("malawi", "V6"), ("ludhiana", "V7")}]
+               if check["status"] == "not_run" and (site["site"]["site_id"], check["check_id"]) in
+               {("ludhiana", "V2"), ("ludhiana", "V3"), ("ludhiana", "V5"), ("ludhiana", "V8"),
+                ("malawi", "V3"), ("malawi", "V7"), ("malawi", "V8")}]
     tests = " ".join(pytest.strip().splitlines()[-1:]) or "Pytest output is empty."
     roots = ", ".join(a.value for a in load_assumptions() if a.parameter == "initial_root_depth")
     return f"""# basalt review
 
 1. [Repository]({REPO_URL}) · {f'[Public app]({deployed})' if deployed else 'Public deployment pending'} · `{commit}`
-2. M0–M3 implemented, with V2 infeasible using the supplied calendars. M4 {'verified in a signed-out browser' if deployed else 'verified locally, public deployment pending'}. M5 {'complete' if not missing else 'partial (' + ', '.join(missing) + ' pending or infeasible)'}.
+2. M0–M3 implemented. V2 isolates crop parameters on a feasible shared calendar. M4 {'verified in a signed-out browser' if deployed else 'verified locally, public deployment pending'}. M5 {'complete' if not missing else 'partial (' + ', '.join(missing) + ' pending or infeasible)'}.
 3. Tests. {tests}
 
 ## Validation
@@ -127,6 +129,8 @@ def _report(summary, bundles, browser, pytest, deployed, commit) -> str:
 
 {chr(10).join(headlines)}
 
+The results summary covers all eight demo fields, including six new cropland pins checked with ESA WorldCover.
+
 ## Malawi lever outcomes
 
 {reasons or 'All three selected alternatives passed the proposal checks.'}
@@ -137,7 +141,7 @@ def _report(summary, bundles, browser, pytest, deployed, commit) -> str:
 - The offline map uses bundled Natural Earth shapes. The weather controls send both slider values together, including during rapid keyboard edits. GRACE uses official JPL analysis values at the two demo cells. Elsewhere the fallback is NASA Goddard, labelled separately because its catalog and embedded release labels differ. The offline script also supports the authenticated full JPL product.
 - Complete agricultural years determine trends. At these pins the 2025-starting season extends past the supplied weather archive. The bare-soil depletion fraction (0.55), proportional depletion when roots shrink, initial rooting depth{f' ({roots})' if roots else ''}, gap-crop heights and supplied uncertainty bounds are model assumptions. The crop YAML files record low-confidence additions.
 - Internal rotation runs retain both phases for two-year cycles. Reported counts can be half-integers after averaging phases; peak closure uses the larger phase residual. JSON Evidence fields follow the frozen structure.
-- V7 requires the authorized NASA AppEEARS point export at the Malawi pin.
+- V2 holds PAU planting and harvest dates fixed while replacing crop parameters. Unadjusted GGCMI dates fit only one of the four rotations.
 
 ## Self-audit
 
@@ -145,7 +149,7 @@ def _report(summary, bundles, browser, pytest, deployed, commit) -> str:
 
 ## Next checks
 
-- Obtain the SMAP time series and run V7.
+{'- Obtain the queued AppEEARS export and run V7.' if 'malawi V7' in missing else '- Confirm model wetness on the ground at the Malawi field scale.'}
 - Check the season-long rice reference water-use difference with local records.
 - Derive a defensible global comparison for rotations with overlapping regional calendars.
 """
