@@ -67,7 +67,7 @@ def _bundle(session: requests.Session, task_id: str, wait_minutes: int) -> dict:
             files = session.get(f"{APPEEARS}/bundle/{task_id}", timeout=45)
             files.raise_for_status()
             return files.json()
-        if status not in {"pending", "processing"}:
+        if status not in {"pending", "queued", "processing"}:
             raise RuntimeError(f"AppEEARS task {task_id} returned {status}")
         if monotonic() >= deadline:
             raise TimeoutError(f"Resume AppEEARS task with --task-id {task_id}")
@@ -82,7 +82,7 @@ def daily_wetness(samples: list[pd.DataFrame]) -> pd.DataFrame:
         layer = columns.get(f"spl4smgp_008_{LAYER.lower()}", columns.get(LAYER.lower()))
         day = next((columns[name] for name in ("datetime", "date_time", "date") if name in columns), None)
         if day is None or layer is None or not {"latitude", "longitude"}.issubset(columns):
-            raise ValueError("AppEEARS results must include the date, coordinates and V8 root-zone wetness")
+            raise ValueError("AppEEARS results must include the date, coordinates and SMAP version 8 root-zone wetness")
         timestamps = frame[day]
         if day == columns.get("date") and "time" in columns:
             timestamps = timestamps.astype(str) + " " + frame[columns["time"]].astype(str)
@@ -158,8 +158,18 @@ def main() -> None:
         raise ValueError("No valid SMAP days in the requested interval")
     if daily.date.min() != pd.Timestamp(START_DATE) or daily.date.max() != pd.Timestamp(END_DATE):
         raise ValueError(f"AppEEARS results must span {START_DATE} to {END_DATE}")
+    daily.attrs.update({
+        "source": "NASA AppEEARS point sample",
+        "product": PRODUCT,
+        "layer": LAYER,
+        "timestamp_zone": "UTC",
+        "sample_points": _payload()["params"]["coordinates"],
+        "aggregation": "Mean per day at each point, followed by the mean across points.",
+    })
     options.output.parent.mkdir(parents=True, exist_ok=True)
-    daily.to_parquet(options.output, index=False, compression="zstd")
+    staging = options.output.with_suffix(".tmp")
+    daily.to_parquet(staging, index=False, compression="zstd")
+    staging.replace(options.output)
     print(f"Wrote {len(daily):,} daily values from {daily.date.min():%Y-%m-%d} to {daily.date.max():%Y-%m-%d}")
 
 
