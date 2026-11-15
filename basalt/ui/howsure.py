@@ -2,10 +2,9 @@ from html import escape
 
 import streamlit as st
 
-from basalt.ui.components import APP_COLOR, copybook, how_it_works, labels
+from basalt.ui.components import APP_COLOR, copybook, labels
 
 STATUS_TONES = {"pass": "better", "caveat": "iron", "fail": "worse", "not_run": "similar"}
-MODEL_CHECKS = {"V1", "V4"}
 
 VALIDATION_STYLE = """
 <style>
@@ -51,6 +50,45 @@ VALIDATION_STYLE = """
 }
 @media(max-width:380px){
  .stApp .b-check-note,.stApp .b-check-details{margin-left:0}
+}
+.stApp .b-validation-board .b-check-coverage{color:var(--basalt);max-width:74ch;margin:0 0 12px}
+.stApp .b-validation-board .b-check-coverage p{margin:0 0 3px}
+.stApp .b-validation-board .b-check-coverage .b-check-notice{font-weight:500;font-size:14px}
+.stApp .b-validation-board .b-check-coverage .b-check-absent{font-size:14px;color:var(--ash)}
+.stApp .b-check-spotlights{list-style:none;padding:0;margin:0 0 24px}
+.stApp .b-validation-board .b-check-spotlight{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);
+ gap:20px 32px;padding:18px 22px;border:1px solid var(--fracture);border-top:3px solid var(--check-tone);
+ background:var(--plate)}
+.stApp .b-check-spotlight h3{font-size:23px;line-height:1.2;margin:3px 0;padding:0}
+.stApp .b-check-spotlight p{margin:4px 0 0;font-size:14px;line-height:1.45}
+.stApp .b-check-spotlight .b-check-hero-number{font:500 38px/1 'IBM Plex Sans',sans-serif;letter-spacing:-.035em}
+.stApp .b-check-spotlight .b-check-number-label{margin-left:8px;font-size:13px;color:var(--ash)}
+.stApp .b-check-spotlight .b-check-context{color:var(--basalt)}
+.stApp .b-check-spotlight .b-check-note{color:var(--ash);margin-left:0}
+.stApp .b-check-spotlight .b-check-status{color:var(--check-tone);font-size:13px}
+.stApp .b-validation-board .b-check-group{margin:0 0 22px}
+.stApp .b-validation-board .b-check-group h3{font-size:19px}
+.stApp .b-validation-board .b-check-list .b-check{padding-block:12px}
+.stApp .b-validation-board .b-check-list .b-check[data-status="fail"]{
+ border-inline-start:3px solid #9B2D2D;padding-inline-start:11px;background:#9B2D2D08}
+.stApp .b-check-guide{border-block:1px solid var(--fracture);padding:4px 0}
+.stApp .b-check-guide summary{font-size:16px;font-weight:600;min-height:40px;padding-block:8px}
+.stApp .b-check-guide summary:focus-visible{outline:2px solid var(--iron);outline-offset:3px}
+.stApp .b-method-section{margin:18px 0;max-width:82ch}
+.stApp .b-method-section h3{font-size:17px;margin:0;padding-bottom:3px}
+.stApp .b-method-section p,.stApp .b-method-section li,.stApp .b-glossary{font-size:14px}
+.stApp .b-method-check{border-top:1px solid var(--fracture);padding:9px 0}
+.stApp .b-method-check h4{font-size:14px;margin:0;padding:0}
+.stApp .b-method-check p{margin:3px 0}
+.stApp .b-method-check .b-check-source{font-size:13px}
+@media(max-width:700px){
+ .stApp .b-validation-board .b-check-spotlight{grid-template-columns:minmax(0,1fr);padding:14px;gap:8px}
+ .stApp .b-check-spotlight h3{font-size:20px}
+ .stApp .b-check-spotlight .b-check-hero-number{font-size:32px}
+ .stApp .b-validation-board .b-check-list .b-check{gap:4px}
+ .stApp .b-validation-board .b-check-note{margin-left:2.9rem}
+ .stApp .b-method-check .b-check-source{grid-template-columns:minmax(0,1fr);gap:2px}
+ .stApp .b-method-check .b-check-source dd{margin-bottom:5px}
 }
 @media print{
  .stApp .b-validation .b-check{break-inside:avoid;gap:12px;padding-block:7px}
@@ -106,108 +144,167 @@ def _prominent_result(check: dict, ui: dict) -> tuple[str, list[tuple[str, str]]
     return _result_values(value, check["unit"]), []
 
 
-def _source_details(check: dict, ui: dict, measurements: list[tuple[str, str]]) -> str:
+def _source_terms(check: dict, ui: dict, measurements: list[tuple[str, str]]) -> str:
     source = " · ".join(str(check[key]) for key in ("dataset", "version", "period") if check.get(key))
     entries = [*measurements, (ui["validation_columns"][3], source), (ui["validation_rule"], check["pass_rule"])]
     if check.get("n") and check["check_id"] not in {"V2", "V7"}:
         entries.append((ui["validation_sample"], f'{check["n"]:,}'))
     terms = "".join(f"<dt>{escape(name)}</dt><dd>{escape(str(value))}</dd>" for name, value in entries if value)
-    detail_label = escape(ui["validation_details"])
-    return (f'<details class="b-check-details"><summary>{detail_label}</summary>'
-            f'<dl class="b-check-source">{terms}</dl></details>')
+    return f'<dl class="b-check-source">{terms}</dl>'
 
 
-def _check_row(check: dict, ui: dict) -> str:
+def _check_row(check: dict, ui: dict, *, include_source: bool) -> str:
     status = check["status"]
     tone = APP_COLOR[STATUS_TONES[status]]
     result, measurements = _prominent_result(check, ui)
+    threshold = ""
+    if include_source:
+        threshold = (f'<details class="b-check-details"><summary>{escape(ui["validation_details"])}</summary>'
+                     f'{_source_terms(check, ui, measurements)}</details>')
     return (
-        '<li class="b-check"><div><div class="b-check-heading">'
+        f'<li class="b-check" data-status="{escape(status)}"><div><div class="b-check-heading">'
         f'<span class="b-check-id">{escape(check["check_id"])}</span>'
         f'<span class="b-check-title">{escape(check["metric"])}</span></div>'
         f'<div class="b-check-result"><span class="b-check-status" style="color:{tone}">'
         f'{escape(ui["validation_status"][status])}</span>'
         f'{result}</div></div><div>'
-        f'<p class="b-check-note">{escape(check["note"])}</p>{_source_details(check, ui, measurements)}</div></li>'
+        f'<p class="b-check-note">{escape(check["note"])}</p>{threshold}</div></li>'
     )
 
 
-def _check_list(checks: list[dict], ui: dict) -> str:
-    return f'<ol class="b-check-list">{"".join(_check_row(check, ui) for check in checks)}</ol>'
+def _check_list(checks: list[dict], ui: dict, *, include_source: bool = False) -> str:
+    rows = ''.join(_check_row(check, ui, include_source=include_source) for check in checks)
+    return f'<ol class="b-check-list">{rows}</ol>'
 
 
 def _check_group(checks: list[dict], heading: str, ui: dict) -> str:
     return f'<section class="b-check-group"><h3>{escape(heading)}</h3>{_check_list(checks, ui)}</section>' if checks else ""
 
 
+def _spotlight(check: dict, ui: dict) -> str:
+    identifier = check["check_id"]
+    status = check["status"]
+    value = check["value"]
+    if identifier == "V2":
+        title = ui["validation_v2_title"]
+        note = ui["validation_v2_shared"]
+        number = _format_value(value["Arrow agreement (%)"], "%")
+        measure = ""
+        summary = ui["validation_v2_counts"].format(
+            matched=value["Matching arrows"], total=value["Compared arrows"],
+            alternatives=value["Matching alternative arrows"], alternative_total=value["Compared alternative arrows"],
+        )
+    else:
+        title = ui["validation_v7_title"]
+        note = check["note"]
+        number = _format_value(value)
+        measure = ui["validation_v7_scale"]
+        summary = ui["validation_v7_pairs"].format(n=check["n"])
+    tone = APP_COLOR[STATUS_TONES[status]]
+    return (
+        f'<li class="b-check b-check-spotlight" data-status="{escape(status)}" style="--check-tone:{tone}"><div>'
+        f'<span class="b-check-id">{escape(identifier)}</span><h3>{escape(title)}</h3>'
+        f'<span class="b-check-status">{escape(ui["validation_status"][status])}</span>'
+        f'<p class="b-check-note">{escape(note)}</p></div><div>'
+        f'<strong class="b-check-value b-check-hero-number">{escape(number)}</strong>'
+        f'<span class="b-check-number-label">{escape(measure)}</span>'
+        f'<p class="b-check-context">{escape(summary)}</p></div></li>'
+    )
+
+
+def _coverage(checks: list[dict], ui: dict) -> str:
+    tally = {status: sum(check["status"] == status for check in checks) for status in STATUS_TONES}
+    copy = [f'<p>{escape(ui["validation_lead"])}</p>']
+    for status, key, css in (("fail", "failed", "b-check-notice"), ("not_run", "unavailable", "b-check-absent")):
+        count = tally[status]
+        if count:
+            number = "one" if count == 1 else "many"
+            message = ui[f"validation_{key}_{number}"].format(n=count)
+            copy.append(f'<p class="{css}">{escape(message)}</p>')
+    completed = {check["check_id"] for check in checks if check["status"] != "not_run"}
+    if completed and completed <= {"V1", "V4"}:
+        copy.append(f'<p class="b-check-absent">{escape(ui["validation_model_only"])}</p>')
+    return f'<div class="b-check-coverage">{"".join(copy)}</div>'
+
+
 def _dashboard_checks(checks: list[dict], ui: dict) -> str:
-    model, local, deferred = [], [], []
+    spotlight, caution, passed = [], [], []
     for check in checks:
         if check["status"] == "not_run":
-            deferred.append(check)
-        elif check["check_id"] in MODEL_CHECKS:
-            model.append(check)
+            continue
+        identifier, value = check["check_id"], check["value"]
+        paired = identifier == "V2" and isinstance(value, dict) and "Arrow agreement (%)" in value
+        if paired or identifier == "V7" and value is not None:
+            spotlight.append(check)
+        elif check["status"] == "pass":
+            passed.append(check)
         else:
-            local.append(check)
-    context = ""
-    if model and not local:
-        text = ui.get("validation_model_only", "The results here cover the model calculations. "
-                      "Local comparisons need supporting data for this location.")
-        context = f'<p class="b-check-coverage">{escape(text)}</p>'
-    body = (context + _check_group(local, ui.get("validation_local", "Local comparisons"), ui)
-            + _check_group(model, ui.get("validation_model", "Model checks"), ui))
-    if deferred:
-        heading = ui.get("validation_deferred", "Checks without results ({n})").format(n=len(deferred))
-        body += (f'<details class="b-check-deferred"><summary>{escape(heading)}</summary>'
-                 f'{_check_list(deferred, ui)}</details>')
-    return body
+            caution.append(check)
+    body = _coverage(checks, ui)
+    if spotlight:
+        body += f'<ul class="b-check-spotlights">{"".join(_spotlight(check, ui) for check in spotlight)}</ul>'
+    caution.sort(key=lambda check: check["status"] != "fail")
+    return body + _check_group(caution, ui["validation_attention"], ui) + _check_group(passed, ui["validation_passes"], ui)
 
 
 def validation_table(checks: list[dict], *, totals: bool = False) -> None:
-    """Show check results and keep unavailable checks accessible on the field dashboard."""
+    """Show validation results on the field dashboard or the slides."""
     ui = labels()
     if not checks:
         st.caption(ui["validation_empty"])
         return
-    markup = _dashboard_checks(checks, ui) if totals else _check_list(checks, ui)
-    st.markdown(f'{VALIDATION_STYLE}<section class="b-validation" aria-label="{escape(ui["validation"])}">'
+    markup = _dashboard_checks(checks, ui) if totals else _check_list(checks, ui, include_source=True)
+    css = "b-validation b-validation-board" if totals else "b-validation"
+    st.markdown(f'{VALIDATION_STYLE}<section class="{css}" aria-label="{escape(ui["validation"])}">'
                 f'{markup}</section>', unsafe_allow_html=True)
 
 
-def _glossary(season_start: str) -> None:
-    ui = labels()
-    definitions = copybook()["glossary"]
-    with st.expander(ui["glossary"]):
-        terms = "".join(
-            f'<dt>{escape(term)}</dt><dd>{escape(definitions[key].format(season_year_start=season_start))}</dd>'
-            for key, term in ui["glossary_terms"].items()
-        )
-        st.markdown(f'<dl class="b-glossary">{terms}</dl>', unsafe_allow_html=True)
+def _method_check(check: dict, ui: dict) -> str:
+    _, measurements = _prominent_result(check, ui)
+    return (
+        f'<div class="b-method-check"><h4>{escape(check["check_id"])} · {escape(check["metric"])}</h4>'
+        f'<p>{escape(ui["validation_status"][check["status"]])}. {escape(check["note"])}</p>'
+        f'{_source_terms(check, ui, measurements)}</div>'
+    )
+
+
+def _section(heading: str, content: str) -> str:
+    return f'<section class="b-method-section"><h3>{escape(heading)}</h3>{content}</section>'
+
+
+def _bullets(lines: tuple[str, ...] | list[str], *, ordered: bool = False) -> str:
+    tag = "ol" if ordered else "ul"
+    return f'<{tag}>' + "".join(f'<li>{escape(line)}</li>' for line in lines) + f'</{tag}>'
 
 
 def _notes(bundle: dict, ui: dict) -> None:
     assumptions = tuple(dict.fromkeys(line for option in bundle["evidence"] for line in option["assumptions_L"]))
     datasets = tuple(dict.fromkeys(source for option in bundle["evidence"] for source in option["datasets"]))
-    with st.expander(ui["limitations"]):
-        st.markdown("\n".join(f"- {limitation}" for limitation in ui["limits"]))
-    with st.expander(ui["assumptions"]):
-        if assumptions:
-            st.markdown("\n".join(f"- {assumption}" for assumption in assumptions))
-        else:
-            st.caption(ui["no_assumptions"])
-    with st.expander(ui["datasets_heading"]):
-        if datasets:
-            st.markdown(f'**{ui["datasets_used"]}**')
-            st.markdown("\n".join(f"- {dataset}" for dataset in datasets))
-        st.write(ui["datasets_text"])
-        st.markdown(f'**{ui["satellites_heading"]}**')
-        st.write(ui["satellites_text"])
-    _glossary(bundle["field_story"]["site"]["season_year_start"])
-    how_it_works()
+    glossary = copybook()["glossary"]
+    season_start = bundle["field_story"]["site"]["season_year_start"]
+    terms = "".join(
+        f'<dt>{escape(term)}</dt><dd>{escape(glossary[key].format(season_year_start=season_start))}</dd>'
+        for key, term in ui["glossary_terms"].items()
+    )
+    sections = [
+        _section(ui["validation_method_checks"], "".join(_method_check(check, ui) for check in bundle["validation"])),
+        _section(ui["limitations"], _bullets(ui["limits"])),
+        _section(ui["assumptions"], _bullets(assumptions) if assumptions else f'<p>{escape(ui["no_assumptions"])}</p>'),
+        _section(ui["datasets_heading"], f'<p>{escape(ui["datasets_text"])}</p>'),
+        _section(ui["satellites_heading"], f'<p>{escape(ui["satellites_text"])}</p>'),
+        _section(ui["how_it_works"], _bullets(ui["how_steps"], ordered=True)),
+        _section(ui["glossary"], f'<dl class="b-glossary">{terms}</dl>'),
+    ]
+    if datasets:
+        sections.insert(3, _section(ui["datasets_used"], _bullets(datasets)))
+    st.markdown(
+        f'<details class="b-check-guide"><summary>{escape(ui["validation_guide"])}</summary>'
+        f'{"".join(sections)}</details>', unsafe_allow_html=True,
+    )
 
 
 def how_sure(bundle: dict) -> None:
-    """Render validation and keep supporting method information within reach."""
+    """Render the visible validation results and a single guide to the methods."""
     ui = labels()
     st.markdown(f'## {ui["validation"]}')
     validation_table(bundle["validation"], totals=True)

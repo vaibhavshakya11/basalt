@@ -403,3 +403,16 @@ ui:
   validation_water_gap: Median difference in crop water use
   validation_soil_gap: Median difference in soil score
   option_chart_key: Chart key
+  validation_lead: These checks compare the replay with published calculations and available evidence from satellites and local studies.
+  validation_attention: Checks that need care
+  validation_passes: Checks that passed
+  validation_guide: Sources, thresholds and methods
+  validation_method_checks: Data and thresholds for each check
+  validation_v2_title: Agreement between global and Punjab ratings
+  validation_v2_shared: Both models used the same planting and harvest dates. The original global calendar is assessed separately in the methods below.
+  validation_v7_title: Agreement on soil wetness
+  validation_v7_scale: Rank correlation
+  validation_failed_one: One check fell outside the expected range.
+  validation_failed_many: "{n} checks fell outside their expected ranges."
+  validation_unavailable_one: One check had no result for this location.
+  validation_unavailable_many: "{n} checks had no result for this location."
