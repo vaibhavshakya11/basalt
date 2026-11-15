@@ -1,10 +1,12 @@
 import argparse
 import json
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from basalt.climate.power import fetch_power, write_climate
 from basalt.config import DEMO, DEMO_COORDS, ROOT, SCOPE
 from basalt.explain.cards import render_stability
+from basalt.satellite.ornl import fetch_modis_et, fetch_ndvi
 from basalt.service import precompute_demo
 
 
@@ -35,10 +37,26 @@ def summarize(bundle: dict) -> dict:
     }
 
 
+def fetch_modis(site_id: str) -> None:
+    _, lat, lon = DEMO_COORDS[site_id]
+    destination = DEMO / site_id
+    destination.mkdir(parents=True, exist_ok=True)
+    for name, fetch in (("ndvi", fetch_ndvi), ("modis_et", fetch_modis_et)):
+        observations = fetch(lat, lon, timeout=60)
+        target = destination / f"{name}.parquet"
+        scratch = target.with_suffix(".tmp")
+        observations.to_parquet(scratch)
+        scratch.replace(target)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Write both network-free Basalt demos and the results summary")
     parser.add_argument("--fetch-power", action="store_true", help="Update the checked NASA POWER weather input")
+    parser.add_argument("--fetch-modis", action="store_true", help="Update the ORNL greenness and water-use composites")
     opts = parser.parse_args()
+    if opts.fetch_modis:
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            tuple(executor.map(fetch_modis, DEMO_COORDS))
     summary = {}
     for site_id, (_, lat, lon) in DEMO_COORDS.items():
         destination = DEMO / site_id
