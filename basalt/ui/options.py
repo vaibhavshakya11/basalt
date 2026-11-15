@@ -13,6 +13,7 @@ from basalt.ui.components import APP_COLOR, ARROWS, copybook, labels
 from basalt.ui.strata import draw_strata, draw_strata_legend
 
 COUNT = re.compile(r"\b\d+ of \d+\b")
+NUMBER = re.compile(r"\b\d+\b")
 scenario_picker = components.declare_component(
     "basalt_climate_scenario", path=str(Path(__file__).with_name("scenario_component")),
 )
@@ -20,7 +21,10 @@ OPTIONS_STYLE = """
 <style>
 .stApp .b-options-intro{margin-bottom:8px}
 .stApp .b-options-intro h2{padding-top:0;margin:0}
-.stApp .b-options-intro p{color:var(--ash);margin:0}
+.stApp .b-options-intro p{color:var(--ash);margin:0;max-width:82ch}
+.stApp .b-options-guide{padding:8px 0 0;border-top:1px solid var(--fracture);color:var(--ash)}
+.stApp .b-options-guide p{font-size:14px;max-width:105ch;margin:0 0 4px}
+.stApp .st-key-options-compact-key{display:none}
 .stApp .b-scenario{margin:0;background:var(--plate);border-inline-start:2px solid var(--iron);font-size:14px}
 .stApp .st-key-options-grid [data-testid="stVerticalBlockBorderWrapper"]{background:var(--plate)}
 .stApp .st-key-options-grid :is([data-testid="stColumn"],[data-testid="column"]){min-width:0}
@@ -34,10 +38,11 @@ OPTIONS_STYLE = """
  font-weight:400;overflow-wrap:anywhere}
 .stApp .b-option-head .b-count{white-space:nowrap}
 .stApp .b-option-axes{margin:0;padding:0}
-.stApp .b-option-axis{display:flex;justify-content:space-between;align-items:center;gap:8px;
+.stApp .b-option-axis{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:1px 8px;align-items:start;
  border-top:1px solid var(--fracture);padding:5px 0;font-size:13px;line-height:1.4}
 .stApp .b-option-axis dt,.stApp .b-option-axis dd{margin:0}
-.stApp .b-option-axis dd{font-weight:600;white-space:nowrap}
+.stApp .b-option-axis .b-axis-direction{font-weight:600;white-space:nowrap}
+.stApp .b-option-axis .b-axis-counts{grid-column:1/-1;color:var(--ash);font-size:12px}
 .stApp .b-option-notes{display:grid;gap:4px;color:var(--ash);font-size:13px;line-height:1.4;min-block-size:2.8em}
 .stApp .b-option-notes .b-tag{margin:0}
 .stApp .b-option-warning{padding-left:8px;border-inline-start:2px solid var(--iron);color:var(--basalt)}
@@ -50,6 +55,8 @@ OPTIONS_STYLE = """
    flex:1 1 calc(50% - 16px);min-width:0}
 }
 @media(max-width:600px){
+ .stApp .st-key-options-full-key{display:none}
+ .stApp .st-key-options-compact-key{display:flex}
  .stApp .st-key-options-controls [data-testid="stHorizontalBlock"]{flex-wrap:wrap;gap:8px}
  .stApp .st-key-options-controls [data-testid="stHorizontalBlock"]>:is([data-testid="stColumn"],[data-testid="column"]){
    flex:1 1 calc(50% - 8px);min-width:0}
@@ -118,16 +125,37 @@ def _render_scenario_status(current: Evidence) -> None:
         st.caption(ui["scenario_stability"])
 
 
-def _option_head(option: Evidence) -> None:
+def _reference_axis(option: Evidence, axis: str, irrigated: bool) -> str:
+    ui = labels()
+    metrics = option["metrics"]
+    if axis == "soil":
+        return ui["option_reference_soil"].format(score=metrics["soil_score"]["median"])
+    if axis == "risk":
+        return ui["option_reference_risk"].format(risk=metrics["risk_hits"]["median"])
+    water = "et_mm" if irrigated else "dry_stress_frac"
+    template = ui["option_reference_irr"] if irrigated else ui["option_reference_rf"]
+    return template.format(water=metrics[water]["median"])
+
+
+def _option_head(option: Evidence, irrigated: bool) -> None:
     ui = labels()
     verdict = COUNT.sub(r'<span class="b-count">\g<0></span>', escape(option["verdict"]))
     rows = []
     for axis in ("soil", "water", "risk"):
-        tone = option["arrows"][axis]
+        if option["is_current"]:
+            status = escape(ui["option_reference"])
+            color = APP_COLOR["ash"]
+            counts = _reference_axis(option, axis, irrigated)
+        else:
+            tone = option["arrows"][axis]
+            color = APP_COLOR[tone]
+            status = f'<span aria-hidden="true">{ARROWS[tone]}</span> {escape(ui["tone"][tone])}'
+            counts = ui["option_count_line"].format(**option["wins_vs_current"][axis])
+        tally = NUMBER.sub(r'<span class="b-count">\g<0></span>', escape(counts))
         rows.append(
             f'<div class="b-option-axis"><dt>{escape(ui[axis])}</dt>'
-            f'<dd style="color:{APP_COLOR[tone]}"><span aria-hidden="true">{ARROWS[tone]}</span> '
-            f'{escape(ui["tone"][tone])}</dd></div>'
+            f'<dd class="b-axis-direction" style="color:{color}">{status}</dd>'
+            f'<dd class="b-axis-counts">{tally}</dd></div>'
         )
     st.markdown(
         f'<div class="b-option-head" data-current="{str(option["is_current"]).lower()}">'
@@ -200,7 +228,7 @@ def _option_card(option: Evidence, current: Evidence, bundle: dict, *, key: str)
     identity = option["rotation_id"]
     card = bundle.get("cards", {}).get(identity, {})
     with st.container(border=True):
-        _option_head(option)
+        _option_head(option, bundle["setup"]["irrigated"])
         strata = bundle["strata"][identity]
         draw_strata(strata, key=f"{key}-{identity}", thumbnail=True)
         _option_notes(option)
@@ -210,6 +238,31 @@ def _option_card(option: Evidence, current: Evidence, bundle: dict, *, key: str)
                 other = dict(strata, rows=strata["alternate_rows"])
                 draw_strata(other, key=f"{key}-{identity}-other", thumbnail=True)
         _details(option, current, card)
+
+
+def _comparison_legend(charts: list[dict]) -> None:
+    with st.container(key="options-full-key"):
+        draw_strata_legend(charts)
+    with st.container(key="options-compact-key"):
+        with st.popover(labels()["option_chart_key"]):
+            draw_strata_legend(charts)
+
+
+def _comparison_guide(options: list[Evidence], bundle: dict) -> None:
+    ui = labels()
+    charts = [bundle["strata"][option["rotation_id"]] for option in options]
+    if len(options) == 1:
+        _comparison_legend(charts)
+        return
+    reading, legend = st.columns([.52, .48], gap="large")
+    water_rule = ui["option_water_irrigated"] if bundle["setup"]["irrigated"] else ui["option_water_rainfed"]
+    with reading:
+        st.markdown(
+            f'<div class="b-options-guide"><p>{escape(ui["option_count_guide"])}</p>'
+            f'<p>{escape(water_rule)}</p></div>', unsafe_allow_html=True,
+        )
+    with legend:
+        _comparison_legend(charts)
 
 
 def options_view(bundle: dict, *, key: str, on_scenario: Callable[[Scenario], None]) -> None:
@@ -233,6 +286,7 @@ def options_view(bundle: dict, *, key: str, on_scenario: Callable[[Scenario], No
     if len(options) == 1:
         st.info(ui["no_options_available"])
     ordered = order_evidence(options, priorities)
+    _comparison_guide(ordered, bundle)
     with st.container(key="options-grid"):
         if len(ordered) == 1:
             with st.container(key="options-grid-single"):
@@ -241,7 +295,6 @@ def options_view(bundle: dict, *, key: str, on_scenario: Callable[[Scenario], No
             for col, option in zip(st.columns(len(ordered)), ordered, strict=True):
                 with col:
                     _option_card(option, current, bundle, key=key)
-    draw_strata_legend([bundle["strata"][option["rotation_id"]] for option in ordered])
     if current["tier"] == "global" and bundle.get("rejections"):
         with st.expander(ui["no_more"], expanded=True):
             if len(options) > 1 and len(options) < 4:

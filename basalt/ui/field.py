@@ -5,7 +5,7 @@ import streamlit as st
 from basalt.contracts import Constraints
 from basalt.ui.components import APP_COLOR, labels
 from basalt.ui.map import map_view
-from basalt.ui.strata import draw_strata
+from basalt.ui.strata import EVENTS, draw_strata, draw_strata_legend, farming_year_label
 
 FIELD_STYLE = """
 <style>
@@ -15,8 +15,17 @@ FIELD_STYLE = """
 .stApp .b-field-fact:last-child{border-inline-end:0}
 .stApp .b-field-fact dt{font-size:12px;color:var(--ash);margin:0 0 3px}
 .stApp .b-field-fact dd{font-size:17px;font-weight:600;margin:0;line-height:1.3;overflow-wrap:anywhere}
-.stApp .b-field-strata-title{margin:12px 0 0}
-.stApp .b-field-strata-title p{margin:0;color:var(--ash);font-size:13px}
+.stApp .b-field-strata-title{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px 36px;
+ align-items:end;margin:12px 0 0}
+.stApp .b-field-strata-title h2{font-size:26px;margin:0;padding:0 0 4px}
+.stApp .b-field-strata-title p{margin:0;color:var(--ash);font-size:14px;max-width:66ch}
+.stApp .b-field-strata-title .b-field-chart-hint{font-size:12px;margin-top:3px}
+.stApp .b-field-chart-reading{display:grid;align-items:end;grid-template-columns:auto auto;gap:0 9px;
+ border-inline-start:1px solid var(--fracture);padding-inline-start:20px}
+.stApp .b-field-chart-reading strong{font-size:36px;font-weight:600;line-height:1;font-variant-numeric:tabular-nums}
+.stApp .b-field-chart-reading span{font-size:13px;font-weight:500}
+.stApp .b-field-chart-reading small{grid-column:1/-1;color:var(--ash);font-size:12px}
+.stApp .st-key-field-chart [data-testid="stPlotlyChart"]{max-width:100%;overflow-x:clip}
 .stApp .b-field-pattern-list{list-style:none;margin:0;padding:0}
 .stApp .b-field-pattern-list li{border-top:1px solid var(--fracture);padding:10px 0;line-height:1.45}
 .stApp .b-field-pattern-list li:first-child{border-top:0;padding-top:0}
@@ -27,6 +36,10 @@ FIELD_STYLE = """
  .stApp .b-field-fact:first-child{grid-column:1/-1;border-inline-end:0;border-bottom:1px solid var(--fracture)}
  .stApp .b-field-fact{padding:10px 12px}
  .stApp .b-field-fact dd{font-size:15px}
+ .stApp .b-field-strata-title{grid-template-columns:1fr;gap:9px}
+ .stApp .b-field-strata-title h2{font-size:22px}
+ .stApp .b-field-chart-reading{justify-self:start;padding-inline-start:9px}
+ .stApp .b-field-chart-reading strong{font-size:28px}
  .st-key-field-chart g.xtick:nth-child(even){display:none}
 }
 </style>
@@ -129,8 +142,10 @@ def _regional_water(story: dict, key: str) -> None:
             st.caption(ui["field_storage_weak"])
         else:
             tone = APP_COLOR["iron"] if slope < 0 else "#3D7FC4"
-            sign = ui["storage_drier"] if slope < 0 else ui["storage_wetter"]
-            reading = f'{sign} <strong>{abs(slope):.2f}</strong> {escape(ui["storage_unit"])}'
+            direction = ui["storage_drier"] if slope < 0 else ui["storage_wetter"]
+            magnitude = f"{abs(slope):.2f}"
+            sentence = ui["field_storage_statement"].format(direction=direction.lower(), rate=magnitude)
+            reading = escape(sentence).replace(magnitude, f"<strong>{magnitude}</strong>", 1)
             st.markdown(f'<p class="b-field-water-reading" style="color:{tone}">{reading}</p>', unsafe_allow_html=True)
         if period:
             st.caption(period)
@@ -138,6 +153,58 @@ def _regional_water(story: dict, key: str) -> None:
     if slope is not None:
         source = ". ".join(piece for piece in (grace.get("dataset"), grace.get("note")) if piece)
         st.caption(source or ui["storage_caption"])
+
+
+def _chart_heading(bundle: dict) -> None:
+    ui = labels()
+    current = next(row for row in bundle["evidence"] if row["is_current"])
+    bare = f'{current["metrics"]["bare_days"]["median"]:g}'
+    spoken_summary = ui["field_bare_summary"].format(days=bare)
+    st.markdown(
+        f'<div class="b-field-strata-title"><div><h2>{escape(ui["strata"])}</h2>'
+        f'<p>{escape(ui["chart_reading"])}</p>'
+        f'<p class="b-field-chart-hint">{escape(ui["chart_hover_help"])}</p></div>'
+        f'<div class="b-field-chart-reading" role="group" aria-label="{escape(spoken_summary)}">'
+        f'<strong aria-hidden="true">{escape(bare)}</strong>'
+        f'<span aria-hidden="true">{escape(ui["field_bare_lead"])}</span>'
+        f'<small aria-hidden="true">{escape(ui["field_bare_cadence"])}</small></div></div>',
+        unsafe_allow_html=True,
+    )
+
+
+def _focus_chart(strata: dict, key: str) -> tuple[dict, tuple[str, ...]]:
+    ui = labels()
+    rows = sorted(strata["rows"], key=lambda row: row["season"])
+    recent = 8
+    years = {"all": ui["chart_years_all"]}
+    if len(rows) > recent:
+        years["recent"] = ui["chart_years_recent"].format(n=recent)
+    for row in reversed(rows):
+        years[str(row["season"])] = farming_year_label(row["season"], strata["season_year_start"])
+    markers = {"all": ui["chart_events_all"], "none": ui["chart_events_none"], **ui["events"]}
+    periods_key, markers_key = f"chart-season-{key}", f"chart-events-{key}"
+    focused = any(st.session_state.get(widget, "all") != "all" for widget in (periods_key, markers_key))
+    with st.expander(ui["chart_filter"], expanded=focused):
+        seasons_col, markers_col = st.columns(2)
+        period = seasons_col.selectbox(ui["chart_years_shown"], list(years), format_func=years.__getitem__,
+                                       key=periods_key)
+        selected = markers_col.selectbox(ui["chart_events_shown"], list(markers), format_func=markers.__getitem__,
+                                          key=markers_key)
+    if period == "recent":
+        rows = rows[-recent:]
+    elif period != "all":
+        rows = [row for row in rows if row["season"] == int(period)]
+    if period != "all":
+        st.caption(ui["chart_visible_rows"].format(shown=len(rows), total=len(strata["rows"])))
+    events = {"all": tuple(EVENTS), "none": ()}.get(selected, (selected,))
+    return {**strata, "rows": rows}, events
+
+
+def _pattern_sentence(pattern: dict, ui: dict) -> str:
+    message = pattern["text"]
+    if pattern["id"] == "bare" and message.startswith("Bare for "):
+        return ui["field_bare_phrase"].format(period=message.removeprefix("Bare for "))
+    return message
 
 
 def field_view(
@@ -149,19 +216,19 @@ def field_view(
     st.markdown(FIELD_STYLE, unsafe_allow_html=True)
     _field_facts(bundle["setup"])
     updated = field_inputs(bundle, key=key, editor_open=editor_open)
-    st.markdown(
-        f'<div class="b-field-strata-title"><h2>{escape(ui["strata"])}</h2>'
-        f'<p>{escape(ui["older_lower"])}</p></div>', unsafe_allow_html=True,
-    )
-    with st.container(key="field-chart"):
-        draw_strata(bundle["strata"][story["current_rotation_id"]], key=f"current-strata-{key}")
+    _chart_heading(bundle)
+    chart = st.container(key="field-chart")
+    strata, events = _focus_chart(bundle["strata"][story["current_rotation_id"]], key)
+    with chart:
+        draw_strata_legend([strata], events=events)
+        draw_strata(strata, key=f"current-strata-{key}", show_legend=False, events=events)
     st.divider()
     notes, region = st.columns([.55, .45], gap="large")
     with notes:
         patterns = [pattern for pattern in story.get("patterns", ()) if pattern["id"] != "water_storage"]
         if patterns:
             st.subheader(ui["patterns"])
-            points = "".join(f'<li>{escape(pattern["text"])}</li>' for pattern in patterns)
+            points = "".join(f'<li>{escape(_pattern_sentence(pattern, ui))}</li>' for pattern in patterns)
             st.markdown(f'<ul class="b-field-pattern-list">{points}</ul>', unsafe_allow_html=True)
         st.subheader(ui["calendar"])
         st.write(ui["calendar_source"][story["calendar_source"]])
