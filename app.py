@@ -9,7 +9,7 @@ from basalt.climate.power import PowerError
 from basalt.contracts import Scenario
 from basalt.routes import ROUTE_FIELDS, Route, parse_route
 from basalt.soil.soilgrids import SoilGridsUnavailable
-from basalt.ui.components import apply_navigation, favicon, goto, header, labels
+from basalt.ui.components import apply_navigation, favicon, goto, header, labels, stage_navigation
 from basalt.ui.field import field_view
 from basalt.ui.howsure import how_sure
 from basalt.ui.landing import landing
@@ -126,8 +126,7 @@ def _render_tabs(bundle: dict, key: str, field: dict) -> None:
         heading.title(story["site"]["name"])
         with navigate:
             with st.container(key="location-actions"):
-                if st.button(ui["try_other_site"], key="field-home"):
-                    goto()
+                st.button(ui["try_other_site"], key="field-home", on_click=stage_navigation)
         start, end = current["season_range"]
         source = ui["field_pin_label"] if story["site"]["site_id"] == "custom" else ui["field_demo_label"]
         st.caption(ui["field_context"].format(details=source, start=start, end=end))

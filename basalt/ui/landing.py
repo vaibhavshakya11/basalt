@@ -3,7 +3,7 @@ from html import escape
 import streamlit as st
 
 from basalt.config import SCOPE, SLIDES_URL
-from basalt.ui.components import goto, how_it_works, labels
+from basalt.ui.components import goto, how_it_works, labels, stage_navigation
 from basalt.ui.map import map_view
 from basalt.ui.strata import draw_strata_legend, strata_figure
 
@@ -26,8 +26,11 @@ def _location_picker() -> None:
                                             step=.01, format="%.5f", key="field_lat")
                 longitude = lon.number_input(ui["longitude"], min_value=-180., max_value=180., value=None,
                                              step=.01, format="%.5f", key="field_lon")
-                if st.form_submit_button(ui["use_location"]) and latitude is not None and longitude is not None:
-                    goto(lat=latitude, lon=longitude)
+                if st.form_submit_button(ui["use_location"]):
+                    if latitude is None or longitude is None:
+                        st.error(ui["location_missing"])
+                    else:
+                        goto(lat=latitude, lon=longitude)
 
 
 def _intro() -> None:
@@ -39,10 +42,10 @@ def _intro() -> None:
         )
         with st.container(key="landing-demos"):
             ludhiana, malawi = st.columns(2, gap="small")
-            if ludhiana.button(ui["demo_india"], type="primary", use_container_width=True):
-                goto(site="ludhiana")
-            if malawi.button(ui["demo_malawi"], use_container_width=True):
-                goto(site="malawi")
+            ludhiana.button(ui["demo_india"], type="primary", use_container_width=True,
+                            on_click=stage_navigation, kwargs={"site": "ludhiana"})
+            malawi.button(ui["demo_malawi"], use_container_width=True,
+                          on_click=stage_navigation, kwargs={"site": "malawi"})
         _location_picker()
 
 
@@ -84,8 +87,8 @@ def _supporting_information() -> None:
                 how_it_works()
             with presentation:
                 if SLIDES_URL == "?view=slides":
-                    if st.button(ui["slides"], use_container_width=True):
-                        goto(view="slides")
+                    st.button(ui["slides"], use_container_width=True,
+                              on_click=stage_navigation, kwargs={"view": "slides"})
                 elif SLIDES_URL.startswith("https://"):
                     st.link_button(ui["slides"], SLIDES_URL, use_container_width=True)
                 else:

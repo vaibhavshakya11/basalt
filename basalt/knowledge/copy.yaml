@@ -353,3 +353,4 @@ ui:
   field_demo_label: Demo replay
   field_pin_label: Field pin
   lookup_field: Checking the crop calendar, soil and NASA weather for this pin
+  location_missing: Enter both latitude and longitude, or choose a pin on the map.

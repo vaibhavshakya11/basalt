@@ -51,9 +51,14 @@ def header() -> None:
     st.markdown(f'<header class="b-masthead">{wordmark}</header>', unsafe_allow_html=True)
 
 
-def goto(**params: str | float) -> None:
-    """Update the shareable field URL."""
+def stage_navigation(**params: str | float) -> None:
+    """Stage a shareable route from a widget callback."""
     st.session_state["pending_route"] = {name: str(value) for name, value in params.items()}
+
+
+def goto(**params: str | float) -> None:
+    """Update the route after a form returns new values."""
+    stage_navigation(**params)
     st.rerun()
 
 
