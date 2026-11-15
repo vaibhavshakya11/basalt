@@ -178,7 +178,7 @@ def _sources(site: Site, crops: Sequence[Crop], datasets: Sequence[str]) -> tupl
         scopes = {"global and gap crops"} if site.tier == "global" else set()
     assumptions.extend(
         templates["assumptions"]["added"].format(value=entry.value, reason=entry.reason)
-        for entry in load_assumptions() if entry.scope in scopes
+        for entry in load_assumptions() if entry.scope == "all fields" or entry.scope in scopes
     )
     return list(dict.fromkeys(used)), list(dict.fromkeys(sources)), assumptions
 

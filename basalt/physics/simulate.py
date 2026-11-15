@@ -11,6 +11,7 @@ from basalt.contracts import (
     ClimateTable, Constraints, Crop, CropWindow, DailyState, ModelParameters,
     Rotation, RotationRun, SeasonResult, SeasonRun, Site, Soil,
 )
+from basalt.knowledge.loader import bare_depletion_fraction
 from basalt.physics.risks import burn_pressure, crop_events, erosion
 from basalt.physics.soilhealth import FACTORS, score, soil_factors
 from basalt.physics.waterbalance import CURVE_NUMBERS, readily_available, rice_day, rice_refill, root_day
@@ -56,7 +57,7 @@ def _schedule(dates: pd.DatetimeIndex, climate: ClimateTable, site: Site,
     size = len(dates)
     zeros = lambda: np.zeros(size)
     days = FieldDays(np.full(size, "bare", dtype="U24"), np.full(size, "bare", dtype="U4"),
-                     zeros(), np.full(size, .15), np.full(size, .55), np.full(size, -1),
+                     zeros(), np.full(size, .15), np.full(size, bare_depletion_fraction()), np.full(size, -1),
                      np.full(size, -1), *[np.zeros(size, dtype=bool) for _ in range(5)])
     tmax, tmin, tdew, rh, wind = (climate[column].to_numpy() for column in ("tmax", "tmin", "tdew", "rh", "ws2"))
     sat = lambda temp: np.exp(17.27 * temp / (temp + 237.3))

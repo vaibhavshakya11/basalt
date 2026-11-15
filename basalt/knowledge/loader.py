@@ -120,7 +120,16 @@ def load_punjab_rotations() -> dict[str, Rotation]:
     return _punjab_library().copy()
 
 
+@lru_cache(maxsize=1)
 def load_assumptions() -> tuple[Assumption, ...]:
     """Return the low-confidence inputs added to parameterize the model."""
-    assumptions = [row for name in ("crops.yaml", "gap_crops.yaml") for row in read_yaml(name)["assumptions"]]
+    assumptions = [row for name in ("crops.yaml", "gap_crops.yaml", "soils.yaml") for row in read_yaml(name)["assumptions"]]
     return validated(assumptions, tuple[Assumption, ...])
+
+
+def bare_depletion_fraction() -> float:
+    """Return the low-confidence stress threshold for bare soil."""
+    value = float(next(entry.value for entry in load_assumptions() if entry.parameter == "bare_depletion_fraction"))
+    if not 0 < value < 1:
+        raise ValueError("Bare soil depletion fraction must be strictly between zero and one")
+    return value

@@ -48,3 +48,11 @@ soils:
     rice_percolation: 2
     confidence: M
     source: FAO-56 Table 19, USDA TR-55 and Basalt specification section 7.7
+
+assumptions:
+  - scope: all fields
+    parameter: bare_depletion_fraction
+    value: "0.55"
+    source: assumption
+    confidence: L
+    reason: The specification gives a bare-soil evaporation layer but no available-water threshold for that layer.
