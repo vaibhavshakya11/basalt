@@ -153,13 +153,13 @@
         "dataset": "MODIS MOD16A2GF via ORNL DAAC",
         "version": "061",
         "period": "2001 to 2024",
-        "n": 0,
+        "n": 23,
         "metric": "Median seasonal water use bias",
-        "value": null,
+        "value": 252.94088833472546,
         "unit": "%",
         "pass_rule": "Always shown with a caveat about satellite water use.",
-        "status": "not_run",
-        "note": "The ORNL satellite water-use product is unavailable for this run.",
+        "status": "caveat",
+        "note": "Model minus satellite, divided by satellite water use. MOD16 is a lower bound where fields are irrigated.",
         "figure_path": null
       }
     ],
@@ -169,6 +169,7 @@
       "PAU crop calendar",
       "SoilGrids 2.0",
       "MODIS MOD13Q1 v061 via ORNL DAAC",
+      "MODIS MOD16A2GF v061 via ORNL DAAC",
       "GRACE/GRACE-FO NASA JPL RL06.3Mv04",
       "NASA FIRMS VIIRS S-NPP"
     ],
@@ -484,13 +485,13 @@
         "dataset": "MODIS MOD16A2GF via ORNL DAAC",
         "version": "061",
         "period": "2001 to 2024",
-        "n": 0,
+        "n": 23,
         "metric": "Median seasonal water use bias",
-        "value": null,
+        "value": -15.787485765281364,
         "unit": "%",
         "pass_rule": "Always shown with a caveat about satellite water use.",
-        "status": "not_run",
-        "note": "The ORNL satellite water-use product is unavailable for this run.",
+        "status": "caveat",
+        "note": "Model minus satellite, divided by satellite water use. MOD16 is a lower bound where fields are irrigated.",
         "figure_path": null
       }
     ],
@@ -506,6 +507,7 @@
       "SoilGrids 2.0",
       "GGCMI Phase 3 v1.01 and MapSPAM 2010",
       "MODIS MOD13Q1 v061 via ORNL DAAC",
+      "MODIS MOD16A2GF v061 via ORNL DAAC",
       "GRACE/GRACE-FO NASA JPL RL06.3Mv04"
     ],
     "options": [

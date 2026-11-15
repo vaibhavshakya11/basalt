@@ -54,6 +54,17 @@ Climate trends use [Hamed and Rao's Mann–Kendall test (1998)](https://doi.org/
 
 Open **How sure are we?** on either demo. It reports V1 (FAO reference water use), V2 (Punjab versus global defaults), V3 (satellite calendar), V4 (daily water balance closure), V5 (post-harvest fire detections), V6 (published Punjab ranges), V7 (SMAP soil moisture), and V8 (MODIS water use). [results_summary.json](results_summary.json) carries the values, sample sizes and statuses.
 
+| Validation | Ludhiana | Malawi |
+| --- | --- | --- |
+| V1 FAO reference water use | Pass | Pass |
+| V2 Global and calibrated agreement | Not run | Not run |
+| V3 Satellite calendar | Pass | Fail |
+| V4 Daily water balance | Pass | Pass |
+| V5 Fire timing | Caveat | Not run |
+| V6 Published Punjab ranges | Fail | Not run |
+| V7 SMAP root-zone wetness | Not run | Not run |
+| V8 MODIS crop water use | Caveat | Caveat |
+
 ## Limits
 
 - The model uses one point per field and compares soil practices as proxies.
