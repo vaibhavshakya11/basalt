@@ -8,8 +8,8 @@ import pandas as pd
 import requests
 import xarray as xr
 
-from basalt.config import DATA, DEMO_COORDS
-from basalt.global_tier.grace import GSFC_DATASET, JPL_DATASET
+from basalt.config import DEMO_COORDS
+from basalt.global_tier.grace import GLOBAL_TABLE, GSFC_DATASET, JPL_DATASET, TABLE
 from basalt.global_tier.ggcmi import ggcmi_cell
 
 PRODUCT = "TELLUS_GRAC-GRFO_MASCON_CRI_GRID_RL06.3_V4"
@@ -106,8 +106,10 @@ def build_grid(input_file: Path, output: Path, product: str = "jpl") -> None:
         else:
             print("No land gain factors supplied in the NetCDF")
         label, source = (GSFC_DATASET, GSFC_SOURCE) if product == "gsfc" else (JPL_DATASET, JPL_SOURCE)
+        detail = ("Public NASA Goddard grid. The JPL bulk archive requires Earthdata sign-in."
+                  if product == "gsfc" else "NASA JPL monthly land mascon grid.")
         _write_trends(output, trend, water.lat.values, water.lon.values, dates[0], dates[-1],
-                      label, source, "NASA monthly land mascon grid")
+                      label, source, detail)
     print(f"{label}: wrote {len(dates)} monthly time steps to {output}")
 
 
@@ -137,7 +139,9 @@ def _demo_months(lat: float, lon: float, path: Path) -> pd.Series:
     records = [row for month in document["data"] for row in month if row.get("cnt") == 1]
     dates = pd.to_datetime([row["time"] for row in records], unit="s")
     values = pd.Series([row["mean"] for row in records], index=dates, dtype=float).dropna().sort_index()
-    if metadata["shortName"] != query["ds"] or len(values) < 200:
+    if (metadata["shortName"] != query["ds"] or len(values) < 2
+            or values.index[0].to_period("M") != start.tz_localize(None).to_period("M")
+            or values.index.has_duplicates):
         raise ValueError(f"Unrecognised or incomplete NASA JPL analysis series in {path}")
     return values.loc[~((values.index >= "2017-07-01") & (values.index < "2018-06-01"))]
 
@@ -165,14 +169,15 @@ def main() -> None:
     parser.add_argument("--input", type=Path, help="Local equivalent-water-height NetCDF")
     parser.add_argument("--product", choices=("jpl", "jpl-demo", "gsfc"), default="jpl")
     parser.add_argument("--download-dir", type=Path, default=Path("data/cache/grace"))
-    parser.add_argument("--output", type=Path, default=DATA / "grace" / "grace_trend.npz")
+    parser.add_argument("--output", type=Path)
     options = parser.parse_args()
     if options.product == "jpl-demo":
-        build_demo_grid(options.download_dir, options.output)
+        build_demo_grid(options.download_dir, options.output or TABLE)
         return
     reader = get_gsfc_mascon if options.product == "gsfc" else get_mascon
     input_file = options.input or reader(options.download_dir)
-    build_grid(input_file, options.output, options.product)
+    out = options.output or (GLOBAL_TABLE if options.product == "gsfc" else TABLE)
+    build_grid(input_file, out, options.product)
 
 
 if __name__ == "__main__":

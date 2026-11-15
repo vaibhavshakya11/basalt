@@ -1,4 +1,5 @@
 from basalt.global_tier.ggcmi import calendar_slot, default_season_start, ggcmi_cell, local_calendars
+from basalt.global_tier.grace import JPL_DATASET, regional_trend
 
 
 def test_malawi_calendar_and_local_crop_screen():
@@ -18,3 +19,11 @@ def test_malawi_calendar_and_local_crop_screen():
 def test_boundary_cells_wrap_longitude_without_clamping_to_land():
     assert ggcmi_cell(90, 180) == (89.75, -179.75)
     assert local_calendars(0, -150, False) == ()
+
+
+def test_grace_demo_cells_use_the_public_jpl_series():
+    ludhiana = regional_trend(30.80, 75.70)
+    malawi = regional_trend(-13.80, 33.45)
+    assert ludhiana["dataset"] == malawi["dataset"] == JPL_DATASET
+    assert round(ludhiana["trend_cm_per_yr"], 2) == -3.94
+    assert round(malawi["trend_cm_per_yr"], 2) == -0.51
