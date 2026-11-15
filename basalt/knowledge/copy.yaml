@@ -186,6 +186,7 @@ ui:
   longitude: Longitude
   data_caption: Built on NASA POWER, MODIS, SMAP, GRACE-FO and FIRMS, with GGCMI crop calendars and SoilGrids soil data.
   hero_caption: Ludhiana, 2001 to 2024. Each row is one season. Sand colour is bare soil.
+  preview_chart_guide: Each row shows one farming year. The bands show crop cover, and the symbols mark weather events.
   local_advice: basalt supports, and does not replace, local agricultural advice.
   try_other_site: Choose another location
   replaying: Replaying crop rotations

@@ -91,6 +91,7 @@ def _preview(bundle: dict | None) -> None:
             f'<p>{site}</p></div><span class="b-preview-period">{period}</span></div>',
             unsafe_allow_html=True,
         )
+        st.caption(ui["preview_chart_guide"])
         strata = bundle["strata"][current]
         chart = strata_figure(strata)
         chart.update_xaxes(tickangle=0, tickfont_size=10)
