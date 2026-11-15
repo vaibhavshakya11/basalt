@@ -2,138 +2,122 @@ from html import escape
 
 import streamlit as st
 
-from basalt.config import DEMO_PROFILES, SCOPE, SLIDES_URL
-from basalt.ui.components import goto, how_it_works, labels, stage_navigation
+from basalt.config import DEMO_PROFILES, SLIDES_URL, YEARS
+from basalt.ui.components import goto, labels, stage_navigation
 from basalt.ui.map import map_view
 from basalt.ui.strata import EVENTS, draw_strata_legend, strata_figure
 
 LEAD_DEMOS = ("ludhiana", "malawi")
-PREVIEW_YEARS = 8
+PREVIEW_YEARS = len(YEARS)
 
 
 def _location_picker() -> None:
     ui = labels()
     with st.container(key="landing-location"):
-        with st.expander(ui["choose_location"]):
-            st.caption(ui["location_help"])
-            st.session_state.setdefault("field_lat", 30.8)
-            st.session_state.setdefault("field_lon", 75.7)
-            picked = map_view(st.session_state["field_lat"], st.session_state["field_lon"], key="location-picker")
-            if picked and picked != st.session_state.get("last_map_pin"):
-                st.session_state["field_lat"] = picked["lat"]
-                st.session_state["field_lon"] = picked["lon"]
-                st.session_state["last_map_pin"] = picked
-            with st.form("location-form", border=False):
-                lat, lon = st.columns(2)
-                latitude = lat.number_input(ui["latitude"], min_value=-90., max_value=90., value=None,
-                                            step=.01, format="%.5f", key="field_lat")
-                longitude = lon.number_input(ui["longitude"], min_value=-180., max_value=180., value=None,
-                                             step=.01, format="%.5f", key="field_lon")
-                if st.form_submit_button(ui["use_location"]):
-                    if latitude is None or longitude is None:
-                        st.error(ui["location_missing"])
-                    else:
-                        goto(lat=latitude, lon=longitude)
+        st.caption(ui["location_help"])
+        st.session_state.setdefault("field_lat", 30.8)
+        st.session_state.setdefault("field_lon", 75.7)
+        picked = map_view(st.session_state["field_lat"], st.session_state["field_lon"], key="location-picker")
+        if picked and picked != st.session_state.get("last_map_pin"):
+            st.session_state["field_lat"] = picked["lat"]
+            st.session_state["field_lon"] = picked["lon"]
+            st.session_state["last_map_pin"] = picked
+        with st.form("location-form", border=False):
+            lat, lon = st.columns(2)
+            latitude = lat.number_input(ui["latitude"], min_value=-90., max_value=90., value=None,
+                                        step=.01, format="%.5f", key="field_lat")
+            longitude = lon.number_input(ui["longitude"], min_value=-180., max_value=180., value=None,
+                                         step=.01, format="%.5f", key="field_lon")
+            if st.form_submit_button(ui["use_location"]):
+                if latitude is None or longitude is None:
+                    st.error(ui["location_missing"])
+                else:
+                    goto(lat=latitude, lon=longitude)
 
 
-def _intro(extra_count: int) -> None:
+def _toggle_location() -> None:
+    st.session_state["landing_location_open"] = not st.session_state.get("landing_location_open", False)
+
+
+def _intro() -> None:
     ui = labels()
     with st.container(key="landing-lead"):
         st.markdown(
-            f'<div class="b-hero"><h1>{escape(ui["page_title"])}</h1><p>{escape(ui["page_intro"])}</p></div>',
+            '<div class="b-home-intro"><p class="b-home-eyebrow">NASA Space Apps 2026 · Field Shift</p>'
+            f'<h1>{escape(ui["page_title"])}</h1><p class="b-home-lead">{escape(ui["page_intro"])}</p></div>',
             unsafe_allow_html=True,
         )
-        with st.container(key="landing-demos"):
-            columns = st.columns(2, gap="small")
-            captions = (ui["demo_india"], ui["demo_malawi"])
-            for column, site, label in zip(columns, LEAD_DEMOS, captions, strict=True):
-                profile = DEMO_PROFILES[site]
-                with column:
-                    st.button(
-                        label, type="primary" if site == "ludhiana" else "secondary",
-                        use_container_width=True, on_click=stage_navigation, kwargs={"site": site},
-                    )
-                    st.caption(profile.get("teaser") or profile["summary"])
-        if extra_count:
-            jump = ui["demos_jump"].format(count=extra_count)
-            st.markdown(f'<a class="b-demo-jump" href="#more-demo-fields">{escape(jump)}</a>',
-                        unsafe_allow_html=True)
-        _location_picker()
-
-
-def _directory(fields: dict) -> None:
-    if not fields:
-        return
-    ui = labels()
-    with st.container(key="landing-directory"):
-        st.header(ui["demos_heading"], anchor="more-demo-fields")
-        st.markdown(f'<p class="b-demo-intro">{escape(ui["demos_intro"])}</p>', unsafe_allow_html=True)
-        with st.container(key="landing-city-list"):
-            for column, (site, profile) in zip(st.columns(len(fields)), fields.items(), strict=True):
-                with column:
-                    st.button(profile["label"], key=f"demo-directory-{site}", use_container_width=True,
-                              on_click=stage_navigation, kwargs={"site": site})
-                    st.markdown(f'<p class="b-city-summary">{escape(profile["summary"])}</p>', unsafe_allow_html=True)
+        st.button(ui["demo_india"], type="primary", on_click=stage_navigation, kwargs={"site": "ludhiana"})
+        with st.container(key="landing-links"):
+            malawi, location, directory = st.columns(3, gap="small")
+            malawi.button(ui["demo_malawi"], on_click=stage_navigation, kwargs={"site": "malawi"})
+            location.button("Choose your own location", on_click=_toggle_location)
+            directory.button("Other demo fields", on_click=stage_navigation, kwargs={"view": "demo-fields"})
+        if st.session_state.get("landing_location_open", False):
+            _location_picker()
 
 
 def _preview(bundle: dict | None) -> None:
-    ui = labels()
     with st.container(key="landing-preview"):
         if not bundle:
-            st.caption(ui["demo_unavailable"])
+            st.caption(labels()["demo_unavailable"])
             return
-        story = bundle["field_story"]
-        current = story["current_rotation_id"]
-        site = escape(story["site"]["name"])
+        current = bundle["field_story"]["current_rotation_id"]
         strata = bundle["strata"][current]
-        years = sorted(strata["rows"], key=lambda row: row["season"])
-        rows = years[-PREVIEW_YEARS:]
-        sample = {**strata, "rows": rows}
-        events = tuple(key for key in EVENTS if any(row["events"].get(key) for row in rows))
-        st.markdown(
-            f'<div class="b-preview-heading"><h2>{escape(ui["preview_chart_title"])}</h2>'
-            f'<p>{site}</p></div>',
-            unsafe_allow_html=True,
-        )
-        st.caption(ui["preview_chart_guide"].format(shown=len(rows), total=len(years)))
-        chart = strata_figure(sample, events=events)
-        chart.update_xaxes(tickangle=0, tickfont_size=10)
+        events = tuple(event for event in EVENTS if any(row["events"].get(event) for row in strata["rows"]))
+        chart = strata_figure(strata, events=events)
+        chart.update_layout(height=355, margin={"l": 50, "r": 3, "t": 4, "b": 22})
+        chart.update_xaxes(title_text=None, tickangle=0, tickfont_size=10)
+        chart.update_yaxes(title_text=None, tickfont={"family": "IBM Plex Mono, monospace", "size": 9})
         st.plotly_chart(chart, use_container_width=True, theme=None, key="landing-strata",
                         config={"displayModeBar": False, "scrollZoom": False})
-        draw_strata_legend([sample], events=events)
+        st.caption("Ludhiana, 2001 to 2024. Each row is one farming year. Sand colour is bare soil.")
+        draw_strata_legend([strata], events=events)
 
 
 def _supporting_information() -> None:
     ui = labels()
-    with st.container(key="landing-support"):
-        source, actions = st.columns([.58, .42], gap="large")
-        with source:
-            st.caption(ui["data_caption"])
-            st.caption(SCOPE)
-            st.caption(ui["local_advice"])
-        with actions, st.container(key="landing-method"):
-            method, presentation = st.columns([2.7, 1], gap="small")
-            with method:
-                how_it_works()
-            with presentation:
-                if SLIDES_URL == "?view=slides":
-                    st.button(ui["slides"], use_container_width=True,
-                              on_click=stage_navigation, kwargs={"view": "slides"})
-                elif SLIDES_URL.startswith("https://"):
-                    st.link_button(ui["slides"], SLIDES_URL, use_container_width=True)
-                else:
-                    st.button(ui["slides"], disabled=True, help=ui["slides_unavailable"], use_container_width=True)
+    with st.container(key="landing-method"):
+        st.header(ui["how_it_works"])
+        st.markdown(
+            '<ol class="b-home-steps">'
+            "<li>Read your field's calendar from NASA satellites.</li>"
+            '<li>Replay each rotation through 24 real seasons of NASA weather.</li>'
+            '<li>Compare season by season with what you grow now.</li></ol>',
+            unsafe_allow_html=True,
+        )
+        st.caption(ui["data_caption"])
+        if SLIDES_URL == "?view=slides":
+            st.button(ui["slides"], on_click=stage_navigation, kwargs={"view": "slides"})
+        elif SLIDES_URL.startswith("https://"):
+            st.markdown(f'<a class="b-text-link" href="{escape(SLIDES_URL)}">{escape(ui["slides"])}</a>',
+                        unsafe_allow_html=True)
 
 
 def landing(bundle: dict | None) -> None:
-    """Show the demo entry points and their precomputed field preview."""
-    more_fields = {site: profile for site, profile in DEMO_PROFILES.items() if site not in LEAD_DEMOS}
+    """Show the primary replay entry point and the full Ludhiana record."""
     with st.container(key="landing"):
         with st.container(key="landing-grid"):
-            intro, figure = st.columns([.46, .54], gap="large")
+            intro, figure = st.columns([5, 7], gap="large", vertical_alignment="center")
             with intro:
-                _intro(len(more_fields))
+                _intro()
             with figure:
                 _preview(bundle)
-        _directory(more_fields)
         _supporting_information()
+
+
+def directory_page() -> None:
+    """List the other fields without competing with the homepage entry point."""
+    ui = labels()
+    with st.container(key="landing-directory"):
+        st.title("Other demo fields")
+        st.markdown(ui["demos_intro"])
+        rows = []
+        for site, profile in DEMO_PROFILES.items():
+            if site not in LEAD_DEMOS:
+                rows.append(
+                    f'<li><a class="b-text-link" href="?site={escape(site)}">{escape(profile["label"])}</a>'
+                    f'<p>{escape(profile["summary"])}</p></li>'
+                )
+        st.html(f'<ul class="b-home-directory">{"".join(rows)}</ul>')
+        st.html('<a class="b-text-link" href="?">Back to basalt</a>')
