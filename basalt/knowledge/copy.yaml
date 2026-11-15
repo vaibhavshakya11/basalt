@@ -233,7 +233,6 @@ ui:
   rain: What if rainfall changes?
   scenario_banner: "Scenario: {temperature:+g} °C, {rain:+d}% rain"
   scenario_stability: Stability shown for today's climate.
-  use_scenario: Replay this climate
   lever:
     current: Current rotation
     fill_the_gap: Fill the gap

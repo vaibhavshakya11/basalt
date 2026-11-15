@@ -33,3 +33,14 @@ def test_each_demo_has_three_tabs_and_needs_no_network(site, network_off):
     assert [tab.label for tab in app.tabs] == ["Your field", "Your options", "How sure are we?"]
     assert len(app.get("plotly_chart")) > 1
     assert any("Validation checks" in paragraph.value for paragraph in app.markdown)
+
+
+def test_demo_sliders_replay_archived_weather_without_network(network_off):
+    app = AppTest.from_file(str(ROOT / "app.py"))
+    app.query_params["site"] = "ludhiana"
+    app.run(timeout=12)
+    app.slider(key="temperature-ludhiana").set_value(2.0).run(timeout=12)
+    app.slider(key="rainfall-ludhiana").set_value(-10).run(timeout=12)
+    assert not app.exception
+    assert not app.error
+    assert any("Scenario: +2 °C, -10% rain" in paragraph.value for paragraph in app.markdown)

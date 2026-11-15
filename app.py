@@ -6,7 +6,7 @@ import streamlit as st
 from basalt.config import DEMO_COORDS
 from basalt.contracts import Scenario
 from basalt.soil.soilgrids import SoilGridsUnavailable
-from basalt.ui.components import favicon, goto, header, labels
+from basalt.ui.components import apply_navigation, favicon, goto, header, labels
 from basalt.ui.field import field_view
 from basalt.ui.howsure import how_sure
 from basalt.ui.landing import landing
@@ -42,6 +42,10 @@ def _field_session(key: str) -> dict:
     return st.session_state["field_model"]
 
 
+def _set_scenario(scenario: Scenario) -> None:
+    st.session_state["field_model"] = dict(st.session_state["field_model"], scenario=scenario)
+
+
 def _render_tabs(bundle: dict, key: str, state: dict) -> None:
     ui = labels()
     story = bundle["field_story"]
@@ -53,7 +57,7 @@ def _render_tabs(bundle: dict, key: str, state: dict) -> None:
     with field_tab:
         updated_field = field_view(bundle, key=key)
     with options_tab:
-        new_scenario = options_view(bundle, key=key)
+        options_view(bundle, key=key, on_scenario=_set_scenario)
     with confidence_tab:
         how_sure(bundle)
     st.divider()
@@ -61,9 +65,7 @@ def _render_tabs(bundle: dict, key: str, state: dict) -> None:
     if updated_field is not None:
         soil, irrigated, crop_ids, constraints = updated_field
         state.update(soil_class=soil, irrigated=irrigated, crop_ids=crop_ids, constraints=constraints)
-    if new_scenario is not None:
-        state["scenario"] = new_scenario
-    if updated_field is not None or new_scenario is not None:
+        st.session_state["field_model"] = state
         st.rerun()
 
 
@@ -103,6 +105,7 @@ def _show_field(key: str, load: Callable[..., dict]) -> None:
 def run() -> None:
     """Route public field pins and precomputed offline demo views."""
     st.set_page_config(page_title="Basalt", page_icon=favicon(), layout="wide", initial_sidebar_state="collapsed")
+    apply_navigation()
     header()
     query = st.query_params
     site_id = query.get("site")

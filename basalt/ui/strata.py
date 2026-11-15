@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from datetime import date, timedelta
 from html import escape
 
@@ -138,16 +139,16 @@ def _marker(color: str, symbol: str) -> str:
     return f'<svg viewBox="0 0 12 12" class="b-legend-mark" aria-hidden="true">{shapes[symbol]}</svg>'
 
 
-def _visible_legend(strata: dict) -> list[tuple[str, str, str]]:
+def _visible_legend(views: Sequence[dict]) -> list[tuple[str, str, str]]:
     ui = labels()
-    families = {segment[3] for row in strata["rows"] for segment in row["segments"]}
+    families = {segment[3] for view in views for row in view["rows"] for segment in row["segments"]}
     categories = [(ui["categories"][family], color, "square") for family, color in COVER.items() if family in families]
     events = [(ui["events"][event], color, symbol) for event, (color, symbol) in EVENTS.items()]
     return categories + events
 
 
 def _print_legend(figure: go.Figure, strata: dict) -> None:
-    for label, color, symbol in _visible_legend(strata):
+    for label, color, symbol in _visible_legend([strata]):
         figure.add_scatter(x=[None], y=[None], mode="markers", showlegend=True, name=label,
                            marker={"color": color, "symbol": symbol, "size": 9}, hoverinfo="skip")
     figure.update_traces(showlegend=False, selector=lambda trace: not trace.name)
@@ -159,11 +160,15 @@ def draw_strata(strata: dict, *, key: str, thumbnail: bool = False) -> None:
     """Render a full or compact Season Strata chart."""
     st.plotly_chart(strata_figure(strata, thumbnail=thumbnail), use_container_width=True, key=key,
                     theme=None, config={"displayModeBar": False, "scrollZoom": False})
-    if thumbnail:
-        return
+    if not thumbnail:
+        draw_strata_legend([strata])
+
+
+def draw_strata_legend(views: Sequence[dict]) -> None:
+    """Label the crop and weather colours shared by a group of Strata charts."""
     legend = [
         f'<span>{_marker(color, symbol)}{escape(label)}</span>'
-        for label, color, symbol in _visible_legend(strata)
+        for label, color, symbol in _visible_legend(views)
     ]
     st.markdown('<div class="b-chart-legend">' + "".join(legend) + "</div>", unsafe_allow_html=True)
     st.caption(labels()["chart_shading"])

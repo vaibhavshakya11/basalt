@@ -2,6 +2,8 @@ import argparse
 from pathlib import Path
 from shutil import copyfile
 
+from kaleido import write_fig_sync
+
 from basalt.config import ROOT
 from basalt.service import load_demo
 from basalt.ui.strata import strata_figure
@@ -13,7 +15,7 @@ def export_strata(destination: Path) -> None:
     current = demo["field_story"]["current_rotation_id"]
     figure = strata_figure(demo["strata"][current], include_legend=True)
     destination.parent.mkdir(parents=True, exist_ok=True)
-    figure.write_image(destination, width=1440)
+    write_fig_sync(figure, path=destination, opts={"format": "png", "width": 1440})
 
 
 def main() -> None:

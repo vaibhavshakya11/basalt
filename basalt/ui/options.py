@@ -1,4 +1,5 @@
 import re
+from collections.abc import Callable
 from html import escape
 
 import streamlit as st
@@ -7,28 +8,33 @@ from basalt.contracts import Evidence, Priorities, Scenario
 from basalt.decision.priorities import order_evidence
 from basalt.explain.cards import constraint_warnings, render_stability
 from basalt.ui.components import APP_COLOR, arrow_rows, copybook, labels
-from basalt.ui.strata import draw_strata
+from basalt.ui.strata import draw_strata, draw_strata_legend
 
 COUNT = re.compile(r"\b\d+ of \d+\b")
 
 
-def _scenario_controls(bundle: dict, *, key: str) -> Scenario | None:
+def _scenario_controls(bundle: dict, *, key: str, on_change: Callable[[Scenario], None]) -> None:
     ui = labels()
     current = next(option for option in bundle["evidence"] if option["is_current"])
     scenario = current["scenario"]
+    temp_key, rain_key = f"temperature-{key}", f"rainfall-{key}"
+
+    def change_climate() -> None:
+        temperature = st.session_state[temp_key]
+        rainfall = st.session_state[rain_key]
+        on_change(Scenario(temperature, round(1 + rainfall / 100, 2)))
+
     with st.expander(ui["scenario"], expanded=scenario != {"dT_c": 0, "rain_mult": 1}):
-        with st.form(f"scenario-{key}", border=False):
-            warm, rain = st.columns(2)
-            temperature = warm.slider(ui["warm"], 0., 3., float(scenario["dT_c"]), step=.5, format="+%g °C")
-            rainfall = rain.slider(ui["rain"], -30, 30, round((scenario["rain_mult"] - 1) * 100),
-                                  step=5, format="%+d%%")
-            if st.form_submit_button(ui["use_scenario"]):
-                return Scenario(temperature, round(1 + rainfall / 100, 2))
+        warm, rain = st.columns(2)
+        warm.slider(ui["warm"], 0., 3., float(scenario["dT_c"]), step=.5, format="+%g °C",
+                    key=temp_key, on_change=change_climate)
+        rain.slider(ui["rain"], -30, 30, round((scenario["rain_mult"] - 1) * 100),
+                    step=5, format="%+d%%", key=rain_key, on_change=change_climate)
     if scenario["dT_c"] or scenario["rain_mult"] != 1:
-        st.info(ui["scenario_banner"].format(temperature=scenario["dT_c"],
-                                            rain=round((scenario["rain_mult"] - 1) * 100)))
+        banner = ui["scenario_banner"].format(temperature=scenario["dT_c"],
+                                               rain=round((scenario["rain_mult"] - 1) * 100))
+        st.markdown(f'<div class="b-scenario" role="status">{escape(banner)}</div>', unsafe_allow_html=True)
         st.caption(ui["scenario_stability"])
-    return None
 
 
 def _render_tags(option: Evidence) -> None:
@@ -79,7 +85,7 @@ def _option_card(option: Evidence, current: Evidence, bundle: dict, *, key: str)
         st.caption(ui["lever"][option["lever"]])
         st.markdown(f'### {option["name"]}')
         verdict = COUNT.sub(r'<span class="b-count">\g<0></span>', escape(option["verdict"]))
-        st.markdown(f'<p class="b-verdict">{verdict}</p>', unsafe_allow_html=True)
+        st.markdown(f'<p class="b-verdict" data-rotation="{escape(identity)}">{verdict}</p>', unsafe_allow_html=True)
         arrow_rows(option["arrows"])
         _render_tags(option)
         if not option["is_current"]:
@@ -104,7 +110,7 @@ def _option_card(option: Evidence, current: Evidence, bundle: dict, *, key: str)
             _practices(option, current)
 
 
-def options_view(bundle: dict, *, key: str) -> Scenario | None:
+def options_view(bundle: dict, *, key: str, on_scenario: Callable[[Scenario], None]) -> None:
     """Present scenario controls, comparisons and evidence."""
     ui = labels()
     st.subheader(ui["options_header"])
@@ -112,7 +118,7 @@ def options_view(bundle: dict, *, key: str) -> Scenario | None:
         cols = st.columns(3)
         priorities = {axis: col.slider(ui[axis], 0., 1., 1., .05, key=f"priority-{key}-{axis}")
                       for axis, col in zip(("soil", "water", "risk"), cols, strict=True)}
-    scenario = _scenario_controls(bundle, key=key)
+    _scenario_controls(bundle, key=key, on_change=on_scenario)
     options = bundle["evidence"]
     current = next(option for option in options if option["is_current"])
     ordered = order_evidence(options, Priorities(**priorities))
@@ -120,6 +126,7 @@ def options_view(bundle: dict, *, key: str) -> Scenario | None:
     for col, option in zip(cols, ordered, strict=True):
         with col:
             _option_card(option, current, bundle, key=key)
+    draw_strata_legend([bundle["strata"][option["rotation_id"]] for option in ordered])
     if current["tier"] == "global" and bundle["rejections"]:
         with st.expander(ui["no_more"], expanded=True):
             if len(options) < 4:
@@ -127,4 +134,3 @@ def options_view(bundle: dict, *, key: str) -> Scenario | None:
             for entry in bundle["rejections"]:
                 lever = ui["lever"].get(entry["lever"], entry["lever"])
                 st.markdown(f'**{lever}**. {entry["reason"]}')
-    return scenario
