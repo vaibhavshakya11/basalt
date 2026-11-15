@@ -130,6 +130,10 @@ def _fetch_series(
             try:
                 summaries.update(subset_request.result())
             except ORNLError as error:
+                if timeout <= TIMEOUT_SECONDS:
+                    for _, pending in requests_by_chunk:
+                        pending.cancel()
+                    raise
                 failures.append((chunk[0]["modis_date"], chunk[-1]["modis_date"], error))
     if failures:
         first, last, error = failures[0]
